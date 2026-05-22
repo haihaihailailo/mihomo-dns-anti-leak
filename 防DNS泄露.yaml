@@ -169,7 +169,7 @@ proxy-groups:
   - name: 微软服务
     type: select
     proxies: *all_regions_with_direct
-    url: "https://www.msftconnecttest.com/connecttest.txt"
+    url: "http://www.msftconnecttest.com/connecttest.txt"
     expected-status: 200
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/microsoft.svg"
