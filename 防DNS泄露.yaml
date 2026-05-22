@@ -74,6 +74,20 @@ dns:
   nameserver-policy:
     "geosite:private,cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "geosite:gfw,geolocation-!cn": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.google.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.google.com.vn": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.google.com.hk": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.google.co.jp": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.googleapis.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.googleapis.cn": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.gstatic.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.googleusercontent.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.gvt1.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.gvt2.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.gvt3.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.ggpht.com": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.recaptcha.net": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
+    "+.pki.goog": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
 
 # ================= 2. 策略组配置 =================
 proxy-groups:
@@ -387,6 +401,56 @@ rules:
   - "PROCESS-NAME,uTorrent.exe,DIRECT"
   - "PROCESS-NAME,Thunder,DIRECT"
   - "PROCESS-NAME,Xunlei,DIRECT"
+
+  # --- Google 登录 / Play / Android 核心服务：必须前置，统一走谷歌服务 ---
+  # Google 官方网络要求中，认证、Play 更新、GCM/FCM、静态资源分别使用 accounts / play / gvt / gstatic / googleapis 等端点。
+  # 放在 direct、reject、proxy/gfw/tld-not-cn 等规则前，避免被拆到漏网之鱼或直连。
+  - "PROCESS-NAME,com.android.vending,谷歌服务"
+  - "PROCESS-NAME,com.google.android.gms,谷歌服务"
+  - "PROCESS-NAME,com.google.android.gsf,谷歌服务"
+  - "PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务"
+  - "PROCESS-NAME,com.google.android.gsf.login,谷歌服务"
+  - "DOMAIN,accounts.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.google.com.vn,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.google.com.hk,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.google.co.jp,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务"
+  - "DOMAIN,play.google.com,谷歌服务"
+  - "DOMAIN,dl.google.com,谷歌服务"
+  - "DOMAIN,dl-ssl.google.com,谷歌服务"
+  - "DOMAIN,android.apis.google.com,谷歌服务"
+  - "DOMAIN,android.clients.google.com,谷歌服务"
+  - "DOMAIN,android.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,google.com.vn,谷歌服务"
+  - "DOMAIN-SUFFIX,google.com.hk,谷歌服务"
+  - "DOMAIN-SUFFIX,google.co.jp,谷歌服务"
+  - "DOMAIN-SUFFIX,googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,googleapis.cn,谷歌服务"
+  - "DOMAIN-SUFFIX,gstatic.com,谷歌服务"
+  - "DOMAIN-SUFFIX,googleusercontent.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt1.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt2.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt3.com,谷歌服务"
+  - "DOMAIN-SUFFIX,ggpht.com,谷歌服务"
+  - "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,谷歌服务"
+  - "DOMAIN,apis.google.com,谷歌服务"
+  - "DOMAIN,ajax.googleapis.com,谷歌服务"
+  - "DOMAIN,ogs.google.com,谷歌服务"
+  - "DOMAIN,notifications.google.com,谷歌服务"
+  - "DOMAIN,payments.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,pki.goog,谷歌服务"
+  - "DOMAIN-SUFFIX,recaptcha.net,谷歌服务"
+  - "DOMAIN-SUFFIX,google-analytics.com,谷歌服务"
+  - "DOMAIN,mtalk.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,mtalk.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,fcm.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,fcm-xmpp.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gcm-http.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gcm-xmpp.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,firebaseinstallations.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,firebaselogging.googleapis.com,谷歌服务"
   
   # --- 局域网、本地与明确直连规则提前命中 ---
   - "RULE-SET,lancidr,DIRECT,no-resolve"
@@ -432,10 +496,7 @@ rules:
   # =================================================
   
   # --- 特定域名指定 ---
-  # 逻辑优化：统一交给“漏网之鱼”，避免与全局兜底策略分叉
-  - "DOMAIN-SUFFIX,googleapis.cn,漏网之鱼"
-  - "DOMAIN-SUFFIX,gstatic.com,漏网之鱼"
-  - "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,漏网之鱼"
+  # Google 核心域名已在前置规则统一交给“谷歌服务”，这里仅保留非 Google 特定域名。
   - "DOMAIN-SUFFIX,github.io,漏网之鱼"
   - "DOMAIN,v2rayse.com,漏网之鱼"
   
