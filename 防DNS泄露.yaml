@@ -65,8 +65,13 @@ dns:
   direct-nameserver: [https://223.5.5.5/dns-query]
   direct-nameserver-follow-policy: true
   nameserver-policy:
-    "geosite:private,cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "geosite:gfw,geolocation-!cn": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:private": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:geolocation-!cn": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:google": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:youtube": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:openai": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:github": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
     "+.google.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
     "+.googleapis.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
     "+.googleapis.cn": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
@@ -166,7 +171,7 @@ proxy-groups:
 
   - name: 微软服务
     type: select
-    proxies: [DIRECT, 香港-自动, 香港节点, 中国-自动, 中国节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 节点选择]
+    proxies: [DIRECT, 香港-自动, 新加坡-自动, 中国-自动, 香港节点, 新加坡节点, 中国节点, 美国-自动, 美国节点, 节点选择]
     url: "http://www.msftconnecttest.com/connecttest.txt"
     expected-status: 200
     interval: 300
@@ -513,6 +518,13 @@ rules:
   - "DOMAIN-SUFFIX,microsoftonline.com,微软服务"
   - "DOMAIN-SUFFIX,msauth.net,微软服务"
   - "DOMAIN-SUFFIX,live.com,微软服务"
+  - "DOMAIN-SUFFIX,storecatalogrevocation.storequality.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,img-prod-cms-rt-microsoft-com.akamaized.net,微软服务"
+  - "DOMAIN-SUFFIX,img-s-msn-com.akamaized.net,微软服务"
+  - "DOMAIN-SUFFIX,manage.devcenter.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,share.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,pipe.aria.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,api.cdp.microsoft.com,微软服务"
   - "DOMAIN,storeedgefd.dsx.mp.microsoft.com,微软服务"
   - "DOMAIN,livetileedge.dsx.mp.microsoft.com,微软服务"
   - "DOMAIN,licensing.mp.microsoft.com,微软服务"
