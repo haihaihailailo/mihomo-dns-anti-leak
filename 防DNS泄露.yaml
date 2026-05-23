@@ -8,6 +8,7 @@ geo-auto-update: true
 geo-update-interval: 24
 
 tcp-concurrent: true
+
 sniffer:
   enable: true
   parse-pure-ip: true
@@ -168,7 +169,7 @@ proxy-groups:
 
   - name: 微软服务
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [DIRECT, 香港-自动, 香港节点, 中国-自动, 中国节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 节点选择]
     url: "http://www.msftconnecttest.com/connecttest.txt"
     expected-status: 200
     interval: 300
@@ -519,6 +520,30 @@ rules:
   - "DOMAIN-SUFFIX,gcm-xmpp.googleapis.com,谷歌服务"
   - "DOMAIN-SUFFIX,firebaseinstallations.googleapis.com,谷歌服务"
   - "DOMAIN-SUFFIX,firebaselogging.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,displaycatalog.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,delivery.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,dl.delivery.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,prod.do.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,do.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,windowsupdate.com,微软服务"
+  - "DOMAIN-SUFFIX,update.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,download.windowsupdate.com,微软服务"
+  - "DOMAIN-SUFFIX,mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,wns.windows.com,微软服务"
+  - "DOMAIN-SUFFIX,windows.com,微软服务"
+  - "DOMAIN-SUFFIX,msedge.net,微软服务"
+  - "DOMAIN-SUFFIX,microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,microsoftonline.com,微软服务"
+  - "DOMAIN-SUFFIX,msauth.net,微软服务"
+  - "DOMAIN-SUFFIX,live.com,微软服务"
+  - "DOMAIN,storeedgefd.dsx.mp.microsoft.com,微软服务"
+  - "DOMAIN,livetileedge.dsx.mp.microsoft.com,微软服务"
+  - "DOMAIN,licensing.mp.microsoft.com,微软服务"
+  - "DOMAIN,tsfe.trafficshaping.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN,adl.windows.com,微软服务"
+  - "DOMAIN,ctldl.windowsupdate.com,微软服务"
+  - "DOMAIN,definitionupdates.microsoft.com,微软服务"
+  - "DOMAIN,msedge.api.cdp.microsoft.com,微软服务"
   - "RULE-SET,lancidr,DIRECT,no-resolve"
   - "RULE-SET,private,DIRECT"
   - "RULE-SET,direct,DIRECT"
