@@ -116,6 +116,14 @@ proxy-groups:
     interval: 300
     icon: "https://flagcdn.com/w320/cn.png"
 
+  - name: GitHub
+    type: select
+    proxies: [香港-自动, 香港节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 节点选择]
+    url: "https://github.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://github.githubassets.com/favicons/favicon.svg"
+
   - name: YouTube
     type: select
     proxies: *all_regions_with_direct
@@ -386,6 +394,10 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.yaml"
     path: "./ruleset/metacubex/youtube.yaml"
+  github:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.yaml"
+    path: "./ruleset/metacubex/github.yaml"
   microsoft:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.yaml"
@@ -418,10 +430,6 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bahamut.yaml"
     path: "./ruleset/metacubex/bahamut.yaml"
-  bilibili:
-    <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.yaml"
-    path: "./ruleset/metacubex/bilibili.yaml"
   biliintl:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.yaml"
@@ -482,8 +490,12 @@ rules:
   - "DOMAIN-SUFFIX,ggpht.com,谷歌服务"
   - "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,谷歌服务"
   - "DOMAIN,mtalk.google.com,谷歌服务"
-  - "RULE-SET,google,谷歌服务"
   - "RULE-SET,youtube,YouTube"
+  - "RULE-SET,google,谷歌服务"
+
+  - "DOMAIN-SUFFIX,github.io,GitHub"
+  - "DOMAIN,v2rayse.com,GitHub"
+  - "RULE-SET,github,GitHub"
 
   - "DOMAIN-SUFFIX,displaycatalog.mp.microsoft.com,微软服务"
   - "DOMAIN-SUFFIX,delivery.mp.microsoft.com,微软服务"
@@ -519,7 +531,6 @@ rules:
   - "RULE-SET,apple,苹果服务"
   - "RULE-SET,bahamut,动画疯"
   - "RULE-SET,biliintl,哔哩哔哩港澳台"
-  - "RULE-SET,bilibili,哔哩哔哩港澳台"
 
   - "RULE-SET,private,DIRECT"
   - "RULE-SET,reject,广告过滤"
@@ -550,8 +561,6 @@ rules:
   - "DOMAIN-KEYWORD,zalopay,越南服务"
   - "GEOIP,VN,越南服务,no-resolve"
 
-  - "DOMAIN-SUFFIX,github.io,漏网之鱼"
-  - "DOMAIN,v2rayse.com,漏网之鱼"
   - "DOMAIN-KEYWORD,midea,DIRECT"
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
 
