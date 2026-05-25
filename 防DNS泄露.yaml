@@ -25,6 +25,11 @@ tun:
   stack: mixed
   auto-route: true
   auto-detect-interface: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  strict-route: true
+  inet6-address: fdfe:dcba:9876::1/126
 
 dns:
   enable: true
@@ -33,9 +38,10 @@ dns:
   respect-rules: true
   use-system-hosts: false
   cache-algorithm: arc
-  ipv6: false
+  ipv6: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
   fake-ip-filter:
     - "+.lan"
     - "+.local"
