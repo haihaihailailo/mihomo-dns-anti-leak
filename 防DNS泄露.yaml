@@ -28,7 +28,7 @@ tun:
 
 dns:
   enable: true
-  listen: 0.0.0.0:1053
+  listen: 127.0.0.1:1053
   prefer-h3: false
   respect-rules: true
   use-system-hosts: false
@@ -47,46 +47,60 @@ dns:
     - "+.ip6.arpa"
     - "time.*.com"
     - "time.*.gov"
+    - "time.windows.com"
     - "pool.ntp.org"
+    - "+.ntp.org"
+    - "+.stun.*"
+    - "stun.*.*"
     - "localhost.work.weixin.qq.com"
   default-nameserver: [223.5.5.5, 119.29.29.29]
   nameserver:
     - https://223.5.5.5/dns-query
     - https://doh.pub/dns-query
   fallback:
-    - https://1.1.1.1/dns-query#RULES
-    - https://8.8.8.8/dns-query#RULES
+    - https://1.1.1.1/dns-query#自动选择
+    - https://8.8.8.8/dns-query#自动选择
   fallback-filter:
     geoip: true
     geoip-code: CN
     ipcidr:
       - 240.0.0.0/4
-  proxy-server-nameserver: [https://223.5.5.5/dns-query]
-  direct-nameserver: [https://223.5.5.5/dns-query]
-  direct-nameserver-follow-policy: true
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  direct-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  direct-nameserver-follow-policy: false
   nameserver-policy:
     "rule-set:private": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "rule-set:cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:geolocation-!cn": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "rule-set:google": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "rule-set:youtube": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "rule-set:openai": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "rule-set:github": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.google.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.googleapis.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.googleapis.cn": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.gstatic.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.googleusercontent.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.gvt1.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.gvt2.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.gvt3.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.ggpht.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.recaptcha.net": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.pki.goog": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.openai.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.chatgpt.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.oaistatic.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
-    "+.oaiusercontent.com": [https://1.1.1.1/dns-query#RULES, https://8.8.8.8/dns-query#RULES]
+    "rule-set:microsoft": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.download.windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.dl.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:geolocation-!cn": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:google": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:youtube": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:openai": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:github": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.google.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.googleapis.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.googleapis.cn": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.gstatic.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.googleusercontent.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.gvt1.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.gvt2.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.gvt3.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.ggpht.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.recaptcha.net": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.pki.goog": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.openai.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.chatgpt.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.oaistatic.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.oaiusercontent.com": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
 
 proxy-groups:
   - name: 节点选择
