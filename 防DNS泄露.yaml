@@ -113,7 +113,7 @@ proxy-groups:
 
   - name: 漏网之鱼
     type: select
-    proxies: &all_regions_with_direct [自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
     url: "https://www.gstatic.com/generate_204"
     expected-status: 204
     interval: 300
@@ -145,7 +145,7 @@ proxy-groups:
 
   - name: YouTube
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
     url: "https://www.youtube.com/generate_204"
     expected-status: 200/204/301/302
     interval: 300
@@ -153,7 +153,7 @@ proxy-groups:
 
   - name: Netflix
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
     url: "https://www.netflix.com"
     expected-status: 200/301/302
     interval: 300
@@ -169,7 +169,7 @@ proxy-groups:
 
   - name: 谷歌服务
     type: select
-    proxies: [新加坡节点, 日本节点, 香港节点, 美国节点, 新加坡-自动, 日本-自动, 香港-自动, 美国-自动, 节点选择]
+    proxies: [节点选择, 新加坡节点, 日本节点, 香港节点, 美国节点, 新加坡-自动, 日本-自动, 香港-自动, 美国-自动, 自动选择]
     url: "https://www.gstatic.com/generate_204"
     expected-status: 204
     interval: 300
@@ -177,7 +177,7 @@ proxy-groups:
 
   - name: 电报消息
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
     url: "https://core.telegram.org"
     expected-status: 200/301/302
     interval: 300
@@ -193,7 +193,7 @@ proxy-groups:
 
   - name: TikTok
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
     url: "https://www.tiktok.com"
     expected-status: 200/301/302
     interval: 300
@@ -201,7 +201,7 @@ proxy-groups:
 
   - name: 苹果服务
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
     url: "https://www.apple.com/library/test/success.html"
     expected-status: 200
     interval: 300
@@ -209,23 +209,15 @@ proxy-groups:
 
   - name: Spotify
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
     url: "https://open.spotify.com"
     expected-status: 200/301/302
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/spotify.svg"
 
-  - name: 动画疯
-    type: select
-    proxies: *all_regions_with_direct
-    url: "https://ani.gamer.com.tw"
-    expected-status: 200/301/302
-    interval: 300
-    icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/Bahamut.svg"
-
   - name: 哔哩哔哩港澳台
     type: select
-    proxies: *all_regions_with_direct
+    proxies: [自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
     url: "https://www.bilibili.com"
     expected-status: 200/301/302
     interval: 300
@@ -445,10 +437,6 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.yaml"
     path: "./ruleset/metacubex/apple.yaml"
-  bahamut:
-    <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bahamut.yaml"
-    path: "./ruleset/metacubex/bahamut.yaml"
   biliintl:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.yaml"
@@ -555,7 +543,6 @@ rules:
   - "RULE-SET,tiktok,TikTok"
   - "RULE-SET,spotify,Spotify"
   - "RULE-SET,apple,苹果服务"
-  - "RULE-SET,bahamut,动画疯"
   - "RULE-SET,biliintl,哔哩哔哩港澳台"
 
   - "RULE-SET,private,DIRECT"
