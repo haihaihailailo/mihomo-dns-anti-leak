@@ -29,7 +29,8 @@ tun:
     - any:53
     - tcp://any:53
   strict-route: true
-  inet6-address: fdfe:dcba:9876::1/126
+  inet6-address:
+    - fdfe:dcba:9876::1/126
 
 dns:
   enable: true
@@ -434,7 +435,7 @@ rule-providers:
   tiktok:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.yaml"
-    path: "./ruleset/metacubex/tiktok.yaml"
+    path: "./rulesset/metacubex/tiktok.yaml"
   spotify:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.yaml"
