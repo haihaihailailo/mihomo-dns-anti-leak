@@ -435,7 +435,7 @@ rule-providers:
   tiktok:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.yaml"
-    path: "./rulesset/metacubex/tiktok.yaml"
+    path: "./ruleset/metacubex/tiktok.yaml"
   spotify:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.yaml"
@@ -475,6 +475,7 @@ rules:
   - PROCESS-NAME,com.android.vending,谷歌服务 # Google Play 商店
   - PROCESS-NAME,com.google.android.gms,谷歌服务 # Google Play 服务
   - PROCESS-NAME,com.google.android.gsf,谷歌服务 # Google 服务框架
+  - PROCESS-NAME,com.google.android.gsf.login,谷歌服务 # Google 账号登录
   - PROCESS-NAME,com.google.android.partnersetup,谷歌服务 # Google Partner Setup
   - PROCESS-NAME,com.google.android.configupdater,谷歌服务 # Google ConfigUpdater
   - PROCESS-NAME,com.google.android.onetimeinitializer,谷歌服务 # Google One Time Init
@@ -531,11 +532,6 @@ rules:
   - "DOMAIN-SUFFIX,intercomcdn.com,AI"
   - "RULE-SET,openai,AI"
 
-  - "PROCESS-NAME,com.android.vending,谷歌服务"
-  - "PROCESS-NAME,com.google.android.gms,谷歌服务"
-  - "PROCESS-NAME,com.google.android.gsf,谷歌服务"
-  - "PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务"
-  - "PROCESS-NAME,com.google.android.gsf.login,谷歌服务"
   - "DOMAIN,accounts.google.com,谷歌服务"
   - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"
   - "DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务"
