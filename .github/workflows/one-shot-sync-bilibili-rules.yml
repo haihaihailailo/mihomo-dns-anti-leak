@@ -1,0 +1,56 @@
+name: One-shot sync Bilibili package rules
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Sync Bilibili rules into main config
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('防DNS泄露.yaml')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          marker = '  - PROCESS-NAME,tv.twitch.android.app,节点选择 # Twitch\n'
+          insert = (
+              '  - PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台 # 哔哩哔哩\n'
+              '  - PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台 # BiliBili 国际版 / 东南亚版\n'
+          )
+
+          if 'PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台' not in text:
+              if marker not in text:
+                  raise SystemExit('Twitch marker not found')
+              text = text.replace(marker, marker + insert, 1)
+
+          if text == original:
+              print('No changes needed.')
+          else:
+              path.write_text(text, encoding='utf-8')
+              print('Synced Bilibili package rules into 防DNS泄露.yaml')
+
+      - name: Commit sync
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露.yaml
+          git commit -m "feat: add Bilibili package routing rules to main config"
+          git push
