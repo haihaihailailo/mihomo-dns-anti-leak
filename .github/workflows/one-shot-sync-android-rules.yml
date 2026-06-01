@@ -1,0 +1,65 @@
+name: One-shot sync Android package rules
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Sync Android package rules into main config
+        shell: python
+        run: |
+          from pathlib import Path
+
+          main_path = Path('防DNS泄露.yaml')
+          snippet_path = Path('android-process-name-rules.yaml')
+
+          main = main_path.read_text(encoding='utf-8')
+          snippet = snippet_path.read_text(encoding='utf-8')
+
+          rules_marker = 'rules:\n'
+          first_keep_rule = '  - "PROCESS-NAME,aria2c,DIRECT"\n'
+
+          if rules_marker not in main:
+              raise SystemExit('main rules: marker not found')
+          if first_keep_rule not in main:
+              raise SystemExit('first keep rule marker not found')
+          if rules_marker not in snippet:
+              raise SystemExit('snippet rules: marker not found')
+
+          prefix, rest = main.split(rules_marker, 1)
+          old_android_block, suffix = rest.split(first_keep_rule, 1)
+          snippet_rules = snippet.split(rules_marker, 1)[1]
+          snippet_rules = snippet_rules.replace('  # 下方不要放 MATCH,DIRECT；把这些规则插入主配置 rules: 最前面即可。\n', '')
+          snippet_rules = snippet_rules.rstrip() + '\n  \n'
+
+          new_main = prefix + rules_marker + snippet_rules + first_keep_rule + suffix
+
+          if new_main == main:
+              print('No changes needed.')
+          else:
+              main_path.write_text(new_main, encoding='utf-8')
+              print('Synced Android package rules into 防DNS泄露.yaml')
+
+      - name: Commit sync
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露.yaml
+          git commit -m "feat: sync preventive Android package rules into main config"
+          git push
