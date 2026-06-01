@@ -1,0 +1,8 @@
+# Normalize text files
+* text=auto eol=lf
+
+# Explicit encodings / formats
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
