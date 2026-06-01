@@ -586,6 +586,33 @@ rules:
   - PROCESS-NAME,com.mynat.android,节点选择 # My NAT
   - PROCESS-NAME,com.eup.hanzii,节点选择 # Hanzii Dict
   
+  # --- 桌面端 AI / 开发工具 ---
+  - PROCESS-NAME,ChatGPT.exe,AI # ChatGPT Desktop
+  - PROCESS-NAME,Claude.exe,AI # Claude Desktop
+  - PROCESS-NAME,Perplexity.exe,AI # Perplexity Desktop
+  - PROCESS-NAME,Copilot.exe,AI # Microsoft Copilot Desktop
+  - PROCESS-NAME,Codex.exe,AI # OpenAI Codex Desktop / Windows
+  - PROCESS-NAME,codex.exe,AI # Codex CLI / Windows
+  - PROCESS-NAME,codex,AI # Codex CLI / macOS / Linux
+
+  # --- 桌面端海外社交 / 通讯 ---
+  - PROCESS-NAME,Telegram.exe,电报消息 # Telegram Desktop
+  - PROCESS-NAME,Discord.exe,节点选择 # Discord Desktop
+  - PROCESS-NAME,WhatsApp.exe,节点选择 # WhatsApp Desktop
+  - PROCESS-NAME,Signal.exe,节点选择 # Signal Desktop
+  - PROCESS-NAME,LINE.exe,节点选择 # LINE Desktop
+  - PROCESS-NAME,Messenger.exe,节点选择 # Messenger Desktop
+
+  # --- 桌面端越南服务 ---
+  - PROCESS-NAME,Zalo.exe,越南服务 # Zalo PC
+  - PROCESS-NAME,Zalo,越南服务 # Zalo macOS / Linux 兼容写法
+
+  # --- 桌面端影音 / 游戏 / 开发 ---
+  - PROCESS-NAME,Spotify.exe,Spotify # Spotify Desktop
+  - PROCESS-NAME,steam.exe,节点选择 # Steam
+  - PROCESS-NAME,steamwebhelper.exe,节点选择 # Steam Web Helper
+  - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
+  
   - "PROCESS-NAME,aria2c,DIRECT"
   - "PROCESS-NAME,aria2c.exe,DIRECT"
   - "PROCESS-NAME,BitComet,DIRECT"
