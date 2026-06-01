@@ -1,0 +1,24 @@
+# Local editor / OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.backup
+
+# Mihomo / Clash local generated cache
+ruleset/
+*.db
+cache.db
+cache.db-shm
+cache.db-wal
+
+# Local test outputs
+*.diff
+*.patch
