@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "防DNS泄露.yaml"
+      - "android-process-name-rules.yaml"
       - ".github/workflows/validate-config.yml"
   pull_request:
     paths:
       - "防DNS泄露.yaml"
+      - "android-process-name-rules.yaml"
       - ".github/workflows/validate-config.yml"
   workflow_dispatch:
 
