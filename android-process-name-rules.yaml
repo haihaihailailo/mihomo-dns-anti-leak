@@ -68,6 +68,8 @@ rules:
   - PROCESS-NAME,com.spotify.music,Spotify # Spotify
   - PROCESS-NAME,com.zhiliaoapp.musically,TikTok # TikTok 国际版
   - PROCESS-NAME,tv.twitch.android.app,节点选择 # Twitch
+  - PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台 # 哔哩哔哩
+  - PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台 # BiliBili 国际版 / 东南亚版
 
   # --- GitHub / 浏览器 / 游戏平台 ---
   - PROCESS-NAME,com.github.android,GitHub # GitHub
