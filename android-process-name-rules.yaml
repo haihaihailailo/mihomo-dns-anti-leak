@@ -28,6 +28,7 @@ rules:
   - PROCESS-NAME,com.android.vending,谷歌服务 # Google Play 商店
   - PROCESS-NAME,com.google.android.gms,谷歌服务 # Google Play 服务
   - PROCESS-NAME,com.google.android.gsf,谷歌服务 # Google 服务框架
+  - PROCESS-NAME,com.google.android.gsf.login,谷歌服务 # Google 账号登录
   - PROCESS-NAME,com.google.android.partnersetup,谷歌服务 # Google Partner Setup
   - PROCESS-NAME,com.google.android.configupdater,谷歌服务 # Google ConfigUpdater
   - PROCESS-NAME,com.google.android.onetimeinitializer,谷歌服务 # Google One Time Init
