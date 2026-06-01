@@ -457,14 +457,28 @@ rule-providers:
     path: "./ruleset/metacubex/telegramcidr.yaml"
 
 rules:
-  # --- AI / 海外社交 ---
+  # --- AI ---
   - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
   - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini
+  - PROCESS-NAME,com.anthropic.claude,AI # Claude
+  - PROCESS-NAME,ai.perplexity.app.android,AI # Perplexity
+  - PROCESS-NAME,com.microsoft.copilot,AI # Microsoft Copilot
+
+  # --- 海外社交 / 通讯 ---
   - PROCESS-NAME,com.twitter.android,节点选择 # X / Twitter
   - PROCESS-NAME,com.facebook.katana,节点选择 # Facebook
+  - PROCESS-NAME,com.facebook.orca,节点选择 # Messenger
+  - PROCESS-NAME,com.instagram.android,节点选择 # Instagram
+  - PROCESS-NAME,com.instagram.barcelona,节点选择 # Threads
   - PROCESS-NAME,org.telegram.messenger,电报消息 # Telegram
   - PROCESS-NAME,org.telegram.group,电报消息 # Turrit
   - PROCESS-NAME,com.whatsapp,节点选择 # WhatsApp
+  - PROCESS-NAME,com.reddit.frontpage,节点选择 # Reddit
+  - PROCESS-NAME,com.discord,节点选择 # Discord
+  - PROCESS-NAME,org.thoughtcrime.securesms,节点选择 # Signal
+  - PROCESS-NAME,jp.naver.line.android,节点选择 # LINE
+  - PROCESS-NAME,com.snapchat.android,节点选择 # Snapchat
+  - PROCESS-NAME,com.pinterest,节点选择 # Pinterest
 
   # --- Google 全家桶 ---
   - PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务 # Google
@@ -488,8 +502,22 @@ rules:
   - PROCESS-NAME,com.google.android.accessibility.switchaccess,谷歌服务 # 开关控制
   - PROCESS-NAME,com.google.android.printservice.recommendation,谷歌服务 # Print Service Recommendation Service
   - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView
+  - PROCESS-NAME,com.google.android.apps.photos,谷歌服务 # Google Photos
+  - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome
+  - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
+  - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
+
+  # --- YouTube / 流媒体 ---
+  - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
+  - PROCESS-NAME,com.google.android.apps.youtube.music,YouTube # YouTube Music
+  - PROCESS-NAME,com.google.android.apps.youtube.kids,YouTube # YouTube Kids
+  - PROCESS-NAME,com.netflix.mediaclient,Netflix # Netflix
+  - PROCESS-NAME,com.spotify.music,Spotify # Spotify
+  - PROCESS-NAME,com.zhiliaoapp.musically,TikTok # TikTok 国际版
+  - PROCESS-NAME,tv.twitch.android.app,节点选择 # Twitch
 
   # --- GitHub / 浏览器 / 游戏平台 ---
+  - PROCESS-NAME,com.github.android,GitHub # GitHub
   - PROCESS-NAME,com.valvesoftware.android.steam.community,节点选择 # Steam
   - PROCESS-NAME,zed.rainxch.githubstore,GitHub # GitHub Store
   - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta
