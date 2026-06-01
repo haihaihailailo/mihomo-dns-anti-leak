@@ -479,6 +479,8 @@ rules:
   - PROCESS-NAME,jp.naver.line.android,节点选择 # LINE
   - PROCESS-NAME,com.snapchat.android,节点选择 # Snapchat
   - PROCESS-NAME,com.pinterest,节点选择 # Pinterest
+  - PROCESS-NAME,com.linkedin.android,节点选择 # LinkedIn
+  - PROCESS-NAME,com.duolingo,节点选择 # Duolingo
 
   # --- Google 全家桶 ---
   - PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务 # Google
@@ -506,6 +508,7 @@ rules:
   - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome
   - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
   - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
+  - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth
 
   # --- 国内 App：按包名固定到国内服务，避免掉到漏网之鱼 ---
   - PROCESS-NAME,com.tencent.mm,国内服务 # 微信
@@ -572,6 +575,41 @@ rules:
   - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
   - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器
   - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
+  - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程
+  - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
+  - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek
+  - PROCESS-NAME,com.larus.nova,国内服务 # 豆包
+  - PROCESS-NAME,com.tencent.tmgp.cf,国内服务 # 穿越火线-枪战王者
+  - PROCESS-NAME,com.x7890.shortcutcreator,国内服务 # 创建快捷方式
+  - PROCESS-NAME,com.tryfun.intelligent,国内服务 # 春风元力
+  - PROCESS-NAME,com.ktls.fileinfo,国内服务 # 存储空间清理
+  - PROCESS-NAME,com.jingcai.apps.qualitydev,国内服务 # 到梦空间
+  - PROCESS-NAME,com.dragon.read,国内服务 # 番茄免费小说
+  - PROCESS-NAME,com.example.gxcs_app,国内服务 # 广西人社
+  - PROCESS-NAME,com.jingyao.easybike,国内服务 # 哈啰
+  - PROCESS-NAME,com.cmic.heduohao,国内服务 # 和多号
+  - PROCESS-NAME,com.lemon.lv,国内服务 # 剪映
+  - PROCESS-NAME,com.ksjhaoka.a,国内服务 # 卡世界
+  - PROCESS-NAME,com.coolapk.market,国内服务 # 酷安
+  - PROCESS-NAME,com.taou.maimai,国内服务 # 脉脉
+  - PROCESS-NAME,com.eusoft.ting.en,国内服务 # 每日英语听力
+  - PROCESS-NAME,com.mt.mtxx.mtxx,国内服务 # 美图秀秀
+  - PROCESS-NAME,com.midea.connect,国内服务 # 美信
+  - PROCESS-NAME,com.job.android,国内服务 # 前程无忧51Job
+  - PROCESS-NAME,com.redteamobile.roaming,国内服务 # 逍遥游
+  - PROCESS-NAME,com.tianyancha.skyeye,国内服务 # 天眼查
+  - PROCESS-NAME,com.newcapec.mobile.ncp,国内服务 # 完美校园
+  - PROCESS-NAME,com.tencent.weread,国内服务 # 微信读书
+  - PROCESS-NAME,com.mi.health,国内服务 # 小米运动健康
+  - PROCESS-NAME,com.xt.retouch,国内服务 # 醒图
+  - PROCESS-NAME,com.iflytek.inputmethod,国内服务 # 讯飞输入法
+  - PROCESS-NAME,com.chaoxing.mobile,国内服务 # 学习通
+  - PROCESS-NAME,cn.com.chsi.chsiapp,国内服务 # 学信网
+  - PROCESS-NAME,com.youdao.dict,国内服务 # 网易有道词典
+  - PROCESS-NAME,com.maxframing.mipad,国内服务 # 远程控制
+  - PROCESS-NAME,com.able.wisdomtree,国内服务 # 知到
+  - PROCESS-NAME,com.fifedu.fifiplat,国内服务 # 智教学
+  - PROCESS-NAME,com.zte.smarthome,国内服务 # 中兴智慧生活
 
   # --- YouTube / 流媒体 ---
   - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
