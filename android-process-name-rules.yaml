@@ -60,6 +60,24 @@ rules:
   - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
   - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
 
+  - PROCESS-NAME,com.tencent.androidqqmail,国内服务 # QQ邮箱
+  - PROCESS-NAME,com.tencent.wemeet.app,国内服务 # 腾讯会议
+  - PROCESS-NAME,com.taobao.idlefish,国内服务 # 闲鱼
+  - PROCESS-NAME,com.achievo.vipshop,国内服务 # 唯品会
+  - PROCESS-NAME,com.alibaba.wireless,国内服务 # 1688 / 阿里巴巴
+  - PROCESS-NAME,com.cainiao.wireless,国内服务 # 菜鸟
+  - PROCESS-NAME,com.fcbox.hiveconsumer,国内服务 # 丰巢
+  - PROCESS-NAME,com.intsig.camscanner,国内服务 # 扫描全能王
+  - PROCESS-NAME,com.manmanbuy.bijia,国内服务 # 慢慢买
+  - PROCESS-NAME,com.max.xiaoheihe,国内服务 # 小黑盒
+  - PROCESS-NAME,com.umetrip.android.msky.app,国内服务 # 航旅纵横
+  - PROCESS-NAME,com.oneplus.bbs,国内服务 # 一加社区
+  - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加
+  - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城
+  - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
+  - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器
+  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
+
   # --- YouTube / 流媒体 ---
   - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
   - PROCESS-NAME,com.google.android.apps.youtube.music,YouTube # YouTube Music
