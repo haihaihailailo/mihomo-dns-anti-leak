@@ -1,0 +1,65 @@
+# Android 包名分流规则片段
+# 用途：两个手机 + 平板共用同一套 mihomo / Clash Meta 配置时，按 Android 包名统一分流。
+#
+# 使用方法：
+# 1. 把 find-process-mode: always 放到主配置顶层。
+# 2. 把下方 PROCESS-NAME 规则插入主配置 rules: 的最前面。
+# 3. 保留原配置后面的 GEOSITE / GEOIP / RULE-SET / MATCH 规则。
+#
+# 注意：PROCESS-NAME 在 Android 平台匹配的是应用包名。
+# 不要把 Clash Mi 自己、银行支付、微信/QQ、国内购物、系统组件加入代理规则。
+
+find-process-mode: always
+
+rules:
+  # --- AI / 海外社交 ---
+  - PROCESS-NAME,com.openai.chatgpt,AI
+  - PROCESS-NAME,com.google.android.apps.bard,AI
+  - PROCESS-NAME,com.twitter.android,节点选择
+  - PROCESS-NAME,com.facebook.katana,节点选择
+  - PROCESS-NAME,org.telegram.messenger,电报消息
+  - PROCESS-NAME,org.telegram.group,电报消息
+  - PROCESS-NAME,com.whatsapp,节点选择
+
+  # --- Google 全家桶 ---
+  - PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务
+  - PROCESS-NAME,com.google.android.apps.maps,谷歌服务
+  - PROCESS-NAME,com.google.android.gm,谷歌服务
+  - PROCESS-NAME,com.google.android.apps.docs,谷歌服务
+  - PROCESS-NAME,com.google.android.apps.translate,谷歌服务
+  - PROCESS-NAME,com.android.vending,谷歌服务
+  - PROCESS-NAME,com.google.android.gms,谷歌服务
+  - PROCESS-NAME,com.google.android.gsf,谷歌服务
+  - PROCESS-NAME,com.google.android.partnersetup,谷歌服务
+  - PROCESS-NAME,com.google.android.configupdater,谷歌服务
+  - PROCESS-NAME,com.google.android.onetimeinitializer,谷歌服务
+  - PROCESS-NAME,com.google.android.as.oss,谷歌服务
+  - PROCESS-NAME,com.google.android.contactkeys,谷歌服务
+  - PROCESS-NAME,com.google.android.inputmethod.latin,谷歌服务
+  - PROCESS-NAME,com.google.android.apps.authenticator2,谷歌服务
+  - PROCESS-NAME,com.google.ar.core,谷歌服务
+  - PROCESS-NAME,com.google.android.marvin.talkback,谷歌服务
+  - PROCESS-NAME,com.google.android.accessibility.switchaccess,谷歌服务
+  - PROCESS-NAME,com.google.android.printservice.recommendation,谷歌服务
+  - PROCESS-NAME,com.google.android.webview,谷歌服务
+
+  # --- GitHub / 浏览器 / 游戏平台 ---
+  - PROCESS-NAME,com.valvesoftware.android.steam.community,节点选择
+  - PROCESS-NAME,zed.rainxch.githubstore,GitHub
+  - PROCESS-NAME,com.yjllq.chrome.beta,节点选择
+
+  # --- 越南 App：中国使用时也走代理 ---
+  - PROCESS-NAME,com.zing.zalo,节点选择
+  - PROCESS-NAME,com.shopee.vn,节点选择
+  - PROCESS-NAME,com.grabtaxi.passenger,节点选择
+  - PROCESS-NAME,xyz.be.customer,节点选择
+  - PROCESS-NAME,com.jtexpress.customer.vn,节点选择
+  - PROCESS-NAME,com.viettel.ViettelPost,节点选择
+  - PROCESS-NAME,com.vnp.myvinaphone,节点选择
+
+  # --- 测速 / NAT / 词典 ---
+  - PROCESS-NAME,org.zwanoo.android.speedtest,节点选择
+  - PROCESS-NAME,com.mynat.android,节点选择
+  - PROCESS-NAME,com.eup.hanzii,节点选择
+
+  # 下方不要放 MATCH,DIRECT；把这些规则插入主配置 rules: 最前面即可。
