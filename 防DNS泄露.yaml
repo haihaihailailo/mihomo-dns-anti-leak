@@ -457,6 +457,56 @@ rule-providers:
     path: "./ruleset/metacubex/telegramcidr.yaml"
 
 rules:
+  # --- AI / 海外社交 ---
+  - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
+  - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini
+  - PROCESS-NAME,com.twitter.android,节点选择 # X / Twitter
+  - PROCESS-NAME,com.facebook.katana,节点选择 # Facebook
+  - PROCESS-NAME,org.telegram.messenger,电报消息 # Telegram
+  - PROCESS-NAME,org.telegram.group,电报消息 # Turrit
+  - PROCESS-NAME,com.whatsapp,节点选择 # WhatsApp
+
+  # --- Google 全家桶 ---
+  - PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务 # Google
+  - PROCESS-NAME,com.google.android.apps.maps,谷歌服务 # Google 地图
+  - PROCESS-NAME,com.google.android.gm,谷歌服务 # Gmail
+  - PROCESS-NAME,com.google.android.apps.docs,谷歌服务 # Google 云端硬盘
+  - PROCESS-NAME,com.google.android.apps.translate,谷歌服务 # Google 翻译
+  - PROCESS-NAME,com.android.vending,谷歌服务 # Google Play 商店
+  - PROCESS-NAME,com.google.android.gms,谷歌服务 # Google Play 服务
+  - PROCESS-NAME,com.google.android.gsf,谷歌服务 # Google 服务框架
+  - PROCESS-NAME,com.google.android.partnersetup,谷歌服务 # Google Partner Setup
+  - PROCESS-NAME,com.google.android.configupdater,谷歌服务 # Google ConfigUpdater
+  - PROCESS-NAME,com.google.android.onetimeinitializer,谷歌服务 # Google One Time Init
+  - PROCESS-NAME,com.google.android.as.oss,谷歌服务 # Private Compute Services
+  - PROCESS-NAME,com.google.android.contactkeys,谷歌服务 # Android System Key Verifier
+  - PROCESS-NAME,com.google.android.inputmethod.latin,谷歌服务 # Gboard
+  - PROCESS-NAME,com.google.android.apps.authenticator2,谷歌服务 # Authenticator
+  - PROCESS-NAME,com.google.ar.core,谷歌服务 # ARCore
+  - PROCESS-NAME,com.google.android.marvin.talkback,谷歌服务 # Android 无障碍套件
+  - PROCESS-NAME,com.google.android.accessibility.switchaccess,谷歌服务 # 开关控制
+  - PROCESS-NAME,com.google.android.printservice.recommendation,谷歌服务 # Print Service Recommendation Service
+  - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView
+
+  # --- GitHub / 浏览器 / 游戏平台 ---
+  - PROCESS-NAME,com.valvesoftware.android.steam.community,节点选择 # Steam
+  - PROCESS-NAME,zed.rainxch.githubstore,GitHub # GitHub Store
+  - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta
+
+  # --- 越南 App：中国使用时也走代理，统一归到“越南服务”策略组 ---
+  - PROCESS-NAME,com.zing.zalo,越南服务 # Zalo
+  - PROCESS-NAME,com.shopee.vn,越南服务 # Shopee 越南
+  - PROCESS-NAME,com.grabtaxi.passenger,越南服务 # Grab
+  - PROCESS-NAME,xyz.be.customer,越南服务 # be
+  - PROCESS-NAME,com.jtexpress.customer.vn,越南服务 # J&T Express 越南
+  - PROCESS-NAME,com.viettel.ViettelPost,越南服务 # ViettelPost
+  - PROCESS-NAME,com.vnp.myvinaphone,越南服务 # My VNPT / Vinaphone
+
+  # --- 测速 / NAT / 词典 ---
+  - PROCESS-NAME,org.zwanoo.android.speedtest,节点选择 # Speedtest
+  - PROCESS-NAME,com.mynat.android,节点选择 # My NAT
+  - PROCESS-NAME,com.eup.hanzii,节点选择 # Hanzii Dict
+  
   - "PROCESS-NAME,aria2c,DIRECT"
   - "PROCESS-NAME,aria2c.exe,DIRECT"
   - "PROCESS-NAME,BitComet,DIRECT"
