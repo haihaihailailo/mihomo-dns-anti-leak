@@ -1,0 +1,41 @@
+# 桌面端进程名分流规则片段
+# 用途：Windows / macOS / Linux 桌面端共用 Mihomo / Clash Meta 配置时，按进程名统一分流。
+#
+# 使用方法：
+# 1. 只复制下方 PROCESS-NAME 规则到主配置 rules: 的前部，建议放在 Android 包名规则之后、BT/下载工具直连规则之前。
+# 2. 保留原配置后面的 DOMAIN / RULE-SET / GEOIP / MATCH 规则。
+#
+# 注意：
+# - 桌面端 PROCESS-NAME 匹配的是进程名，例如 Telegram.exe、Zalo.exe。
+# - 不要把 chrome.exe、msedge.exe、firefox.exe、Code.exe、Cursor.exe、node.exe 这类混合入口直接加代理。
+# - Codex CLI 如果通过 npm/Node 运行，实际进程可能是 node.exe；不建议加 node.exe，避免误伤所有 Node 程序。
+
+rules:
+  # --- 桌面端 AI / 开发工具 ---
+  - PROCESS-NAME,ChatGPT.exe,AI # ChatGPT Desktop
+  - PROCESS-NAME,Claude.exe,AI # Claude Desktop
+  - PROCESS-NAME,Perplexity.exe,AI # Perplexity Desktop
+  - PROCESS-NAME,Copilot.exe,AI # Microsoft Copilot Desktop
+  - PROCESS-NAME,Codex.exe,AI # OpenAI Codex Desktop / Windows
+  - PROCESS-NAME,codex.exe,AI # Codex CLI / Windows
+  - PROCESS-NAME,codex,AI # Codex CLI / macOS / Linux
+
+  # --- 桌面端海外社交 / 通讯 ---
+  - PROCESS-NAME,Telegram.exe,电报消息 # Telegram Desktop
+  - PROCESS-NAME,Discord.exe,节点选择 # Discord Desktop
+  - PROCESS-NAME,WhatsApp.exe,节点选择 # WhatsApp Desktop
+  - PROCESS-NAME,Signal.exe,节点选择 # Signal Desktop
+  - PROCESS-NAME,LINE.exe,节点选择 # LINE Desktop
+  - PROCESS-NAME,Messenger.exe,节点选择 # Messenger Desktop
+
+  # --- 桌面端越南服务 ---
+  - PROCESS-NAME,Zalo.exe,越南服务 # Zalo PC
+  - PROCESS-NAME,Zalo,越南服务 # Zalo macOS / Linux 兼容写法
+
+  # --- 桌面端影音 / 游戏 / 开发 ---
+  - PROCESS-NAME,Spotify.exe,Spotify # Spotify Desktop
+  - PROCESS-NAME,steam.exe,节点选择 # Steam
+  - PROCESS-NAME,steamwebhelper.exe,节点选择 # Steam Web Helper
+  - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
+
+  # 下方不要放 MATCH,DIRECT；把这些规则插入主配置 rules: 前部即可。
