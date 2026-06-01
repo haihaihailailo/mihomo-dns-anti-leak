@@ -1,4 +1,4 @@
-name: One-shot add domestic package rules
+name: One-shot add reviewed package rules
 
 on:
   push:
@@ -16,49 +16,84 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Add domestic package rules to main and snippet
+      - name: Add reviewed package rules to main and snippet
         shell: python
         run: |
           from pathlib import Path
 
-          rules = [
-              '  - PROCESS-NAME,com.tencent.androidqqmail,国内服务 # QQ邮箱\n',
-              '  - PROCESS-NAME,com.tencent.wemeet.app,国内服务 # 腾讯会议\n',
-              '  - PROCESS-NAME,com.taobao.idlefish,国内服务 # 闲鱼\n',
-              '  - PROCESS-NAME,com.achievo.vipshop,国内服务 # 唯品会\n',
-              '  - PROCESS-NAME,com.alibaba.wireless,国内服务 # 1688 / 阿里巴巴\n',
-              '  - PROCESS-NAME,com.cainiao.wireless,国内服务 # 菜鸟\n',
-              '  - PROCESS-NAME,com.fcbox.hiveconsumer,国内服务 # 丰巢\n',
-              '  - PROCESS-NAME,com.intsig.camscanner,国内服务 # 扫描全能王\n',
-              '  - PROCESS-NAME,com.manmanbuy.bijia,国内服务 # 慢慢买\n',
-              '  - PROCESS-NAME,com.max.xiaoheihe,国内服务 # 小黑盒\n',
-              '  - PROCESS-NAME,com.umetrip.android.msky.app,国内服务 # 航旅纵横\n',
-              '  - PROCESS-NAME,com.oneplus.bbs,国内服务 # 一加社区\n',
-              '  - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加\n',
-              '  - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城\n',
-              '  - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店\n',
-              '  - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器\n',
-              '  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架\n',
+          google_rules = [
+              '  - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth\n',
+          ]
+          overseas_rules = [
+              '  - PROCESS-NAME,com.linkedin.android,节点选择 # LinkedIn\n',
+              '  - PROCESS-NAME,com.duolingo,节点选择 # Duolingo\n',
+          ]
+          domestic_rules = [
+              '  - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程\n',
+              '  - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑\n',
+              '  - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek\n',
+              '  - PROCESS-NAME,com.larus.nova,国内服务 # 豆包\n',
+              '  - PROCESS-NAME,com.tencent.tmgp.cf,国内服务 # 穿越火线-枪战王者\n',
+              '  - PROCESS-NAME,com.x7890.shortcutcreator,国内服务 # 创建快捷方式\n',
+              '  - PROCESS-NAME,com.tryfun.intelligent,国内服务 # 春风元力\n',
+              '  - PROCESS-NAME,com.ktls.fileinfo,国内服务 # 存储空间清理\n',
+              '  - PROCESS-NAME,com.jingcai.apps.qualitydev,国内服务 # 到梦空间\n',
+              '  - PROCESS-NAME,com.dragon.read,国内服务 # 番茄免费小说\n',
+              '  - PROCESS-NAME,com.example.gxcs_app,国内服务 # 广西人社\n',
+              '  - PROCESS-NAME,com.jingyao.easybike,国内服务 # 哈啰\n',
+              '  - PROCESS-NAME,com.cmic.heduohao,国内服务 # 和多号\n',
+              '  - PROCESS-NAME,com.lemon.lv,国内服务 # 剪映\n',
+              '  - PROCESS-NAME,com.ksjhaoka.a,国内服务 # 卡世界\n',
+              '  - PROCESS-NAME,com.coolapk.market,国内服务 # 酷安\n',
+              '  - PROCESS-NAME,com.taou.maimai,国内服务 # 脉脉\n',
+              '  - PROCESS-NAME,com.eusoft.ting.en,国内服务 # 每日英语听力\n',
+              '  - PROCESS-NAME,com.mt.mtxx.mtxx,国内服务 # 美图秀秀\n',
+              '  - PROCESS-NAME,com.midea.connect,国内服务 # 美信\n',
+              '  - PROCESS-NAME,com.job.android,国内服务 # 前程无忧51Job\n',
+              '  - PROCESS-NAME,com.redteamobile.roaming,国内服务 # 逍遥游\n',
+              '  - PROCESS-NAME,com.tianyancha.skyeye,国内服务 # 天眼查\n',
+              '  - PROCESS-NAME,com.newcapec.mobile.ncp,国内服务 # 完美校园\n',
+              '  - PROCESS-NAME,com.tencent.weread,国内服务 # 微信读书\n',
+              '  - PROCESS-NAME,com.mi.health,国内服务 # 小米运动健康\n',
+              '  - PROCESS-NAME,com.xt.retouch,国内服务 # 醒图\n',
+              '  - PROCESS-NAME,com.iflytek.inputmethod,国内服务 # 讯飞输入法\n',
+              '  - PROCESS-NAME,com.chaoxing.mobile,国内服务 # 学习通\n',
+              '  - PROCESS-NAME,cn.com.chsi.chsiapp,国内服务 # 学信网\n',
+              '  - PROCESS-NAME,com.youdao.dict,国内服务 # 网易有道词典\n',
+              '  - PROCESS-NAME,com.maxframing.mipad,国内服务 # 远程控制\n',
+              '  - PROCESS-NAME,com.able.wisdomtree,国内服务 # 知到\n',
+              '  - PROCESS-NAME,com.fifedu.fifiplat,国内服务 # 智教学\n',
+              '  - PROCESS-NAME,com.zte.smarthome,国内服务 # 中兴智慧生活\n',
           ]
 
+          insertions = [
+              ('  - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto\n', google_rules),
+              ('  - PROCESS-NAME,com.pinterest,节点选择 # Pinterest\n', overseas_rules),
+              ('  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架\n', domestic_rules),
+          ]
           files = [Path('防DNS泄露.yaml'), Path('android-process-name-rules.yaml')]
           changed = False
+
           for path in files:
               text = path.read_text(encoding='utf-8')
-              marker = '  # --- YouTube / 流媒体 ---\n'
-              if marker not in text:
-                  raise SystemExit(f'marker not found in {path}')
-              missing = [line for line in rules if line not in text]
-              if missing:
-                  text = text.replace(marker, ''.join(missing) + '\n' + marker, 1)
+              for marker, rules in insertions:
+                  if marker not in text:
+                      raise SystemExit(f'marker not found in {path}: {marker.strip()}')
+                  missing = [line for line in rules if line not in text]
+                  if missing:
+                      text = text.replace(marker, marker + ''.join(missing), 1)
+                      print(f'{path}: added {len(missing)} rules after {marker.strip()}')
+                      changed = True
+              if changed:
                   path.write_text(text, encoding='utf-8')
-                  print(f'{path}: added {len(missing)} rules')
-                  changed = True
-              else:
-                  print(f'{path}: no missing rules')
 
           if not changed:
               print('No changes needed.')
+
+      - name: Validate YAML
+        shell: bash
+        run: |
+          ruby -e 'require "yaml"; YAML.safe_load_file("防DNS泄露.yaml", aliases: true); YAML.safe_load_file("android-process-name-rules.yaml", aliases: true); puts "YAML OK"'
 
       - name: Commit patch
         shell: bash
@@ -70,5 +105,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add 防DNS泄露.yaml android-process-name-rules.yaml
-          git commit -m "feat: add preventive domestic package rules"
+          git commit -m "feat: add reviewed Android package routing rules"
           git push
