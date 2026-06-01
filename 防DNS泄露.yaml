@@ -128,7 +128,7 @@ proxy-groups:
 
   - name: 越南服务
     type: select
-    proxies: [DIRECT, 越南-自动, 越南节点, 新加坡-自动, 新加坡节点, 节点选择]
+    proxies: [越南-自动, 越南节点, 新加坡-自动, 新加坡节点, 节点选择, DIRECT]
     url: "https://zalo.me"
     expected-status: 200/301/302
     interval: 300
@@ -520,7 +520,7 @@ rules:
   - "PROCESS-NAME,uTorrent.exe,DIRECT"
   - "PROCESS-NAME,Thunder,DIRECT"
   - "PROCESS-NAME,Xunlei,DIRECT"
-  - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT"
+  # - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT" # 可选：全局禁用 QUIC/HTTP3；默认注释，避免影响视频和部分 App 性能
 
   - "DOMAIN-SUFFIX,chatgpt.com,AI"
   - "DOMAIN-SUFFIX,openai.com,AI"
