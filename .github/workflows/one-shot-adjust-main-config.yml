@@ -1,0 +1,57 @@
+name: One-shot adjust main config
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Patch 防DNS泄露.yaml
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('防DNS泄露.yaml')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          old_vn = '    proxies: [DIRECT, 越南-自动, 越南节点, 新加坡-自动, 新加坡节点, 节点选择]\n'
+          new_vn = '    proxies: [越南-自动, 越南节点, 新加坡-自动, 新加坡节点, 节点选择, DIRECT]\n'
+          if old_vn not in text and new_vn not in text:
+              raise SystemExit('越南服务 proxies line not found')
+          text = text.replace(old_vn, new_vn, 1)
+
+          old_quic = '  - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT"\n'
+          new_quic = '  # - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT" # 可选：全局禁用 QUIC/HTTP3；默认注释，避免影响视频和部分 App 性能\n'
+          if old_quic not in text and new_quic not in text:
+              raise SystemExit('QUIC reject rule not found')
+          text = text.replace(old_quic, new_quic, 1)
+
+          if text == original:
+              print('No config changes needed.')
+          else:
+              path.write_text(text, encoding='utf-8')
+              print('Patched 防DNS泄露.yaml')
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露.yaml
+          git commit -m "fix: adjust Vietnam routing and QUIC handling"
+          git push
