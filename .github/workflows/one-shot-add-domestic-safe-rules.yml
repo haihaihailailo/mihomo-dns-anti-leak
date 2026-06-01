@@ -1,0 +1,74 @@
+name: One-shot add domestic package rules
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Add domestic package rules to main and snippet
+        shell: python
+        run: |
+          from pathlib import Path
+
+          rules = [
+              '  - PROCESS-NAME,com.tencent.androidqqmail,国内服务 # QQ邮箱\n',
+              '  - PROCESS-NAME,com.tencent.wemeet.app,国内服务 # 腾讯会议\n',
+              '  - PROCESS-NAME,com.taobao.idlefish,国内服务 # 闲鱼\n',
+              '  - PROCESS-NAME,com.achievo.vipshop,国内服务 # 唯品会\n',
+              '  - PROCESS-NAME,com.alibaba.wireless,国内服务 # 1688 / 阿里巴巴\n',
+              '  - PROCESS-NAME,com.cainiao.wireless,国内服务 # 菜鸟\n',
+              '  - PROCESS-NAME,com.fcbox.hiveconsumer,国内服务 # 丰巢\n',
+              '  - PROCESS-NAME,com.intsig.camscanner,国内服务 # 扫描全能王\n',
+              '  - PROCESS-NAME,com.manmanbuy.bijia,国内服务 # 慢慢买\n',
+              '  - PROCESS-NAME,com.max.xiaoheihe,国内服务 # 小黑盒\n',
+              '  - PROCESS-NAME,com.umetrip.android.msky.app,国内服务 # 航旅纵横\n',
+              '  - PROCESS-NAME,com.oneplus.bbs,国内服务 # 一加社区\n',
+              '  - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加\n',
+              '  - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城\n',
+              '  - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店\n',
+              '  - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器\n',
+              '  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架\n',
+          ]
+
+          files = [Path('防DNS泄露.yaml'), Path('android-process-name-rules.yaml')]
+          changed = False
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              marker = '  # --- YouTube / 流媒体 ---\n'
+              if marker not in text:
+                  raise SystemExit(f'marker not found in {path}')
+              missing = [line for line in rules if line not in text]
+              if missing:
+                  text = text.replace(marker, ''.join(missing) + '\n' + marker, 1)
+                  path.write_text(text, encoding='utf-8')
+                  print(f'{path}: added {len(missing)} rules')
+                  changed = True
+              else:
+                  print(f'{path}: no missing rules')
+
+          if not changed:
+              print('No changes needed.')
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露.yaml android-process-name-rules.yaml
+          git commit -m "feat: add preventive domestic package rules"
+          git push
