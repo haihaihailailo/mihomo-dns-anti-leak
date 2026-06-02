@@ -514,6 +514,7 @@ rules:
   - PROCESS-NAME,com.tencent.mm,国内服务 # 微信
   - PROCESS-NAME,com.tencent.mobileqq,国内服务 # QQ
   - PROCESS-NAME,com.tencent.tim,国内服务 # TIM
+  - PROCESS-NAME,com.tencent.soter.soterserver,国内服务 # SoterService / 腾讯安全认证服务
   - PROCESS-NAME,com.sina.weibo,国内服务 # 微博
   - PROCESS-NAME,com.zhihu.android,国内服务 # 知乎
   - PROCESS-NAME,com.eg.android.AlipayGphone,国内服务 # 支付宝
