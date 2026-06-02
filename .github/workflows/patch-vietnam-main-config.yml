@@ -1,4 +1,4 @@
-name: Patch remaining installed package rules
+name: Patch LAN direct priority
 
 on:
   push:
@@ -25,120 +25,31 @@ jobs:
           path = Path('防DNS泄露.yaml')
           text = path.read_text(encoding='utf-8')
 
-          def insert_after(marker, rules):
-              global text
-              block = ''.join(r + '\n' for r in rules if r.split(',')[1] not in text)
-              if not block:
-                  return
+          marker = 'rules:\n'
+          lan_block = '''  # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
+  - "RULE-SET,private,DIRECT"
+  - "GEOIP,LAN,DIRECT,no-resolve"
+  - "IP-CIDR,0.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
+  - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
+  - "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,224.0.0.0/4,DIRECT,no-resolve"
+  - "IP-CIDR,255.255.255.255/32,DIRECT,no-resolve"
+  - "IP-CIDR6,::1/128,DIRECT,no-resolve"
+  - "IP-CIDR6,fc00::/7,DIRECT,no-resolve"
+  - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
+  - "DOMAIN-SUFFIX,local,DIRECT"
+  - "DOMAIN-SUFFIX,lan,DIRECT"
+
+'''
+
+          if '局域网 / 私有地址：最高优先级直连' not in text:
               if marker not in text:
-                  raise SystemExit('marker not found: ' + marker)
-              text = text.replace(marker, marker + block, 1)
-
-          domestic_pkgs = [
-              ('com.heytap.cloud', 'HeyTap 云服务'),
-              ('com.heytap.mcs', 'HeyTap 系统消息/推送'),
-              ('com.heytap.openid', 'HeyTap OpenID'),
-              ('com.heytap.vip', 'HeyTap 账号服务'),
-              ('com.heytap.htms', 'HeyTap 移动服务'),
-              ('com.heytap.tas', 'HeyTap 系统卡包'),
-              ('com.heytap.accessory', 'HeyTap 设备快连'),
-              ('com.heytap.mydevices', 'HeyTap 设备空间'),
-              ('com.heytap.opluscarlink', 'OPPO CarLink'),
-              ('andes.oplus.documentsreader', 'OPPO 文档'),
-              ('com.coloros.findmyphone', 'ColorOS 查找手机'),
-              ('com.coloros.oshare', 'OPPO互传'),
-              ('com.coloros.phonemanager', 'ColorOS 手机管家'),
-              ('com.coloros.filemanager', 'ColorOS 文件管理'),
-              ('com.coloros.gallery3d', 'ColorOS 相册'),
-              ('com.coloros.weather2', 'ColorOS 天气'),
-              ('com.coloros.weather.service', 'ColorOS 天气服务'),
-              ('com.coloros.note', 'ColorOS 便签'),
-              ('com.coloros.calendar', 'ColorOS 日历'),
-              ('com.coloros.video', 'ColorOS 视频'),
-              ('com.coloros.backuprestore', 'ColorOS 备份恢复'),
-              ('com.coloros.remoteguardservice', 'ColorOS 远程守护'),
-              ('com.coloros.operationManual', 'ColorOS 帮助与反馈'),
-              ('com.coloros.assistantscreen', 'ColorOS 速览'),
-              ('com.coloros.translate', 'ColorOS 翻译'),
-              ('com.oplus.account', 'OPLUS 账号中心'),
-              ('com.oplus.vip', 'OPLUS 账号服务'),
-              ('com.oplus.ota', 'OPLUS 软件更新'),
-              ('com.oplus.romupdate', 'OPLUS ROM更新'),
-              ('com.oplus.sau', 'OPLUS 系统升级服务'),
-              ('com.oplus.cota', 'OPLUS 配置更新'),
-              ('com.oplus.apprecover', 'OPLUS 应用找回'),
-              ('com.oplus.pay', 'OPLUS 钱包/支付'),
-              ('com.oplus.safecenter', 'OPLUS 安全中心'),
-              ('com.oplus.games', 'OPLUS 游戏助手'),
-              ('com.oplus.ocar', 'OPLUS Car+'),
-              ('com.oplus.linker', 'OPLUS 设备互联'),
-              ('com.oplus.cast', 'OPLUS 投屏'),
-              ('com.oplus.remotecontrol', 'OPLUS 远程控制'),
-              ('com.oplus.dfs', 'OPLUS 跨设备文件'),
-              ('com.oplus.melody', 'OPLUS 耳机服务'),
-              ('com.oplus.location', 'OPLUS 定位服务'),
-              ('com.oplus.acc.gac', 'OPLUS 智慧云加速'),
-              ('com.oplus.networksense', 'OPLUS 网络感知'),
-              ('com.oplus.nas', 'OPLUS 网络服务'),
-              ('com.oplus.nhs', 'OPLUS 网络健康服务'),
-              ('com.oplus.beaconlink', 'OPLUS 无网畅聊'),
-              ('com.oplus.healthservice', 'OPLUS 健康数据平台'),
-              ('com.oplus.aiwriter', 'OPLUS AI写作'),
-              ('com.oplus.aiunit', 'OPLUS AI服务引擎'),
-              ('com.oplus.aicall', 'OPLUS AI通话'),
-              ('com.oplus.aimemory', 'OPLUS 小布记忆'),
-              ('com.oplus.owork', 'OPLUS OWork'),
-              ('com.newcall', '国内新通话'),
-              ('com.ted.number', '智能识别陌生号码'),
-              ('com.opos.ads', '国内智能推荐服务'),
-              ('com.xiaomi.xmsf', '小米服务框架'),
-              ('com.xiaomi.account', '小米账号'),
-              ('com.miui.cloudservice', '小米云服务'),
-              ('com.miui.cloudbackup', '小米云备份'),
-              ('com.miui.micloudsync', 'MiCloud同步'),
-              ('com.xiaomi.micloud.sdk', '小米云SDK'),
-              ('com.miui.newmidrive', '小米云盘'),
-              ('com.xiaomi.finddevice', '小米查找设备'),
-              ('com.miui.findmy', 'MIUI查找设备'),
-              ('com.xiaomi.mi_connect_service', '小米互联通信服务'),
-              ('com.miui.mishare.connectivity', '小米互传'),
-              ('com.xiaomi.mirror', '小米跨屏协同'),
-              ('com.milink.service', '设备互联'),
-              ('com.xiaomi.payment', '小米支付'),
-              ('com.miui.weather2', 'MIUI 天气'),
-              ('com.miui.gallery', 'MIUI 相册'),
-              ('com.miui.notes', 'MIUI 笔记'),
-              ('com.miui.securitycenter', 'MIUI 安全中心'),
-              ('com.miui.securitymanager', 'MIUI 安全管理'),
-              ('com.miui.packageinstaller', 'MIUI 包管理'),
-              ('com.miui.hybrid', 'MIUI 快应用框架'),
-              ('com.xiaomi.gamecenter.sdk.service', '小米游戏服务'),
-              ('com.xiaomi.migameservice', '小米游戏AI服务'),
-              ('com.xiaomi.minigame', '小米小游戏服务'),
-              ('com.miui.yellowpage', 'MIUI 生活黄页'),
-              ('com.miui.bugreport', 'MIUI 用户反馈'),
-              ('com.miui.personalassistant', 'MIUI 智能助理'),
-              ('com.xiaomi.mibrain.speech', '小米语音引擎'),
-              ('com.miui.voiceassist', '小爱同学'),
-              ('com.miui.voiceassistProxy', '小爱代理'),
-              ('com.xiaomi.scanner', '小米扫描'),
-              ('com.miui.cleanmaster', 'MIUI 垃圾清理'),
-              ('com.xiaomi.ugd', '小米 GPU驱动更新'),
-              ('com.android.updater', '系统更新'),
-              ('com.lbe.security.miui', 'MIUI 权限管理服务'),
-              ('com.miuix.editor', 'MIUI 编辑组件'),
-              ('com.mobiletools.systemhelper', 'SystemHelper'),
-          ]
-          domestic_rules = [f'  - PROCESS-NAME,{pkg},国内服务 # {name}' for pkg, name in domestic_pkgs]
-          insert_after('  - PROCESS-NAME,com.unionpay.tsmservice,国内服务 # 银联可信服务安全组件\n', domestic_rules)
-
-          microsoft_pkgs = [
-              ('com.microsoft.appmanager', '连接至 Windows'),
-              ('com.microsoft.deviceintegrationservice', 'Microsoft Device Integration Service'),
-              ('com.microsoftsdk.crossdeviceservicebroker', 'Microsoft Cross Device Service Broker'),
-          ]
-          microsoft_rules = [f'  - PROCESS-NAME,{pkg},微软服务 # {name}' for pkg, name in microsoft_pkgs]
-          insert_after('  - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth\n', microsoft_rules)
+                  raise SystemExit('rules marker not found')
+              text = text.replace(marker, marker + lan_block, 1)
 
           path.write_text(text, encoding='utf-8')
           PY
@@ -149,5 +60,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.BOT_PAT }}@github.com/${{ github.repository }}.git"
           git add 防DNS泄露.yaml
-          git commit -m "add remaining installed package rules" || exit 0
+          git commit -m "prioritize LAN direct rules" || exit 0
           git push
