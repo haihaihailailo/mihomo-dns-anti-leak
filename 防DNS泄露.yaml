@@ -503,9 +503,9 @@ rules:
   - PROCESS-NAME,com.google.android.marvin.talkback,谷歌服务 # Android 无障碍套件
   - PROCESS-NAME,com.google.android.accessibility.switchaccess,谷歌服务 # 开关控制
   - PROCESS-NAME,com.google.android.printservice.recommendation,谷歌服务 # Print Service Recommendation Service
-  - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView
+  # - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView（WebView 不按包名固定，交给域名规则分流）
   - PROCESS-NAME,com.google.android.apps.photos,谷歌服务 # Google Photos
-  - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome
+  # - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome（浏览器不按包名固定，交给域名规则分流）
   - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
   - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
   - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth
@@ -573,7 +573,7 @@ rules:
   - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加
   - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城
   - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
-  - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器
+  # - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器（浏览器不按包名固定，交给域名规则分流）
   - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
   - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程
   - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
@@ -626,7 +626,7 @@ rules:
   - PROCESS-NAME,com.github.android,GitHub # GitHub
   - PROCESS-NAME,com.valvesoftware.android.steam.community,节点选择 # Steam
   - PROCESS-NAME,zed.rainxch.githubstore,GitHub # GitHub Store
-  - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta
+  # - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta（浏览器不按包名固定，交给域名规则分流）
 
   # --- 越南 App：中国使用时也走代理，统一归到“越南服务”策略组 ---
   - PROCESS-NAME,com.zing.zalo,越南服务 # Zalo
