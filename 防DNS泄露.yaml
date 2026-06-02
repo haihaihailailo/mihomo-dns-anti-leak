@@ -862,6 +862,10 @@ rules:
 
   - "DOMAIN-KEYWORD,midea,DIRECT"
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
+  - "DOMAIN-SUFFIX,coolapk.com,国内服务"
+  - "DOMAIN-SUFFIX,www.coolapk.com,国内服务"
+  - "DOMAIN-SUFFIX,m.coolapk.com,国内服务"
+  - "DOMAIN-KEYWORD,coolapk,国内服务"
 
   - "RULE-SET,cn,国内服务"
   - "GEOIP,CN,国内服务,no-resolve"
