@@ -509,6 +509,9 @@ rules:
   - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
   - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
   - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth
+  - PROCESS-NAME,com.microsoft.appmanager,微软服务 # 连接至 Windows
+  - PROCESS-NAME,com.microsoft.deviceintegrationservice,微软服务 # Microsoft Device Integration Service
+  - PROCESS-NAME,com.microsoftsdk.crossdeviceservicebroker,微软服务 # Microsoft Cross Device Service Broker
 
   # --- 国内 App：按包名固定到国内服务，避免掉到漏网之鱼 ---
   - PROCESS-NAME,com.tencent.mm,国内服务 # 微信
@@ -637,6 +640,99 @@ rules:
   - PROCESS-NAME,com.android.browser,国内服务 # 国内系统浏览器
   - PROCESS-NAME,com.finshell.wallet,国内服务 # 钱包
   - PROCESS-NAME,com.unionpay.tsmservice,国内服务 # 银联可信服务安全组件
+  - PROCESS-NAME,com.heytap.cloud,国内服务 # HeyTap 云服务
+  - PROCESS-NAME,com.heytap.mcs,国内服务 # HeyTap 系统消息/推送
+  - PROCESS-NAME,com.heytap.openid,国内服务 # HeyTap OpenID
+  - PROCESS-NAME,com.heytap.vip,国内服务 # HeyTap 账号服务
+  - PROCESS-NAME,com.heytap.htms,国内服务 # HeyTap 移动服务
+  - PROCESS-NAME,com.heytap.tas,国内服务 # HeyTap 系统卡包
+  - PROCESS-NAME,com.heytap.accessory,国内服务 # HeyTap 设备快连
+  - PROCESS-NAME,com.heytap.mydevices,国内服务 # HeyTap 设备空间
+  - PROCESS-NAME,com.heytap.opluscarlink,国内服务 # OPPO CarLink
+  - PROCESS-NAME,andes.oplus.documentsreader,国内服务 # OPPO 文档
+  - PROCESS-NAME,com.coloros.findmyphone,国内服务 # ColorOS 查找手机
+  - PROCESS-NAME,com.coloros.oshare,国内服务 # OPPO互传
+  - PROCESS-NAME,com.coloros.phonemanager,国内服务 # ColorOS 手机管家
+  - PROCESS-NAME,com.coloros.filemanager,国内服务 # ColorOS 文件管理
+  - PROCESS-NAME,com.coloros.gallery3d,国内服务 # ColorOS 相册
+  - PROCESS-NAME,com.coloros.weather2,国内服务 # ColorOS 天气
+  - PROCESS-NAME,com.coloros.weather.service,国内服务 # ColorOS 天气服务
+  - PROCESS-NAME,com.coloros.note,国内服务 # ColorOS 便签
+  - PROCESS-NAME,com.coloros.calendar,国内服务 # ColorOS 日历
+  - PROCESS-NAME,com.coloros.video,国内服务 # ColorOS 视频
+  - PROCESS-NAME,com.coloros.backuprestore,国内服务 # ColorOS 备份恢复
+  - PROCESS-NAME,com.coloros.remoteguardservice,国内服务 # ColorOS 远程守护
+  - PROCESS-NAME,com.coloros.operationManual,国内服务 # ColorOS 帮助与反馈
+  - PROCESS-NAME,com.coloros.assistantscreen,国内服务 # ColorOS 速览
+  - PROCESS-NAME,com.coloros.translate,国内服务 # ColorOS 翻译
+  - PROCESS-NAME,com.oplus.account,国内服务 # OPLUS 账号中心
+  - PROCESS-NAME,com.oplus.vip,国内服务 # OPLUS 账号服务
+  - PROCESS-NAME,com.oplus.ota,国内服务 # OPLUS 软件更新
+  - PROCESS-NAME,com.oplus.romupdate,国内服务 # OPLUS ROM更新
+  - PROCESS-NAME,com.oplus.sau,国内服务 # OPLUS 系统升级服务
+  - PROCESS-NAME,com.oplus.cota,国内服务 # OPLUS 配置更新
+  - PROCESS-NAME,com.oplus.apprecover,国内服务 # OPLUS 应用找回
+  - PROCESS-NAME,com.oplus.pay,国内服务 # OPLUS 钱包/支付
+  - PROCESS-NAME,com.oplus.safecenter,国内服务 # OPLUS 安全中心
+  - PROCESS-NAME,com.oplus.games,国内服务 # OPLUS 游戏助手
+  - PROCESS-NAME,com.oplus.ocar,国内服务 # OPLUS Car+
+  - PROCESS-NAME,com.oplus.linker,国内服务 # OPLUS 设备互联
+  - PROCESS-NAME,com.oplus.cast,国内服务 # OPLUS 投屏
+  - PROCESS-NAME,com.oplus.remotecontrol,国内服务 # OPLUS 远程控制
+  - PROCESS-NAME,com.oplus.dfs,国内服务 # OPLUS 跨设备文件
+  - PROCESS-NAME,com.oplus.melody,国内服务 # OPLUS 耳机服务
+  - PROCESS-NAME,com.oplus.location,国内服务 # OPLUS 定位服务
+  - PROCESS-NAME,com.oplus.acc.gac,国内服务 # OPLUS 智慧云加速
+  - PROCESS-NAME,com.oplus.networksense,国内服务 # OPLUS 网络感知
+  - PROCESS-NAME,com.oplus.nas,国内服务 # OPLUS 网络服务
+  - PROCESS-NAME,com.oplus.nhs,国内服务 # OPLUS 网络健康服务
+  - PROCESS-NAME,com.oplus.beaconlink,国内服务 # OPLUS 无网畅聊
+  - PROCESS-NAME,com.oplus.healthservice,国内服务 # OPLUS 健康数据平台
+  - PROCESS-NAME,com.oplus.aiwriter,国内服务 # OPLUS AI写作
+  - PROCESS-NAME,com.oplus.aiunit,国内服务 # OPLUS AI服务引擎
+  - PROCESS-NAME,com.oplus.aicall,国内服务 # OPLUS AI通话
+  - PROCESS-NAME,com.oplus.aimemory,国内服务 # OPLUS 小布记忆
+  - PROCESS-NAME,com.oplus.owork,国内服务 # OPLUS OWork
+  - PROCESS-NAME,com.newcall,国内服务 # 国内新通话
+  - PROCESS-NAME,com.ted.number,国内服务 # 智能识别陌生号码
+  - PROCESS-NAME,com.opos.ads,国内服务 # 国内智能推荐服务
+  - PROCESS-NAME,com.xiaomi.xmsf,国内服务 # 小米服务框架
+  - PROCESS-NAME,com.xiaomi.account,国内服务 # 小米账号
+  - PROCESS-NAME,com.miui.cloudservice,国内服务 # 小米云服务
+  - PROCESS-NAME,com.miui.cloudbackup,国内服务 # 小米云备份
+  - PROCESS-NAME,com.miui.micloudsync,国内服务 # MiCloud同步
+  - PROCESS-NAME,com.xiaomi.micloud.sdk,国内服务 # 小米云SDK
+  - PROCESS-NAME,com.miui.newmidrive,国内服务 # 小米云盘
+  - PROCESS-NAME,com.xiaomi.finddevice,国内服务 # 小米查找设备
+  - PROCESS-NAME,com.miui.findmy,国内服务 # MIUI查找设备
+  - PROCESS-NAME,com.xiaomi.mi_connect_service,国内服务 # 小米互联通信服务
+  - PROCESS-NAME,com.miui.mishare.connectivity,国内服务 # 小米互传
+  - PROCESS-NAME,com.xiaomi.mirror,国内服务 # 小米跨屏协同
+  - PROCESS-NAME,com.milink.service,国内服务 # 设备互联
+  - PROCESS-NAME,com.xiaomi.payment,国内服务 # 小米支付
+  - PROCESS-NAME,com.miui.weather2,国内服务 # MIUI 天气
+  - PROCESS-NAME,com.miui.gallery,国内服务 # MIUI 相册
+  - PROCESS-NAME,com.miui.notes,国内服务 # MIUI 笔记
+  - PROCESS-NAME,com.miui.securitycenter,国内服务 # MIUI 安全中心
+  - PROCESS-NAME,com.miui.securitymanager,国内服务 # MIUI 安全管理
+  - PROCESS-NAME,com.miui.packageinstaller,国内服务 # MIUI 包管理
+  - PROCESS-NAME,com.miui.hybrid,国内服务 # MIUI 快应用框架
+  - PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,国内服务 # 小米游戏服务
+  - PROCESS-NAME,com.xiaomi.migameservice,国内服务 # 小米游戏AI服务
+  - PROCESS-NAME,com.xiaomi.minigame,国内服务 # 小米小游戏服务
+  - PROCESS-NAME,com.miui.yellowpage,国内服务 # MIUI 生活黄页
+  - PROCESS-NAME,com.miui.bugreport,国内服务 # MIUI 用户反馈
+  - PROCESS-NAME,com.miui.personalassistant,国内服务 # MIUI 智能助理
+  - PROCESS-NAME,com.xiaomi.mibrain.speech,国内服务 # 小米语音引擎
+  - PROCESS-NAME,com.miui.voiceassist,国内服务 # 小爱同学
+  - PROCESS-NAME,com.miui.voiceassistProxy,国内服务 # 小爱代理
+  - PROCESS-NAME,com.xiaomi.scanner,国内服务 # 小米扫描
+  - PROCESS-NAME,com.miui.cleanmaster,国内服务 # MIUI 垃圾清理
+  - PROCESS-NAME,com.xiaomi.ugd,国内服务 # 小米 GPU驱动更新
+  - PROCESS-NAME,com.android.updater,国内服务 # 系统更新
+  - PROCESS-NAME,com.lbe.security.miui,国内服务 # MIUI 权限管理服务
+  - PROCESS-NAME,com.miuix.editor,国内服务 # MIUI 编辑组件
+  - PROCESS-NAME,com.mobiletools.systemhelper,国内服务 # SystemHelper
 
   # --- YouTube / 流媒体 ---
   - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
