@@ -1,4 +1,4 @@
-name: Patch suggested domestic package rules
+name: Patch Tencent Soter domestic rule
 
 on:
   push:
@@ -24,28 +24,13 @@ jobs:
 
           path = Path('防DNS泄露.yaml')
           text = path.read_text(encoding='utf-8')
+          marker = '  - PROCESS-NAME,com.tencent.tim,国内服务 # TIM\n'
+          rule = '  - PROCESS-NAME,com.tencent.soter.soterserver,国内服务 # SoterService / 腾讯安全认证服务\n'
 
-          marker = '  - PROCESS-NAME,com.zte.smarthome,国内服务 # 中兴智慧生活\n'
-          suggested_rules = [
-              '  - PROCESS-NAME,com.netease.mail,国内服务 # 网易邮箱大师',
-              '  - PROCESS-NAME,com.jd.jrapp,国内服务 # 京东金融',
-              '  - PROCESS-NAME,com.xiaomi.smarthome,国内服务 # 米家',
-              '  - PROCESS-NAME,com.xiaomi.shop,国内服务 # 小米商城',
-              '  - PROCESS-NAME,com.xiaomi.market,国内服务 # 小米应用商店',
-              '  - PROCESS-NAME,com.xiaomi.vipaccount,国内服务 # 小米社区',
-              '  - PROCESS-NAME,cn.wps.moffice_eng.xiaomi.lite,国内服务 # 小米文档查看器/WPS定制',
-              '  - PROCESS-NAME,com.iflytek.inputmethod.miui,国内服务 # 讯飞输入法小米版',
-              '  - PROCESS-NAME,com.sohu.inputmethod.sogou.xiaomi,国内服务 # 搜狗输入法小米版',
-              '  - PROCESS-NAME,com.heytap.health,国内服务 # OPPO健康',
-              '  - PROCESS-NAME,com.heytap.themestore,国内服务 # OPPO主题商店',
-              '  - PROCESS-NAME,com.oplus.member,国内服务 # 我的OPPO',
-          ]
-          block = ''.join(rule + '\n' for rule in suggested_rules)
-
-          if 'PROCESS-NAME,com.netease.mail,国内服务' not in text:
+          if 'PROCESS-NAME,com.tencent.soter.soterserver,国内服务' not in text:
               if marker not in text:
-                  raise SystemExit('marker not found: domestic package marker')
-              text = text.replace(marker, marker + block, 1)
+                  raise SystemExit('marker not found: Tencent TIM marker')
+              text = text.replace(marker, marker + rule, 1)
               path.write_text(text, encoding='utf-8')
           PY
 
@@ -55,5 +40,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.BOT_PAT }}@github.com/${{ github.repository }}.git"
           git add 防DNS泄露.yaml
-          git commit -m "add suggested domestic package rules" || exit 0
+          git commit -m "add Tencent Soter domestic rule" || exit 0
           git push
