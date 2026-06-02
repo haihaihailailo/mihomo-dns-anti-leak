@@ -1,4 +1,5 @@
 name: Patch Vietnam rules into main config
+# retrigger: 2026-06-02
 
 on:
   push:
@@ -107,7 +108,6 @@ jobs:
               text = text.replace(marker, marker + block, 1)
 
           workflow = Path('.github/workflows/patch-vietnam-main-config.yml')
-          text_workflow = workflow.read_text(encoding='utf-8') if workflow.exists() else ''
           path.write_text(text, encoding='utf-8')
           workflow.unlink(missing_ok=True)
           PY
