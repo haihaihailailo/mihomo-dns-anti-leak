@@ -623,6 +623,20 @@ rules:
   - PROCESS-NAME,com.heytap.health,国内服务 # OPPO健康
   - PROCESS-NAME,com.heytap.themestore,国内服务 # OPPO主题商店
   - PROCESS-NAME,com.oplus.member,国内服务 # 我的OPPO
+  - PROCESS-NAME,com.cnspeedtest.globalspeed,国内服务 # 全球网测
+  - PROCESS-NAME,com.chinamworld.bocmbci,国内服务 # 中国银行
+  - PROCESS-NAME,com.bankcomm.Bankcomm,国内服务 # 交通银行
+  - PROCESS-NAME,cn.com.spdb.mobilebank.per,国内服务 # 浦发银行
+  - PROCESS-NAME,cmb.pb,国内服务 # 招商银行
+  - PROCESS-NAME,com.kingpoint.gmcchh,国内服务 # 中国移动广东
+  - PROCESS-NAME,cn.gov.pbc.dcep,国内服务 # 数字人民币
+  - PROCESS-NAME,cn.gov.tax.its,国内服务 # 个人所得税
+  - PROCESS-NAME,com.cdb.sla,国内服务 # 国家助学贷款
+  - PROCESS-NAME,cn.cyberIdentity.certification,国内服务 # 国家网络身份认证
+  - PROCESS-NAME,com.sohu.inputmethod.sogouoem,国内服务 # 搜狗输入法定制版
+  - PROCESS-NAME,com.android.browser,国内服务 # 国内系统浏览器
+  - PROCESS-NAME,com.finshell.wallet,国内服务 # 钱包
+  - PROCESS-NAME,com.unionpay.tsmservice,国内服务 # 银联可信服务安全组件
 
   # --- YouTube / 流媒体 ---
   - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
