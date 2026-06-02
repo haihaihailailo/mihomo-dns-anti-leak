@@ -1,21 +1,107 @@
 payload:
+  # --- Vietnam TLD / ccTLD ---
   - DOMAIN-SUFFIX,vn
   - DOMAIN-SUFFIX,com.vn
   - DOMAIN-SUFFIX,net.vn
   - DOMAIN-SUFFIX,org.vn
   - DOMAIN-SUFFIX,edu.vn
   - DOMAIN-SUFFIX,gov.vn
+  - DOMAIN-SUFFIX,biz.vn
+  - DOMAIN-SUFFIX,info.vn
+  - DOMAIN-SUFFIX,name.vn
+  - DOMAIN-SUFFIX,pro.vn
+
+  # --- Zalo / VNG ---
   - DOMAIN-SUFFIX,zalo.me
   - DOMAIN-SUFFIX,zaloapp.com
   - DOMAIN-SUFFIX,zing.vn
+  - DOMAIN-SUFFIX,zingmp3.vn
+  - DOMAIN-SUFFIX,znews.vn
+  - DOMAIN-SUFFIX,vng.com.vn
+  - DOMAIN-KEYWORD,zalo
+  - DOMAIN-KEYWORD,zing
+
+  # --- News / media ---
   - DOMAIN-SUFFIX,vnexpress.net
   - DOMAIN-SUFFIX,tuoitre.vn
   - DOMAIN-SUFFIX,thanhnien.vn
+  - DOMAIN-SUFFIX,dantri.com.vn
+  - DOMAIN-SUFFIX,vietnamnet.vn
+  - DOMAIN-SUFFIX,laodong.vn
+  - DOMAIN-SUFFIX,kenh14.vn
+  - DOMAIN-SUFFIX,soha.vn
+  - DOMAIN-SUFFIX,cafef.vn
+  - DOMAIN-SUFFIX,vtv.vn
+  - DOMAIN-SUFFIX,vov.vn
+  - DOMAIN-SUFFIX,nld.com.vn
+  - DOMAIN-SUFFIX,plo.vn
+  - DOMAIN-SUFFIX,tienphong.vn
+  - DOMAIN-SUFFIX,baomoi.com
+  - DOMAIN-SUFFIX,24h.com.vn
+
+  # --- E-commerce / retail ---
   - DOMAIN-SUFFIX,shopee.vn
   - DOMAIN-SUFFIX,lazada.vn
   - DOMAIN-SUFFIX,tiki.vn
   - DOMAIN-SUFFIX,sendo.vn
+  - DOMAIN-SUFFIX,thegioididong.com
+  - DOMAIN-SUFFIX,dienmayxanh.com
+  - DOMAIN-SUFFIX,bachhoaxanh.com
+  - DOMAIN-SUFFIX,fptshop.com.vn
+  - DOMAIN-SUFFIX,cellphones.com.vn
+  - DOMAIN-SUFFIX,phongvu.vn
+  - DOMAIN-SUFFIX,gearvn.com
+  - DOMAIN-SUFFIX,nguyenkim.com
+  - DOMAIN-SUFFIX,mediamart.vn
+  - DOMAIN-SUFFIX,hoanghamobile.com
+  - DOMAIN-KEYWORD,tiki
+  - DOMAIN-KEYWORD,sendo
+
+  # --- Local services / delivery ---
   - DOMAIN-SUFFIX,grab.com
+  - DOMAIN-SUFFIX,gojek.com
   - DOMAIN-SUFFIX,be.com.vn
+  - DOMAIN-SUFFIX,baemin.vn
   - DOMAIN-SUFFIX,foody.vn
   - DOMAIN-SUFFIX,shopeefood.vn
+  - DOMAIN-SUFFIX,now.vn
+  - DOMAIN-SUFFIX,ahamove.com
+  - DOMAIN-SUFFIX,loship.vn
+  - DOMAIN-KEYWORD,grab
+  - DOMAIN-KEYWORD,gojek
+  - DOMAIN-KEYWORD,baemin
+  - DOMAIN-KEYWORD,shopeefood
+
+  # --- Telecom / streaming ---
+  - DOMAIN-SUFFIX,viettel.vn
+  - DOMAIN-SUFFIX,vietteltelecom.vn
+  - DOMAIN-SUFFIX,viettelpost.vn
+  - DOMAIN-SUFFIX,mobifone.vn
+  - DOMAIN-SUFFIX,vinaphone.com.vn
+  - DOMAIN-SUFFIX,vnpt.vn
+  - DOMAIN-SUFFIX,fpt.vn
+  - DOMAIN-SUFFIX,fpt.net
+  - DOMAIN-SUFFIX,fptplay.vn
+
+  # --- Logistics / travel ---
+  - DOMAIN-SUFFIX,ghn.vn
+  - DOMAIN-SUFFIX,ghnexpress.com
+  - DOMAIN-SUFFIX,ghtk.vn
+  - DOMAIN-SUFFIX,jtexpress.vn
+  - DOMAIN-SUFFIX,jtexpress.com.vn
+  - DOMAIN-SUFFIX,viettelpost.com.vn
+  - DOMAIN-SUFFIX,vietnamairlines.com
+  - DOMAIN-SUFFIX,vietjetair.com
+  - DOMAIN-SUFFIX,bambooairways.com
+  - DOMAIN-SUFFIX,vexere.com
+  - DOMAIN-SUFFIX,traveloka.com
+
+  # --- Classifieds / jobs ---
+  - DOMAIN-SUFFIX,batdongsan.com.vn
+  - DOMAIN-SUFFIX,chotot.com
+  - DOMAIN-SUFFIX,muaban.net
+  - DOMAIN-SUFFIX,vieclam24h.vn
+  - DOMAIN-SUFFIX,vietnamworks.com
+  - DOMAIN-SUFFIX,topcv.vn
+  - DOMAIN-SUFFIX,careerbuilder.vn
+  - DOMAIN-SUFFIX,jobstreet.vn
