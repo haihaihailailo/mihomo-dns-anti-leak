@@ -1,5 +1,6 @@
 name: Patch Vietnam rules into main config
 # patch only main config, do not self-delete
+# rerun after classic BOT_PAT update
 
 on:
   push:
