@@ -1,5 +1,5 @@
 name: Patch Vietnam rules into main config
-# use BOT_PAT to push final patch
+# patch only main config, do not self-delete
 
 on:
   push:
@@ -107,9 +107,7 @@ jobs:
                   raise SystemExit('marker not found')
               text = text.replace(marker, marker + block, 1)
 
-          workflow = Path('.github/workflows/patch-vietnam-main-config.yml')
           path.write_text(text, encoding='utf-8')
-          workflow.unlink(missing_ok=True)
           PY
 
       - name: Commit patch
@@ -118,6 +116,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.BOT_PAT }}@github.com/${{ github.repository }}.git"
           git add 防DNS泄露.yaml
-          git add -u .github/workflows/patch-vietnam-main-config.yml
           git commit -m "add Vietnam domains to main config" || exit 0
           git push
