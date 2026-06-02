@@ -689,12 +689,80 @@ rules:
   # --- 桌面端越南服务 ---
   - PROCESS-NAME,Zalo.exe,越南服务 # Zalo PC
   - PROCESS-NAME,Zalo,越南服务 # Zalo macOS / Linux 兼容写法
+  # --- 桌面端国内服务 / 预防性 ---
+  - PROCESS-NAME,WeChat.exe,国内服务 # 微信 PC
+  - PROCESS-NAME,WeChatAppEx.exe,国内服务 # 微信 PC 内置组件
+  - PROCESS-NAME,Weixin.exe,国内服务 # 微信新版 PC
+  - PROCESS-NAME,QQ.exe,国内服务 # QQ PC
+  - PROCESS-NAME,TIM.exe,国内服务 # TIM PC
+  - PROCESS-NAME,DingTalk.exe,国内服务 # 钉钉 PC
+  - PROCESS-NAME,WXWork.exe,国内服务 # 企业微信 PC
+  - PROCESS-NAME,Feishu.exe,国内服务 # 飞书 PC
+  - PROCESS-NAME,Lark.exe,节点选择 # Lark 国际版 PC
+  - PROCESS-NAME,wps.exe,国内服务 # WPS Office PC
+  - PROCESS-NAME,et.exe,国内服务 # WPS 表格
+  - PROCESS-NAME,wpp.exe,国内服务 # WPS 演示
+  - PROCESS-NAME,baidunetdisk.exe,国内服务 # 百度网盘 PC
+  - PROCESS-NAME,BaiduNetdisk.exe,国内服务 # 百度网盘 PC
+  - PROCESS-NAME,AliYunDrive.exe,国内服务 # 阿里云盘 PC
+  - PROCESS-NAME,QuarkCloudDrive.exe,国内服务 # 夸克网盘 PC
+  - PROCESS-NAME,TencentMeeting.exe,国内服务 # 腾讯会议 PC
+  - PROCESS-NAME,WeMeetApp.exe,国内服务 # 腾讯会议 PC
+  - PROCESS-NAME,NeteaseMailMaster.exe,国内服务 # 网易邮箱大师 PC
+  - PROCESS-NAME,QQMail.exe,国内服务 # QQ邮箱 PC
+  - PROCESS-NAME,cloudmusic.exe,国内服务 # 网易云音乐 PC
+  - PROCESS-NAME,QQMusic.exe,国内服务 # QQ音乐 PC
+  - PROCESS-NAME,KuGou.exe,国内服务 # 酷狗音乐 PC
+  - PROCESS-NAME,KuwoMusic.exe,国内服务 # 酷我音乐 PC
+  - PROCESS-NAME,iQIYI.exe,国内服务 # 爱奇艺 PC
+  - PROCESS-NAME,Youku.exe,国内服务 # 优酷 PC
+  - PROCESS-NAME,QQLive.exe,国内服务 # 腾讯视频 PC
+  - PROCESS-NAME,Douyin.exe,国内服务 # 抖音 PC
+  - PROCESS-NAME,JianyingPro.exe,国内服务 # 剪映专业版 PC
+  - PROCESS-NAME,CapCut.exe,节点选择 # CapCut 国际版 PC
+  - PROCESS-NAME,SogouInput.exe,国内服务 # 搜狗输入法 PC
+  - PROCESS-NAME,SogouImeBroker.exe,国内服务 # 搜狗输入法组件
+  - PROCESS-NAME,iFlyIME.exe,国内服务 # 讯飞输入法 PC
+  - PROCESS-NAME,LenovoVantage.exe,国内服务 # 联想管家 / Vantage
+  - PROCESS-NAME,Lenovo.Modern.ImController.exe,国内服务 # 联想系统组件
+  - PROCESS-NAME,HuaweiPCManager.exe,国内服务 # 华为电脑管家
+  - PROCESS-NAME,MiService.exe,国内服务 # 小米电脑服务
+  - PROCESS-NAME,MiPhoneManager.exe,国内服务 # 小米手机助手
+  - PROCESS-NAME,OPPOPCSuite.exe,国内服务 # OPPO PC 工具
+  - PROCESS-NAME,OnePlusPCSuite.exe,国内服务 # 一加 PC 工具
 
   # --- 桌面端影音 / 游戏 / 开发 ---
   - PROCESS-NAME,Spotify.exe,Spotify # Spotify Desktop
   - PROCESS-NAME,steam.exe,节点选择 # Steam
   - PROCESS-NAME,steamwebhelper.exe,节点选择 # Steam Web Helper
   - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
+  - PROCESS-NAME,Cursor.exe,AI # Cursor Editor
+  - PROCESS-NAME,Windsurf.exe,AI # Windsurf Editor
+  - PROCESS-NAME,Code.exe,节点选择 # VS Code（通用开发工具，走节点选择）
+  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
+  - PROCESS-NAME,Postman.exe,节点选择 # Postman
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
+  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
+  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
+  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
+  - PROCESS-NAME,EpicGamesLauncher.exe,节点选择 # Epic Games Launcher
+  - PROCESS-NAME,EpicWebHelper.exe,节点选择 # Epic Games Web Helper
+  - PROCESS-NAME,Battle.net.exe,节点选择 # Battle.net
+  - PROCESS-NAME,RiotClientServices.exe,节点选择 # Riot Client
+  - PROCESS-NAME,UbisoftConnect.exe,节点选择 # Ubisoft Connect
+  - PROCESS-NAME,EA app.exe,节点选择 # EA App
+  - PROCESS-NAME,EADesktop.exe,节点选择 # EA Desktop
+  - PROCESS-NAME,ms-teams.exe,节点选择 # Microsoft Teams
+  - PROCESS-NAME,Teams.exe,节点选择 # Microsoft Teams Classic
+  - PROCESS-NAME,Zoom.exe,节点选择 # Zoom
+  - PROCESS-NAME,slack.exe,节点选择 # Slack
+  # --- 桌面端硬件 / 驱动更新 / 预防性 ---
+  - PROCESS-NAME,NVIDIA App.exe,节点选择 # NVIDIA App
+  - PROCESS-NAME,NVIDIA GeForce Experience.exe,节点选择 # GeForce Experience
+  - PROCESS-NAME,NvContainer.exe,节点选择 # NVIDIA Container / 更新检查
+  - PROCESS-NAME,AMDSoftware.exe,节点选择 # AMD Software
+  - PROCESS-NAME,AMDRSServ.exe,节点选择 # AMD Radeon Settings Service
+  - PROCESS-NAME,Intel Driver & Support Assistant.exe,节点选择 # Intel 驱动支持助手
   
   - "PROCESS-NAME,aria2c,DIRECT"
   - "PROCESS-NAME,aria2c.exe,DIRECT"
