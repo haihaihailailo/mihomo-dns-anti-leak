@@ -2,6 +2,9 @@ name: Patch Vietnam rules into main config
 # use BOT_PAT to push final patch
 
 on:
+  push:
+    paths:
+      - ".github/workflows/patch-vietnam-main-config.yml"
   workflow_dispatch:
 
 permissions:
