@@ -1,4 +1,4 @@
-name: Patch Coolapk domains into main config
+name: Patch browser neutral and Coolapk rules
 
 on:
   push:
@@ -24,20 +24,35 @@ jobs:
 
           path = Path('防DNS泄露.yaml')
           text = path.read_text(encoding='utf-8')
+
+          # 1) Add Coolapk web domains to domestic services.
           marker = '  - "DOMAIN-SUFFIX,yhglobal.com,国内服务"\n'
-          rules = [
+          coolapk_rules = [
               '  - "DOMAIN-SUFFIX,coolapk.com,国内服务"',
               '  - "DOMAIN-SUFFIX,www.coolapk.com,国内服务"',
               '  - "DOMAIN-SUFFIX,m.coolapk.com,国内服务"',
               '  - "DOMAIN-KEYWORD,coolapk,国内服务"',
           ]
-          block = ''.join(r + '\n' for r in rules)
-
           if 'DOMAIN-SUFFIX,coolapk.com,国内服务' not in text:
               if marker not in text:
-                  raise SystemExit('marker not found')
-              text = text.replace(marker, marker + block, 1)
-              path.write_text(text, encoding='utf-8')
+                  raise SystemExit('marker not found: yhglobal domestic marker')
+              text = text.replace(marker, marker + ''.join(rule + '\n' for rule in coolapk_rules), 1)
+
+          # 2) Keep browsers neutral: do not pin browser/WebView process names to a fixed proxy group.
+          replacements = {
+              '  - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome':
+              '  # - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome（浏览器不按包名固定，交给域名规则分流）',
+              '  - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView':
+              '  # - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView（WebView 不按包名固定，交给域名规则分流）',
+              '  - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器':
+              '  # - PROCESS-NAME,com.heytap.browser,国内服务 # 浏览器（浏览器不按包名固定，交给域名规则分流）',
+              '  - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta':
+              '  # - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta（浏览器不按包名固定，交给域名规则分流）',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding='utf-8')
           PY
 
       - name: Commit patch
@@ -46,5 +61,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.BOT_PAT }}@github.com/${{ github.repository }}.git"
           git add 防DNS泄露.yaml
-          git commit -m "add Coolapk domains to domestic services" || exit 0
+          git commit -m "make browsers domain-based and add Coolapk domains" || exit 0
           git push
