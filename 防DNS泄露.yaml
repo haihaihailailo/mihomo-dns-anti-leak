@@ -610,6 +610,18 @@ rules:
   - PROCESS-NAME,com.able.wisdomtree,国内服务 # 知到
   - PROCESS-NAME,com.fifedu.fifiplat,国内服务 # 智教学
   - PROCESS-NAME,com.zte.smarthome,国内服务 # 中兴智慧生活
+  - PROCESS-NAME,com.netease.mail,国内服务 # 网易邮箱大师
+  - PROCESS-NAME,com.jd.jrapp,国内服务 # 京东金融
+  - PROCESS-NAME,com.xiaomi.smarthome,国内服务 # 米家
+  - PROCESS-NAME,com.xiaomi.shop,国内服务 # 小米商城
+  - PROCESS-NAME,com.xiaomi.market,国内服务 # 小米应用商店
+  - PROCESS-NAME,com.xiaomi.vipaccount,国内服务 # 小米社区
+  - PROCESS-NAME,cn.wps.moffice_eng.xiaomi.lite,国内服务 # 小米文档查看器/WPS定制
+  - PROCESS-NAME,com.iflytek.inputmethod.miui,国内服务 # 讯飞输入法小米版
+  - PROCESS-NAME,com.sohu.inputmethod.sogou.xiaomi,国内服务 # 搜狗输入法小米版
+  - PROCESS-NAME,com.heytap.health,国内服务 # OPPO健康
+  - PROCESS-NAME,com.heytap.themestore,国内服务 # OPPO主题商店
+  - PROCESS-NAME,com.oplus.member,国内服务 # 我的OPPO
 
   # --- YouTube / 流媒体 ---
   - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
