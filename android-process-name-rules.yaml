@@ -3,11 +3,12 @@
 #
 # 使用方法：
 # 1. 在 Clash Mi / mihomo 客户端界面打开“进程匹配 / 包名匹配”相关开关。
-# 2. 只复制下方 PROCESS-NAME 规则到主配置 rules: 的最前面。
-# 3. 保留原配置后面的 GEOSITE / GEOIP / RULE-SET / MATCH 规则。
+# 2. 主配置 rules: 最前面先放私有网络 / 局域网 DIRECT 规则。
+# 3. 再将下方 PROCESS-NAME 规则放在局域网规则之后。
+# 4. 保留原配置后面的 GEOSITE / GEOIP / RULE-SET / MATCH 规则。
 #
 # 注意：PROCESS-NAME 在 Android 平台匹配的是应用包名。
-# 不要把 Clash Mi 自己、银行支付、微信/QQ、国内购物、系统组件加入代理规则。
+# 不要把 Clash Mi 自己、银行支付、微信/QQ、国内购物、系统组件加入代理规则；浏览器、WebView、快应用等混合入口交给域名规则分流。
 
 rules:
   # --- AI ---
@@ -78,8 +79,8 @@ rules:
   - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加
   - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城
   - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
-  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器
-  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
+  # - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器（混合入口，交给域名规则分流）
+  # - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架（混合入口，交给域名规则分流）
   - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程
   - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
   - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek
@@ -147,4 +148,4 @@ rules:
   - PROCESS-NAME,com.mynat.android,节点选择 # My NAT
   - PROCESS-NAME,com.eup.hanzii,节点选择 # Hanzii Dict
 
-  # 下方不要放 MATCH,DIRECT；把这些规则插入主配置 rules: 最前面即可。
+  # 下方不要放 MATCH,DIRECT；把这些规则插入主配置 rules: 的局域网直连规则之后即可。
