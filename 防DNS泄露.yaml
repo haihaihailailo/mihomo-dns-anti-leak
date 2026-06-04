@@ -479,18 +479,6 @@ rule-providers:
     path: "./ruleset/metacubex/telegramcidr.yaml"
 
 rules:
-  # --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---
-  - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
-  - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
-  - "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
-  - "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
-  - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
-  - "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve"
-  - "IP-CIDR6,fc00::/7,DIRECT,no-resolve"
-  - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
-  - "RULE-SET,private,DIRECT"
-  - "GEOIP,LAN,DIRECT,no-resolve"
-
   # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
   - "IP-CIDR,0.0.0.0/8,DIRECT,no-resolve"
   - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
@@ -506,6 +494,8 @@ rules:
   - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
   - "DOMAIN-SUFFIX,local,DIRECT"
   - "DOMAIN-SUFFIX,lan,DIRECT"
+  - "RULE-SET,private,DIRECT"
+  - "GEOIP,LAN,DIRECT,no-resolve"
   # --- AI ---
   - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
   - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini
