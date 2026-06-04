@@ -1,0 +1,54 @@
+# Mihomo / Clash Meta 局域网、微信与支付宝绕过修正片段
+#
+# 用途：
+# - 避免应用 PROCESS-NAME 规则抢先命中，导致局域网、NAS、投屏、设备发现异常。
+# - 避免微信、支付宝小程序、支付、扫码登录等流量经过 Android TUN。
+# - 避免嗅探器改写局域网目标。
+#
+# 使用方法：
+# 1. 将 sniffer 下的 skip-dst-address 合并到主配置现有 sniffer:。
+# 2. 将 tun 下的 route-exclude-address 与 exclude-package 合并到主配置现有 tun:。
+# 3. 将 rules 下的局域网规则放到主配置 rules: 最前面，必须早于全部 PROCESS-NAME。
+# 4. 删除主配置底部重复的 RULE-SET,private,DIRECT 与 GEOIP,LAN,DIRECT,no-resolve。
+# 5. OPPO 浏览器、快应用服务框架等混合入口不要按 PROCESS-NAME 固定，交给域名规则分流。
+
+sniffer:
+  skip-dst-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+
+tun:
+  route-exclude-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+
+  # Android only：让微信、支付宝完全绕过 TUN。
+  # 若客户端界面已经使用分应用黑名单排除这两个应用，可不重复配置。
+  exclude-package:
+    - com.tencent.mm
+    - com.eg.android.AlipayGphone
+
+rules:
+  # --- 私有网络 / 局域网优先直连：必须放在全部 PROCESS-NAME 之前 ---
+  - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
+  - "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
+  - "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR6,fc00::/7,DIRECT,no-resolve"
+  - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
+  - "RULE-SET,private,DIRECT"
+  - "GEOIP,LAN,DIRECT,no-resolve"
+
+  # --- 下方再放 Android / Windows PROCESS-NAME 应用分流规则 ---
