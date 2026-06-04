@@ -1,0 +1,33 @@
+name: Apply local network and payment bypass fix
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-local-network-fix.yml
+      - scripts/apply_local_network_fix.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply safe configuration patch
+        run: python3 scripts/apply_local_network_fix.py
+
+      - name: Commit updated main configuration
+        run: |
+          if git diff --quiet -- 防DNS泄露.yaml; then
+            echo "No changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露.yaml
+          git commit -m "fix: prioritize LAN and bypass payment apps from TUN"
+          git push
