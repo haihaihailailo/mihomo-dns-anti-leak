@@ -531,13 +531,13 @@ rules:
   - PROCESS-NAME,com.microsoftsdk.crossdeviceservicebroker,微软服务 # Microsoft Cross Device Service Broker
 
   # --- 国内 App：按包名固定到国内服务，避免掉到漏网之鱼 ---
-  - PROCESS-NAME,com.tencent.mm,国内服务 # 微信
+  # - PROCESS-NAME,com.tencent.mm,国内服务 # 微信（由 Clash Mi 分应用黑名单绕过 VPN）
   - PROCESS-NAME,com.tencent.mobileqq,国内服务 # QQ
   - PROCESS-NAME,com.tencent.tim,国内服务 # TIM
   - PROCESS-NAME,com.tencent.soter.soterserver,国内服务 # SoterService / 腾讯安全认证服务
   - PROCESS-NAME,com.sina.weibo,国内服务 # 微博
   - PROCESS-NAME,com.zhihu.android,国内服务 # 知乎
-  - PROCESS-NAME,com.eg.android.AlipayGphone,国内服务 # 支付宝
+  # - PROCESS-NAME,com.eg.android.AlipayGphone,国内服务 # 支付宝（由 Clash Mi 分应用黑名单绕过 VPN）
   - PROCESS-NAME,com.taobao.taobao,国内服务 # 淘宝
   - PROCESS-NAME,com.tmall.wireless,国内服务 # 天猫
   - PROCESS-NAME,com.jingdong.app.mall,国内服务 # 京东
