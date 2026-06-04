@@ -1,6 +1,7 @@
 name: Apply routing priority fix
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - ".github/workflows/apply-routing-fix.yml"
