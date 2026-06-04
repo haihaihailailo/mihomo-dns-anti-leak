@@ -46,17 +46,8 @@ insert_after(
     "route-exclude-address:\n",
 )
 
-# 删除旧位置的私有网络规则，随后统一移动到 rules: 最前面。
-for line in (
-    '  - "RULE-SET,private,DIRECT"\n',
-    '  - "GEOIP,LAN,DIRECT,no-resolve"\n',
-    "  - RULE-SET,private,DIRECT\n",
-    "  - GEOIP,LAN,DIRECT,no-resolve\n",
-):
-    text = text.replace(line, "")
-
-lan_block = (
-    "rules:\n"
+# 删除早期修补脚本新增的重复局域网组，保留主配置原有的更完整规则组。
+duplicate_block = (
     "  # --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---\n"
     "  - \"IP-CIDR,127.0.0.0/8,DIRECT,no-resolve\"\n"
     "  - \"IP-CIDR,10.0.0.0/8,DIRECT,no-resolve\"\n"
@@ -69,11 +60,18 @@ lan_block = (
     "  - \"RULE-SET,private,DIRECT\"\n"
     "  - \"GEOIP,LAN,DIRECT,no-resolve\"\n\n"
 )
-marker = "# --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---"
-if marker not in text:
-    if "rules:\n" not in text:
-        raise RuntimeError("Required rules: anchor not found")
-    text = text.replace("rules:\n", lan_block, 1)
+text = text.replace(duplicate_block, "", 1)
+
+# 在原有完整局域网组末尾补充规则集与 LAN GEOIP，仍保持在全部 PROCESS-NAME 之前。
+lan_tail = '  - "DOMAIN-SUFFIX,lan,DIRECT"\n'
+lan_addition = (
+    '  - "RULE-SET,private,DIRECT"\n'
+    '  - "GEOIP,LAN,DIRECT,no-resolve"\n'
+)
+if '  - "RULE-SET,private,DIRECT"\n' not in text:
+    if lan_tail not in text:
+        raise RuntimeError("Required LAN rule anchor not found")
+    text = text.replace(lan_tail, lan_tail + lan_addition, 1)
 
 text = text.replace(
     "  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器\n",
