@@ -44,7 +44,7 @@
 
 ### Android 包名分流
 
-配置在 `rules:` 前部加入 `PROCESS-NAME` 规则，用于在 Android 端按应用包名直接分流。
+配置在 `rules:` 前部、私有网络 / 局域网直连规则之后加入 `PROCESS-NAME` 规则，用于在 Android 端按应用包名直接分流。
 
 当前重点分流对象：
 
