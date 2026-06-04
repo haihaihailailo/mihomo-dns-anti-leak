@@ -12,6 +12,15 @@ tcp-concurrent: true
 sniffer:
   enable: true
   parse-pure-ip: true
+  # 跳过局域网目标嗅探，避免 NAS、投屏、设备发现等目标被改写
+  skip-dst-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
   sniff:
     HTTP:
       ports: [80, 8080-8880]
@@ -29,6 +38,19 @@ tun:
     - any:53
     - tcp://any:53
   strict-route: true
+  # 局域网地址直接绕过 TUN
+  route-exclude-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+  # Android：微信、支付宝完全绕过 TUN，避免小程序、支付和扫码登录异常
+  exclude-package:
+    - com.tencent.mm
+    - com.eg.android.AlipayGphone
   inet6-address:
     - fdfe:dcba:9876::1/126
 
@@ -457,9 +479,19 @@ rule-providers:
     path: "./ruleset/metacubex/telegramcidr.yaml"
 
 rules:
-  # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
+  # --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---
+  - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
+  - "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
+  - "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR6,fc00::/7,DIRECT,no-resolve"
+  - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
   - "RULE-SET,private,DIRECT"
   - "GEOIP,LAN,DIRECT,no-resolve"
+
+  # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
   - "IP-CIDR,0.0.0.0/8,DIRECT,no-resolve"
   - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
   - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
@@ -594,8 +626,8 @@ rules:
   - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加
   - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城
   - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
-  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器
-  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
+  # - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器（混合入口，交给域名规则分流）
+  # - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架（混合入口，交给域名规则分流）
   - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程
   - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
   - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek
@@ -967,9 +999,7 @@ rules:
   - "RULE-SET,apple,苹果服务"
   - "RULE-SET,biliintl,哔哩哔哩港澳台"
 
-  - "RULE-SET,private,DIRECT"
   - "RULE-SET,reject,广告过滤"
-  - "GEOIP,LAN,DIRECT,no-resolve"
 
   - "DOMAIN-SUFFIX,zalo.me,越南服务"
   - "DOMAIN-SUFFIX,zaloapp.com,越南服务"
