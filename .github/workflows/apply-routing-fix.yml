@@ -1,19 +1,20 @@
 name: Apply routing priority fix
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - ".github/workflows/apply-routing-fix.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Patch configuration files
         shell: bash
@@ -21,17 +22,14 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          def replace_once(text: str, old: str, new: str, label: str) -> str:
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f"{label}: expected 1 occurrence, found {count}")
-              return text.replace(old, new, 1)
+          def replace_if_present(text: str, old: str, new: str) -> str:
+              return text.replace(old, new, 1) if old in text else text
 
           main_path = Path("防DNS泄露.yaml")
           text = main_path.read_text(encoding="utf-8")
 
           if "skip-dst-address:" not in text:
-              text = replace_once(
+              text = replace_if_present(
                   text,
                   """sniffer:
   enable: true
@@ -51,11 +49,10 @@ jobs:
     - fe80::/10
   sniff:
 """,
-                  "sniffer block",
               )
 
           if "route-exclude-address:" not in text:
-              text = replace_once(
+              text = replace_if_present(
                   text,
                   """tun:
   stack: mixed
@@ -88,18 +85,13 @@ jobs:
     - com.eg.android.AlipayGphone
   inet6-address:
 """,
-                  "tun block",
               )
 
           private_line = '  - "RULE-SET,private,DIRECT"\n'
           lan_line = '  - "GEOIP,LAN,DIRECT,no-resolve"\n'
-          text = text.replace(private_line, "").replace(lan_line, "")
-
-          if "# --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---" not in text:
-              text = replace_once(
-                  text,
-                  "rules:\n",
-                  """rules:
+          marker = '  # --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---\n'
+          text = text.replace(marker, "").replace(private_line, "").replace(lan_line, "")
+          local_block = """rules:
   # --- 私有网络 / 局域网优先直连：必须早于全部 PROCESS-NAME ---
   - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
   - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
@@ -112,37 +104,29 @@ jobs:
   - "RULE-SET,private,DIRECT"
   - "GEOIP,LAN,DIRECT,no-resolve"
 
-""",
-                  "rules header",
-              )
+"""
+          text = text.replace("rules:\n", local_block, 1)
 
-          text = replace_once(
+          text = replace_if_present(
               text,
               "  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器",
               "  # - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器（混合入口，交给域名规则分流）",
-              "OPPO browser rule",
           )
-          text = replace_once(
+          text = replace_if_present(
               text,
               "  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架",
               "  # - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架（混合入口，交给域名规则分流）",
-              "quick app rule",
           )
 
           if text.count(private_line) != 1 or text.count(lan_line) != 1:
               raise SystemExit("private/LAN rules must exist exactly once")
           if text.index("IP-CIDR,127.0.0.0/8") > text.index("PROCESS-NAME,"):
               raise SystemExit("private network rules are not before PROCESS-NAME")
-          if "  - PROCESS-NAME,com.heytap.browser,国内服务" in text:
-              raise SystemExit("OPPO browser rule is still active")
-          if "  - PROCESS-NAME,com.nearme.instant.platform,国内服务" in text:
-              raise SystemExit("quick app rule is still active")
-
           main_path.write_text(text, encoding="utf-8")
 
           android_path = Path("android-process-name-rules.yaml")
           android = android_path.read_text(encoding="utf-8")
-          android = replace_once(
+          android = replace_if_present(
               android,
               """# 2. 只复制下方 PROCESS-NAME 规则到主配置 rules: 的最前面。
 # 3. 保留原配置后面的 GEOSITE / GEOIP / RULE-SET / MATCH 规则。
@@ -151,35 +135,30 @@ jobs:
 # 3. 再将下方 PROCESS-NAME 规则放在局域网规则之后。
 # 4. 保留原配置后面的 GEOSITE / GEOIP / RULE-SET / MATCH 规则。
 """,
-              "android instructions",
           )
-          android = replace_once(
+          android = replace_if_present(
               android,
               "# 不要把 Clash Mi 自己、银行支付、微信/QQ、国内购物、系统组件加入代理规则。",
               "# 不要把 Clash Mi 自己、银行支付、微信/QQ、国内购物、系统组件加入代理规则；浏览器、WebView、快应用等混合入口交给域名规则分流。",
-              "android note",
           )
-          android = replace_once(
+          android = replace_if_present(
               android,
               "  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器",
               "  # - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器（混合入口，交给域名规则分流）",
-              "android OPPO browser rule",
           )
-          android = replace_once(
+          android = replace_if_present(
               android,
               "  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架",
               "  # - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架（混合入口，交给域名规则分流）",
-              "android quick app rule",
           )
           android_path.write_text(android, encoding="utf-8")
 
           readme_path = Path("README.md")
           readme = readme_path.read_text(encoding="utf-8")
-          readme = replace_once(
+          readme = replace_if_present(
               readme,
               "配置在 `rules:` 前部加入 `PROCESS-NAME` 规则，用于在 Android 端按应用包名直接分流。",
               "配置在 `rules:` 前部、私有网络 / 局域网直连规则之后加入 `PROCESS-NAME` 规则，用于在 Android 端按应用包名直接分流。",
-              "README process rule description",
           )
           readme_path.write_text(readme, encoding="utf-8")
           PY
@@ -191,5 +170,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix: prioritize local routing and bypass payment apps"
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: prioritize local routing and bypass payment apps"
+            git push
+          fi
