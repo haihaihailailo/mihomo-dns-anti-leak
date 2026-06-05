@@ -1,16 +1,17 @@
-# Mihomo DNS 防泄露与 Android 包名分流配置
+# Mihomo DNS 防泄露配置
 
-> 面向 Mihomo / Clash Meta 的个人 DNS 防泄露与规则分流配置，支持 fake-ip、TUN、DoH、rule-provider、Android 包名分流和 WebDAV 多设备同步，适合中国/越南双场景使用。
+面向 Mihomo / Clash Meta / Clash Party / Mihomo Party 的个人 DNS 防泄露与规则分流配置。
 
-## 仓库定位
+## 文件
 
-这个仓库不是通用订阅模板，而是一份面向个人多设备使用的 Mihomo / Clash Meta 主配置。配置重点解决 DNS 泄露、国内外解析路径、Google/AI/Telegram/GitHub/越南服务分组，以及 Android 多设备包名分流统一管理问题。
+| 文件 | 说明 |
+|---|---|
+| `防DNS泄露.yaml` | 主配置，包含 DNS、TUN、Sniffer、代理组、规则集、Android 包名分流和服务分流规则。 |
+| `防DNS泄露.js` | JS 覆写入口文件。当前作为 JS 版本占位与同步入口，后续与 YAML 同步维护。 |
 
-适合在 Clash Mi、Clash Verge Rev、Mihomo Party 等支持 Mihomo / Clash Meta 配置格式的客户端中使用。
+## 当前维护口径
 
-核心目标：
-
-- 防止 DNS 请求绕过代理或被系统 DNS 污染。
-- 国内服务、局域网、银行支付、微信 QQ、国内购物和系统组件默认直连。
-- Google、AI、Telegram、GitHub、越南 App 等按策略组代理。
-- Android 端通过 `PROCESS-NAME` 按应用包名分流，适合两个
+- `防DNS泄露.yaml` 是主配置，以它为准。
+- `防DNS泄露.js` 用于 Clash Party / Mihomo Party 的 JavaScript 覆写入口。
+- 以后修改 YAML 时，JS 也要同步更新，避免两个入口配置不一致。
+- 如果只想使用稳定完整版本，优先导
