@@ -2,16 +2,15 @@
 
 面向 Mihomo / Clash Meta / Clash Party / Mihomo Party 的个人 DNS 防泄露与规则分流配置。
 
-## 文件
+本仓库提供两种入口：
 
-| 文件 | 说明 |
-|---|---|
-| `防DNS泄露.yaml` | 主配置，包含 DNS、TUN、Sniffer、代理组、规则集、Android 包名分流和服务分流规则。 |
-| `防DNS泄露.js` | JS 覆写入口文件。当前作为 JS 版本占位与同步入口，后续与 YAML 同步维护。 |
+- `防DNS泄露.yaml`：主配置，适合直接作为 YAML 覆写或配置片段使用。
+- `防DNS泄露.js`：JavaScript 覆写版本，适合 Clash Party / Mihomo Party 的 JS 覆写功能使用。
 
-## 当前维护口径
+## 配置目标
 
-- `防DNS泄露.yaml` 是主配置，以它为准。
-- `防DNS泄露.js` 用于 Clash Party / Mihomo Party 的 JavaScript 覆写入口。
-- 以后修改 YAML 时，JS 也要同步更新，避免两个入口配置不一致。
-- 如果只想使用稳定完整版本，优先导
+- 防止 DNS 请求绕过 Mihomo 泄露到系统 DNS。
+- 使用 fake-ip、TUN DNS 劫持、DoH 分流和 nameserver-policy 控制解析路径。
+- 局域网、私有地址、NAS、投屏、设备发现等流量优先直连。
+- 微信、支付宝通过 TUN 排除包名绕过，减少小程序、扫码、支付异常。
+- 国内服务、越南服务、AI、Google、YouTube、Git
