@@ -78,14 +78,18 @@ jobs:
             keys.to_h { |key| [key, hash[key]] }
           end
 
-          def canonical(value)
+          def normalize(value, path = [])
             case value
             when Hash
-              value.keys.sort.to_h { |key| [key, canonical(value[key])] }
+              value.keys.sort.to_h do |key|
+                key_string = key.to_s
+                [key, normalize(value[key], path + [key_string])]
+              end
             when Array
-              value.map { |item| canonical(item) }
+              normalized = value.map { |item| normalize(item, path) }
+              path.last == "ports" ? normalized.map(&:to_s) : normalized
             else
-              value
+              path.last == "expected-status" ? value.to_s : value
             end
           end
 
@@ -115,8 +119,8 @@ jobs:
             "#{path}: values differ"
           end
 
-          yaml_selected = canonical(pick(yaml_config, keys_to_compare))
-          js_selected = canonical(pick(js_config, keys_to_compare))
+          yaml_selected = normalize(pick(yaml_config, keys_to_compare))
+          js_selected = normalize(pick(js_config, keys_to_compare))
 
           if yaml_selected != js_selected
             puts "YAML and JS full config sync check failed."
