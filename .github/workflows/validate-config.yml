@@ -13,13 +13,18 @@ on:
       - ".github/workflows/validate-config.yml"
   workflow_dispatch:
 
+concurrency:
+  group: validate-config-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   validate-sources:
-    name: Validate YAML and JS sync
+    name: Validate config source consistency
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -38,60 +43,155 @@ jobs:
           node --version
           node --check "防DNS泄露.js"
 
-      - name: Compare YAML and JS rules
+      - name: Compare YAML and JS full config
         run: |
           ruby <<'RUBY'
+          require "json"
+          require "open3"
           require "yaml"
 
           yaml_file = "防DNS泄露.yaml"
           js_file = "防DNS泄露.js"
+          keys_to_compare = %w[sniffer tun dns proxy-groups rule-providers rules]
 
-          config = YAML.safe_load_file(yaml_file, aliases: true)
-          yaml_rules = Array(config["rules"]).map { |rule| rule.to_s.strip }.reject(&:empty?)
+          yaml_config = YAML.safe_load_file(yaml_file, aliases: true)
 
-          js = File.read(js_file)
-          match = js.match(/const\s+RULES_TEXT\s*=\s*`(?<rules>[\s\S]*?)`;/)
-          abort "Cannot find RULES_TEXT template string in #{js_file}" unless match
+          node_code = <<~'NODE'
+            const fs = require("fs");
+            const vm = require("vm");
+            const file = process.argv[process.argv.length - 1];
+            const code = fs.readFileSync(file, "utf8");
+            const sandbox = { console };
+            vm.createContext(sandbox);
+            const result = vm.runInContext(`${code}\n;main({});`, sandbox, { filename: file });
+            process.stdout.write(JSON.stringify(result));
+          NODE
 
-          js_rules = match[:rules].lines.map(&:strip).reject { |rule| rule.empty? || rule.start_with?("#") }
+          stdout, stderr, status = Open3.capture3("node", "-e", node_code, js_file)
+          unless status.success?
+            warn stderr
+            abort "Failed to evaluate #{js_file}"
+          end
+          js_config = JSON.parse(stdout)
 
-          unless yaml_rules == js_rules
-            puts "Rule sync check failed:"
-            puts "  #{yaml_file}: #{yaml_rules.length} rules"
-            puts "  #{js_file}: #{js_rules.length} rules"
+          def pick(hash, keys)
+            keys.to_h { |key| [key, hash[key]] }
+          end
 
-            limit = [yaml_rules.length, js_rules.length].max
-            first_diff = (0...limit).find { |i| yaml_rules[i] != js_rules[i] }
-            if first_diff
-              puts "First difference at rule ##{first_diff + 1}:"
-              puts "  YAML: #{yaml_rules[first_diff].inspect}"
-              puts "  JS:   #{js_rules[first_diff].inspect}"
+          def canonical(value)
+            case value
+            when Hash
+              value.keys.sort.to_h { |key| [key, canonical(value[key])] }
+            when Array
+              value.map { |item| canonical(item) }
+            else
+              value
+            end
+          end
+
+          def first_diff(a, b, path = "$")
+            return nil if a == b
+            return "#{path}: class #{a.class} != #{b.class}" unless a.class == b.class
+
+            case a
+            when Hash
+              a_keys = a.keys.sort
+              b_keys = b.keys.sort
+              return "#{path}: keys #{a_keys.inspect} != #{b_keys.inspect}" unless a_keys == b_keys
+              a_keys.each do |key|
+                diff = first_diff(a[key], b[key], "#{path}.#{key}")
+                return diff if diff
+              end
+            when Array
+              return "#{path}: length #{a.length} != #{b.length}" unless a.length == b.length
+              a.each_index do |index|
+                diff = first_diff(a[index], b[index], "#{path}[#{index}]")
+                return diff if diff
+              end
+            else
+              return "#{path}: #{a.inspect} != #{b.inspect}"
             end
 
-            yaml_only = yaml_rules - js_rules
-            js_only = js_rules - yaml_rules
+            "#{path}: values differ"
+          end
 
-            unless yaml_only.empty?
-              puts "Rules only in YAML:"
-              yaml_only.first(20).each { |rule| puts "  - #{rule}" }
-              puts "  ... #{yaml_only.length - 20} more" if yaml_only.length > 20
-            end
+          yaml_selected = canonical(pick(yaml_config, keys_to_compare))
+          js_selected = canonical(pick(js_config, keys_to_compare))
 
-            unless js_only.empty?
-              puts "Rules only in JS:"
-              js_only.first(20).each { |rule| puts "  - #{rule}" }
-              puts "  ... #{js_only.length - 20} more" if js_only.length > 20
-            end
-
+          if yaml_selected != js_selected
+            puts "YAML and JS full config sync check failed."
+            puts first_diff(yaml_selected, js_selected)
             exit 1
           end
 
-          puts "YAML and JS rules are synchronized (#{yaml_rules.length} rules)."
+          puts "YAML and JS full config are synchronized for: #{keys_to_compare.join(', ')}."
+          RUBY
+
+      - name: Check rule references
+        run: |
+          ruby <<'RUBY'
+          require "yaml"
+
+          config = YAML.safe_load_file("防DNS泄露.yaml", aliases: true)
+          groups = Array(config["proxy-groups"])
+          group_names = groups.map { |group| group["name"] }.compact
+          provider_names = Hash(config["rule-providers"] || {}).keys
+          rules = Array(config["rules"]).map { |rule| rule.to_s.strip }.reject(&:empty?)
+          built_in_policies = %w[DIRECT REJECT REJECT-DROP REJECT-TINYGIF PASS COMPATIBLE]
+          valid_policies = group_names + built_in_policies
+          errors = []
+
+          duplicate_groups = group_names.group_by(&:itself).select { |_name, values| values.length > 1 }.keys
+          duplicate_groups.each { |name| errors << "Duplicate proxy group: #{name}" }
+
+          duplicate_rules = rules.group_by(&:itself).select { |_rule, values| values.length > 1 }.keys
+          duplicate_rules.each { |rule| errors << "Duplicate rule: #{rule}" }
+
+          groups.each do |group|
+            Array(group["proxies"]).each do |proxy|
+              next if valid_policies.include?(proxy)
+              errors << "Proxy group #{group['name']} references unknown proxy/group: #{proxy}"
+            end
+          end
+
+          rules.each_with_index do |rule, index|
+            parts = rule.split(",").map(&:strip)
+            type = parts[0]
+
+            if type == "RULE-SET"
+              provider = parts[1]
+              policy = parts[2]
+              errors << "Rule ##{index + 1} references unknown rule-provider: #{provider}" unless provider_names.include?(provider)
+              errors << "Rule ##{index + 1} references unknown policy: #{policy}" unless valid_policies.include?(policy)
+            elsif type == "MATCH"
+              policy = parts[1]
+              errors << "Rule ##{index + 1} references unknown policy: #{policy}" unless valid_policies.include?(policy)
+            else
+              policy = parts[2]
+              errors << "Rule ##{index + 1} is too short: #{rule}" if policy.nil? || policy.empty?
+              errors << "Rule ##{index + 1} references unknown policy: #{policy}" if policy && !valid_policies.include?(policy)
+            end
+          end
+
+          Hash(config.dig("dns", "nameserver-policy") || {}).each_key do |key|
+            next unless key.to_s.start_with?("rule-set:")
+            provider = key.to_s.sub(/^rule-set:/, "")
+            errors << "dns.nameserver-policy references unknown rule-provider: #{provider}" unless provider_names.include?(provider)
+          end
+
+          if errors.any?
+            puts "Reference integrity check failed:"
+            errors.each { |error| puts "- #{error}" }
+            exit 1
+          end
+
+          puts "Reference integrity check passed: #{group_names.length} proxy groups, #{provider_names.length} rule providers, #{rules.length} rules."
           RUBY
 
   validate-mihomo:
     name: Load config with mihomo
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: validate-sources
     steps:
       - name: Check out repository
@@ -102,7 +202,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          release_json="$(curl -fsSL \
+          release_json="$(curl --retry 3 --retry-delay 2 --retry-connrefused -fsSL \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -112,7 +212,7 @@ jobs:
             echo "No linux amd64 v1 mihomo asset found" >&2
             exit 1
           fi
-          curl -fsSL "$url" -o mihomo.gz
+          curl --retry 3 --retry-delay 2 --retry-connrefused -fsSL "$url" -o mihomo.gz
           gzip -d mihomo.gz
           chmod +x mihomo
           ./mihomo -v
