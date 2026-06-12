@@ -33,6 +33,26 @@ tcp-concurrent: true
 sniffer:
   enable: true
   parse-pure-ip: true
+  # 这些域名本身依赖真实 DNS / 局域网 / 推送 / 时间服务，跳过嗅探避免目标被误改写。
+  skip-domain:
+    - "+.lan"
+    - "+.local"
+    - "+.home.arpa"
+    - "+.localdomain"
+    - "router.asus.com"
+    - "tplogin.cn"
+    - "miwifi.com"
+    - "tendawifi.com"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.windows.com"
+    - "pool.ntp.org"
+    - "+.ntp.org"
+    - "+.push.apple.com"
+    - "courier.push.apple.com"
+    - "localhost.ptlogin2.qq.com"
+    - "localhost.sec.qq.com"
+    - "localhost.work.weixin.qq.com"
   # 跳过局域网目标嗅探，避免 NAS、投屏、设备发现等目标被改写
   skip-dst-address:
     - 10.0.0.0/8

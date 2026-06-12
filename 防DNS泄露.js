@@ -47,6 +47,27 @@ const OVERRIDE = {
   sniffer: {
     enable: true,
     "parse-pure-ip": true,
+    // 这些域名依赖真实 DNS / 局域网 / 推送 / 时间服务，跳过嗅探避免目标被误改写。
+    "skip-domain": [
+      "+.lan",
+      "+.local",
+      "+.home.arpa",
+      "+.localdomain",
+      "router.asus.com",
+      "tplogin.cn",
+      "miwifi.com",
+      "tendawifi.com",
+      "time.*.com",
+      "time.*.gov",
+      "time.windows.com",
+      "pool.ntp.org",
+      "+.ntp.org",
+      "+.push.apple.com",
+      "courier.push.apple.com",
+      "localhost.ptlogin2.qq.com",
+      "localhost.sec.qq.com",
+      "localhost.work.weixin.qq.com",
+    ],
     "skip-dst-address": [
       "10.0.0.0/8",
       "172.16.0.0/12",
