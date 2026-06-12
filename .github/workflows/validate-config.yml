@@ -4,12 +4,10 @@ on:
   push:
     paths:
       - "防DNS泄露.yaml"
-      - "android-process-name-rules.yaml"
       - ".github/workflows/validate-config.yml"
   pull_request:
     paths:
       - "防DNS泄露.yaml"
-      - "android-process-name-rules.yaml"
       - ".github/workflows/validate-config.yml"
   workflow_dispatch:
 
@@ -31,7 +29,7 @@ jobs:
 
       - name: Parse YAML with aliases enabled
         run: |
-          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "android-process-name-rules.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
+          ruby -e 'require "yaml"; ["防DNS泄露.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
   validate-mihomo:
     name: Load config with mihomo
