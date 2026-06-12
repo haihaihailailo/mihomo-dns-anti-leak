@@ -77,7 +77,7 @@ const OVERRIDE = {
       "com.tencent.mm",
       "com.eg.android.AlipayGphone",
     ],
-    "inet6-address": ["fdfe:dcba:9876::1/126"],
+    "inet6-address": ["fd00:1::1/126"],
   },
   dns: {
     enable: true,
@@ -95,6 +95,8 @@ const OVERRIDE = {
       "+.local",
       "+.msftconnecttest.com",
       "+.msftncsi.com",
+      "+.push.apple.com",
+      "courier.push.apple.com",
       "localhost.ptlogin2.qq.com",
       "localhost.sec.qq.com",
       "+.in-addr.arpa",
@@ -145,21 +147,7 @@ const OVERRIDE = {
       "rule-set:youtube": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
       "rule-set:openai": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
       "rule-set:github": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.google.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.googleapis.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
       "+.googleapis.cn": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.gstatic.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.googleusercontent.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.gvt1.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.gvt2.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.gvt3.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.ggpht.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.recaptcha.net": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.pki.goog": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.openai.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.chatgpt.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.oaistatic.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
-      "+.oaiusercontent.com": ["https://1.1.1.1/dns-query#自动选择", "https://8.8.8.8/dns-query#自动选择"],
     },
   },
   "proxy-groups": [],
@@ -695,6 +683,7 @@ RULE-SET,spotify,Spotify
 RULE-SET,apple,苹果服务
 RULE-SET,biliintl,哔哩哔哩港澳台
 RULE-SET,reject,广告过滤
+DOMAIN-KEYWORD,midea,DIRECT
 DOMAIN-SUFFIX,zalo.me,越南服务
 DOMAIN-SUFFIX,zaloapp.com,越南服务
 DOMAIN-KEYWORD,zalo,越南服务
@@ -702,20 +691,10 @@ DOMAIN-SUFFIX,grab.com,越南服务
 DOMAIN-KEYWORD,grab,越南服务
 DOMAIN-SUFFIX,gojek.com,越南服务
 DOMAIN-KEYWORD,gojek,越南服务
-DOMAIN-SUFFIX,be.com.vn,越南服务
-DOMAIN-SUFFIX,shopee.vn,越南服务
-DOMAIN-SUFFIX,lazada.vn,越南服务
-DOMAIN-SUFFIX,tiki.vn,越南服务
 DOMAIN-KEYWORD,tiki,越南服务
-DOMAIN-SUFFIX,sendo.vn,越南服务
-DOMAIN-SUFFIX,zing.vn,越南服务
-DOMAIN-SUFFIX,zingmp3.vn,越南服务
 DOMAIN-KEYWORD,zing,越南服务
 DOMAIN-SUFFIX,nhaccuatui.com,越南服务
 DOMAIN-SUFFIX,vnexpress.net,越南服务
-DOMAIN-SUFFIX,kenh14.vn,越南服务
-DOMAIN-SUFFIX,fptplay.vn,越南服务
-DOMAIN-SUFFIX,mservice.com.vn,越南服务
 DOMAIN-KEYWORD,momo,越南服务
 DOMAIN-KEYWORD,zalopay,越南服务
 DOMAIN-SUFFIX,vn,越南服务
@@ -728,69 +707,27 @@ DOMAIN-SUFFIX,biz.vn,越南服务
 DOMAIN-SUFFIX,info.vn,越南服务
 DOMAIN-SUFFIX,name.vn,越南服务
 DOMAIN-SUFFIX,pro.vn,越南服务
-DOMAIN-SUFFIX,tuoitre.vn,越南服务
-DOMAIN-SUFFIX,thanhnien.vn,越南服务
-DOMAIN-SUFFIX,dantri.com.vn,越南服务
-DOMAIN-SUFFIX,vietnamnet.vn,越南服务
-DOMAIN-SUFFIX,laodong.vn,越南服务
-DOMAIN-SUFFIX,soha.vn,越南服务
-DOMAIN-SUFFIX,cafef.vn,越南服务
-DOMAIN-SUFFIX,vtv.vn,越南服务
-DOMAIN-SUFFIX,vov.vn,越南服务
-DOMAIN-SUFFIX,nld.com.vn,越南服务
-DOMAIN-SUFFIX,plo.vn,越南服务
-DOMAIN-SUFFIX,tienphong.vn,越南服务
 DOMAIN-SUFFIX,baomoi.com,越南服务
-DOMAIN-SUFFIX,24h.com.vn,越南服务
-DOMAIN-SUFFIX,znews.vn,越南服务
-DOMAIN-SUFFIX,vng.com.vn,越南服务
 DOMAIN-SUFFIX,thegioididong.com,越南服务
 DOMAIN-SUFFIX,dienmayxanh.com,越南服务
 DOMAIN-SUFFIX,bachhoaxanh.com,越南服务
-DOMAIN-SUFFIX,fptshop.com.vn,越南服务
-DOMAIN-SUFFIX,cellphones.com.vn,越南服务
-DOMAIN-SUFFIX,phongvu.vn,越南服务
 DOMAIN-SUFFIX,gearvn.com,越南服务
 DOMAIN-SUFFIX,nguyenkim.com,越南服务
-DOMAIN-SUFFIX,mediamart.vn,越南服务
 DOMAIN-SUFFIX,hoanghamobile.com,越南服务
-DOMAIN-SUFFIX,baemin.vn,越南服务
-DOMAIN-SUFFIX,foody.vn,越南服务
-DOMAIN-SUFFIX,shopeefood.vn,越南服务
-DOMAIN-SUFFIX,now.vn,越南服务
 DOMAIN-SUFFIX,ahamove.com,越南服务
-DOMAIN-SUFFIX,loship.vn,越南服务
 DOMAIN-KEYWORD,baemin,越南服务
 DOMAIN-KEYWORD,shopeefood,越南服务
-DOMAIN-SUFFIX,viettel.vn,越南服务
-DOMAIN-SUFFIX,vietteltelecom.vn,越南服务
-DOMAIN-SUFFIX,viettelpost.vn,越南服务
-DOMAIN-SUFFIX,mobifone.vn,越南服务
-DOMAIN-SUFFIX,vinaphone.com.vn,越南服务
-DOMAIN-SUFFIX,vnpt.vn,越南服务
-DOMAIN-SUFFIX,fpt.vn,越南服务
 DOMAIN-SUFFIX,fpt.net,越南服务
-DOMAIN-SUFFIX,ghn.vn,越南服务
 DOMAIN-SUFFIX,ghnexpress.com,越南服务
-DOMAIN-SUFFIX,ghtk.vn,越南服务
-DOMAIN-SUFFIX,jtexpress.vn,越南服务
-DOMAIN-SUFFIX,jtexpress.com.vn,越南服务
-DOMAIN-SUFFIX,viettelpost.com.vn,越南服务
 DOMAIN-SUFFIX,vietnamairlines.com,越南服务
 DOMAIN-SUFFIX,vietjetair.com,越南服务
 DOMAIN-SUFFIX,bambooairways.com,越南服务
 DOMAIN-SUFFIX,vexere.com,越南服务
 DOMAIN-SUFFIX,traveloka.com,越南服务
-DOMAIN-SUFFIX,batdongsan.com.vn,越南服务
 DOMAIN-SUFFIX,chotot.com,越南服务
 DOMAIN-SUFFIX,muaban.net,越南服务
-DOMAIN-SUFFIX,vieclam24h.vn,越南服务
 DOMAIN-SUFFIX,vietnamworks.com,越南服务
-DOMAIN-SUFFIX,topcv.vn,越南服务
-DOMAIN-SUFFIX,careerbuilder.vn,越南服务
-DOMAIN-SUFFIX,jobstreet.vn,越南服务
 GEOIP,VN,越南服务,no-resolve
-DOMAIN-KEYWORD,midea,DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,coolapk.com,国内服务
 DOMAIN-SUFFIX,www.coolapk.com,国内服务
