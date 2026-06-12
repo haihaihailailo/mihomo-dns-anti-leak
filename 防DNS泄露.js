@@ -101,9 +101,17 @@ const OVERRIDE = {
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
     "fake-ip-range6": "fdfe:dcba:9876::1/64",
+    // blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。
+    "fake-ip-filter-mode": "blacklist",
     "fake-ip-filter": [
       "+.lan",
       "+.local",
+      "+.home.arpa",
+      "+.localdomain",
+      "router.asus.com",
+      "tplogin.cn",
+      "miwifi.com",
+      "tendawifi.com",
       "+.msftconnecttest.com",
       "+.msftncsi.com",
       "+.push.apple.com",
