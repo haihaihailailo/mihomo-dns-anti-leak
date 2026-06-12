@@ -1,0 +1,131 @@
+name: Annotate config comments
+
+on:
+  push:
+    paths:
+      - ".github/workflows/annotate-config-comments.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  annotate:
+    name: Add explanatory comments
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add comments to config files
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def insert_before(text: str, target: str, comment: str) -> str:
+              if comment.strip() in text:
+                  return text
+              if target not in text:
+                  raise SystemExit(f"Target not found: {target!r}")
+              return text.replace(target, comment + target, 1)
+
+          yaml_path = Path("防DNS泄露.yaml")
+          js_path = Path("防DNS泄露.js")
+
+          yaml = yaml_path.read_text(encoding="utf-8")
+          yaml = insert_before(yaml, "unified-delay: true", "# ============================================================\n# Mihomo / Clash Meta DNS 防泄露与分流主配置\n# 维护口径：YAML 是主配置，JS 覆写版本必须与本文件保持同步。\n# 说明：本文件通过 fake-ip、TUN DNS 劫持、规则分流和分应用绕过，降低 DNS 泄露与国内应用异常概率。\n# ============================================================\n\n# --- 1. 全局连接与性能选项 ---\n# unified-delay：统一延迟计算，减少不同节点测速口径差异。\n")
+          yaml = insert_before(yaml, "profile:\n", "\n# --- 2. Profile 持久化选项 ---\n# store-selected：保存各策略组当前选择。\n# store-fake-ip：保存 fake-ip 映射，减少重启后的解析抖动。\n")
+          yaml = insert_before(yaml, "geo-auto-update: true", "\n# --- 3. GEO 数据自动更新 ---\n# geo-auto-update / geo-update-interval：定期更新 GEO 数据，配合 GEOIP/CN、GEOIP/VN 等规则使用。\n")
+          yaml = insert_before(yaml, "tcp-concurrent: true", "\n# --- 4. TCP 并发连接 ---\n# tcp-concurrent：并发尝试连接以降低首包延迟。\n")
+          yaml = insert_before(yaml, "sniffer:\n", "\n# --- 5. Sniffer 嗅探配置 ---\n# 用于从 HTTP/TLS/QUIC 流量中识别真实域名，改善 IP 直连时的分流准确性。\n")
+          yaml = insert_before(yaml, "tun:\n", "\n# --- 6. TUN 配置 ---\n# TUN 接管系统流量；局域网和关键国内支付应用通过排除/绕过避免异常。\n")
+          yaml = insert_before(yaml, "dns:\n", "\n# --- 7. DNS 防泄露配置 ---\n# respect-rules 配合 nameserver-policy 按分流规则选择 DNS；fake-ip 减少直连 DNS 泄露。\n")
+          yaml = insert_before(yaml, "proxy-groups:\n", "\n# --- 8. 策略组 proxy-groups ---\n# 按使用场景组织出口：默认选择、漏网之鱼、国内、越南、AI、Google、流媒体等。\n")
+
+          group_comments = {
+              "  - name: 节点选择\n": "\n  # 默认主策略组：手动选择或切到各地区自动组、地区节点、全部节点、DIRECT。\n",
+              "  - name: 漏网之鱼\n": "\n  # 兜底策略组：未被前置规则命中的流量进入这里，默认跟随节点选择。\n",
+              "  - name: 越南服务\n": "\n  # 越南服务：优先越南节点，第二位 DIRECT；兼顾越南本地服务可用性和直连场景。\n",
+              "  - name: 国内服务\n": "\n  # 国内服务：优先 DIRECT，避免国内应用、支付、小程序、系统服务误入代理。\n",
+              "  - name: GitHub\n": "\n  # GitHub：面向代码托管、GitHub Desktop、相关域名与规则集。\n",
+              "  - name: YouTube\n": "\n  # YouTube：视频服务独立策略，便于按地区/速度单独调优。\n",
+              "  - name: Netflix\n": "\n  # Netflix：流媒体独立策略，便于选择解锁节点。\n",
+              "  - name: AI\n": "\n  # AI：ChatGPT、Claude、Perplexity、Copilot、Codex 等 AI 服务出口。\n",
+              "  - name: 谷歌服务\n": "\n  # Google 全家桶：Google Play、Gmail、Maps、Drive、GMS 等相关服务。\n",
+              "  - name: 电报消息\n": "\n  # Telegram：优先新加坡自动，兼顾低延迟和稳定性。\n",
+              "  - name: 微软服务\n": "\n  # Microsoft：Windows 更新、商店、Edge、Microsoft 账号等服务。\n",
+              "  - name: TikTok\n": "\n  # TikTok：短视频服务独立策略。\n",
+              "  - name: 苹果服务\n": "\n  # Apple：默认 DIRECT，必要时可切代理。\n",
+              "  - name: Spotify\n": "\n  # Spotify：音乐流媒体独立策略。\n",
+              "  - name: 哔哩哔哩港澳台\n": "\n  # 哔哩哔哩港澳台：用于 B 站国际/港澳台相关访问。\n",
+              "  - name: 广告过滤\n": "\n  # 广告过滤：命中 reject 规则集后默认 REJECT。\n",
+              "  - name: 全局直连\n": "\n  # 全局直连：只包含 DIRECT，用于需要强制直连的场景。\n",
+              "  - name: 全部节点\n": "\n  # 全部节点：展示所有可用节点，便于临时手选。\n",
+              "  - &urltest_base\n": "\n  # 自动测速模板：地区自动组复用该 url-test 基础配置。\n",
+              "  - name: 香港节点\n": "\n  # 香港节点：手动选择香港地区节点。\n",
+              "  - name: 台湾节点\n": "\n  # 台湾节点：手动选择台湾地区节点。\n",
+              "  - name: 日本节点\n": "\n  # 日本节点：手动选择日本地区节点。\n",
+              "  - name: 新加坡节点\n": "\n  # 新加坡节点：手动选择新加坡地区节点。\n",
+              "  - name: 美国节点\n": "\n  # 美国节点：手动选择美国地区节点。\n",
+              "  - name: 韩国节点\n": "\n  # 韩国节点：手动选择韩国地区节点。\n",
+              "  - name: 越南节点\n": "\n  # 越南节点：手动选择越南地区节点。\n",
+              "  - name: 中国节点\n": "\n  # 中国节点：中国/回国节点集合，通常隐藏在常用组后侧。\n",
+              "  - name: 中国-自动\n": "\n  # 中国-自动：中国/回国节点自动测速组。\n",
+          }
+          for target, comment in group_comments.items():
+              yaml = insert_before(yaml, target, comment)
+
+          yaml = insert_before(yaml, "rule-providers:\n", "\n# --- 9. 远程规则集 rule-providers ---\n# 从 MetaCubeX meta-rules-dat 拉取常用 geosite/geoip 规则，供 RULE-SET 调用。\n")
+          provider_comments = {
+              "  reject: &meta_domain\n": "  # 广告过滤规则集，作为 domain provider 模板。\n",
+              "  private:\n": "  # 私有/局域网域名规则集。\n",
+              "  cn:\n": "  # 中国大陆域名规则集。\n",
+              "  \"geolocation-!cn\":\n": "  # 非中国大陆地理域名规则集，作为漏网外站兜底前置。\n",
+              "  google:\n": "  # Google 域名规则集。\n",
+              "  youtube:\n": "  # YouTube 域名规则集。\n",
+              "  github:\n": "  # GitHub 域名规则集。\n",
+              "  microsoft:\n": "  # Microsoft 域名规则集。\n",
+              "  openai:\n": "  # OpenAI / ChatGPT 域名规则集。\n",
+              "  telegram:\n": "  # Telegram 域名规则集。\n",
+              "  netflix:\n": "  # Netflix 域名规则集。\n",
+              "  tiktok:\n": "  # TikTok 域名规则集。\n",
+              "  spotify:\n": "  # Spotify 域名规则集。\n",
+              "  apple:\n": "  # Apple 域名规则集。\n",
+              "  biliintl:\n": "  # Bilibili 国际/港澳台规则集。\n",
+              "  telegramcidr:\n": "  # Telegram IP-CIDR 规则集，需 no-resolve。\n",
+          }
+          for target, comment in provider_comments.items():
+              yaml = insert_before(yaml, target, comment)
+
+          yaml = insert_before(yaml, "rules:\n", "\n# --- 10. 分流规则 rules ---\n# 规则按从上到下顺序命中：局域网/私有地址优先，其次分应用、域名、规则集、GEOIP，最后 MATCH 兜底。\n")
+          yaml_path.write_text(yaml, encoding="utf-8")
+
+          js = js_path.read_text(encoding="utf-8")
+          js = insert_before(js, "/**\n * 防DNS泄露.js", "/**\n * 文件说明：Clash Party / Mihomo Party JavaScript 覆写版本。\n * 维护口径：本文件必须与 防DNS泄露.yaml 的关键配置保持同步，CI 会自动比对。\n * 注释只解释结构，不改变实际覆写逻辑。\n */\n\n")
+          js = insert_before(js, "const META_DOMAIN_PROVIDER = {", "// 远程 domain rule-provider 的通用模板。\n")
+          js = insert_before(js, "const URLTEST_BASE = {", "\n// 地区自动测速组的通用模板。\n")
+          js = insert_before(js, "const OVERRIDE = {", "\n// 主覆写对象：包含全局、sniffer、TUN、DNS 等基础配置。\n")
+          js = insert_before(js, "OVERRIDE[\"proxy-groups\"] = [", "\n// 策略组：与 YAML 的 proxy-groups 保持同步。\n")
+          js = insert_before(js, "OVERRIDE[\"rule-providers\"] = {", "\n// 远程规则集：与 YAML 的 rule-providers 保持同步。\n")
+          js = insert_before(js, "const RULES_TEXT = `", "\n// 分流规则文本：与 YAML 的 rules 顺序和内容保持同步。\n")
+          js = insert_before(js, "OVERRIDE.rules = RULES_TEXT", "\n// 将 RULES_TEXT 转为 rules 数组，过滤空行。\n")
+          js = insert_before(js, "function deepClone(value) {", "\n// 深拷贝，避免直接污染输入 config。\n")
+          js = insert_before(js, "function main(config) {", "\n// 入口函数：客户端调用 main(config)，返回覆写后的配置。\n")
+          js_path.write_text(js, encoding="utf-8")
+          PY
+
+      - name: Commit annotated config
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- "防DNS泄露.yaml" "防DNS泄露.js"; then
+            echo "No annotation changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "防DNS泄露.yaml" "防DNS泄露.js"
+          git commit -m "docs: 给配置补充注释"
+          git push
