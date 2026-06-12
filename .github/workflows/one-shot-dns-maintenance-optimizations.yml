@@ -1,0 +1,85 @@
+name: One-shot DNS maintenance optimizations
+
+on:
+  push:
+    paths:
+      - ".github/workflows/one-shot-dns-maintenance-optimizations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    name: Apply low-risk DNS config optimizations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update YAML and JS DNS settings
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          yaml_path = Path("防DNS泄露.yaml")
+          js_path = Path("防DNS泄露.js")
+
+          yaml = yaml_path.read_text(encoding="utf-8")
+          if "  fake-ip-filter-mode: blacklist\n" not in yaml:
+              yaml = yaml.replace(
+                  "  fake-ip-range6: fdfe:dcba:9876::1/64\n  fake-ip-filter:\n",
+                  "  fake-ip-range6: fdfe:dcba:9876::1/64\n  # 显式使用 blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。\n  fake-ip-filter-mode: blacklist\n  fake-ip-filter:\n",
+                  1,
+              )
+          additions = [
+              '    - "+.home.arpa"',
+              '    - "+.localdomain"',
+              '    - "router.asus.com"',
+              '    - "tplogin.cn"',
+              '    - "miwifi.com"',
+              '    - "tendawifi.com"',
+          ]
+          anchor = '    - "+.local"\n'
+          missing = [line for line in additions if line not in yaml]
+          if missing:
+              yaml = yaml.replace(anchor, anchor + "\n".join(missing) + "\n", 1)
+          yaml_path.write_text(yaml, encoding="utf-8")
+
+          js = js_path.read_text(encoding="utf-8")
+          if '    "fake-ip-filter-mode": "blacklist",\n' not in js:
+              js = js.replace(
+                  '    "fake-ip-range6": "fdfe:dcba:9876::1/64",\n    "fake-ip-filter": [\n',
+                  '    "fake-ip-range6": "fdfe:dcba:9876::1/64",\n    // blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。\n    "fake-ip-filter-mode": "blacklist",\n    "fake-ip-filter": [\n',
+                  1,
+              )
+          js_additions = [
+              '      "+.home.arpa",',
+              '      "+.localdomain",',
+              '      "router.asus.com",',
+              '      "tplogin.cn",',
+              '      "miwifi.com",',
+              '      "tendawifi.com",',
+          ]
+          js_anchor = '      "+.local",\n'
+          js_missing = [line for line in js_additions if line not in js]
+          if js_missing:
+              js = js.replace(js_anchor, js_anchor + "\n".join(js_missing) + "\n", 1)
+          js_path.write_text(js, encoding="utf-8")
+          PY
+
+      - name: Commit DNS optimizations
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- "防DNS泄露.yaml" "防DNS泄露.js"; then
+            echo "No DNS optimization changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "防DNS泄露.yaml" "防DNS泄露.js"
+          git commit -m "config: 显式 fake-ip 模式并补充局域网过滤"
+          git push
