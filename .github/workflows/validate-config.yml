@@ -52,7 +52,7 @@ jobs:
 
           yaml_file = "防DNS泄露.yaml"
           js_file = "防DNS泄露.js"
-          keys_to_compare = %w[sniffer tun dns proxy-groups rule-providers rules]
+          keys_to_compare = %w[unified-delay profile geo-auto-update geo-update-interval tcp-concurrent sniffer tun dns proxy-groups rule-providers rules]
 
           yaml_config = YAML.safe_load_file(yaml_file, aliases: true)
 
