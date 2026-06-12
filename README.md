@@ -19,3 +19,5 @@
 - YAML 是主配置。
 - JS 与 YAML 保持功能同步。
 - 以后修改其中一个，另一个也要同步更新。
+- CI 会自动校验 YAML 解析、JS 语法、YAML/JS 关键配置同步、规则引用完整性和 mihomo 加载测试。
+- CI 会检查 `dns`、`tun`、`sniffer`、`proxy-groups`、`rule-providers`、`rules` 是否在 YAML 和 JS 中保持一致。
