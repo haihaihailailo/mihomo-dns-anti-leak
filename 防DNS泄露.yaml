@@ -138,7 +138,7 @@ proxy-groups:
 
   - name: 越南服务
     type: select
-    proxies: [越南-自动, 越南节点, 新加坡-自动, 新加坡节点, 节点选择, DIRECT]
+    proxies: [越南-自动, DIRECT, 越南节点, 新加坡-自动, 新加坡节点, 节点选择]
     url: "https://zalo.me"
     expected-status: 200/301/302
     interval: 300
