@@ -1,9 +1,16 @@
 /**
+ * 文件说明：Clash Party / Mihomo Party JavaScript 覆写版本。
+ * 维护口径：本文件必须与 防DNS泄露.yaml 的关键配置保持同步，CI 会自动比对。
+ * 注释只解释结构，不改变实际覆写逻辑。
+ */
+
+/**
  * 防DNS泄露.js
  * Converted from 防DNS泄露.yaml for Clash Party / Mihomo Party JavaScript override.
  * Entry point: main(config) must return the modified config.
  */
 
+// 远程 domain rule-provider 的通用模板。
 const META_DOMAIN_PROVIDER = {
   type: "http",
   behavior: "domain",
@@ -11,6 +18,8 @@ const META_DOMAIN_PROVIDER = {
   interval: 86400,
 };
 
+
+// 地区自动测速组的通用模板。
 const URLTEST_BASE = {
   type: "url-test",
   interval: 300,
@@ -24,6 +33,8 @@ const URLTEST_BASE = {
   icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg",
 };
 
+
+// 主覆写对象：包含全局、sniffer、TUN、DNS 等基础配置。
 const OVERRIDE = {
   "unified-delay": true,
   profile: {
@@ -155,6 +166,8 @@ const OVERRIDE = {
   rules: [],
 };
 
+
+// 策略组：与 YAML 的 proxy-groups 保持同步。
 OVERRIDE["proxy-groups"] = [
   { name: "节点选择", type: "select", proxies: ["自动选择", "香港-自动", "香港节点", "台湾-自动", "台湾节点", "日本-自动", "日本节点", "新加坡-自动", "新加坡节点", "美国-自动", "美国节点", "韩国-自动", "韩国节点", "越南-自动", "越南节点", "中国-自动", "中国节点", "全部节点", "DIRECT"], url: "https://www.gstatic.com/generate_204", "expected-status": 204, interval: 300, icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg" },
   { name: "漏网之鱼", type: "select", proxies: ["节点选择", "自动选择", "香港-自动", "香港节点", "台湾-自动", "台湾节点", "日本-自动", "日本节点", "新加坡-自动", "新加坡节点", "美国-自动", "美国节点", "韩国-自动", "韩国节点", "越南-自动", "越南节点", "中国-自动", "中国节点", "DIRECT", "全部节点"], url: "https://www.gstatic.com/generate_204", "expected-status": 204, interval: 300, icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/fish.svg" },
@@ -193,6 +206,8 @@ OVERRIDE["proxy-groups"] = [
   { name: "中国-自动", type: "url-test", interval: 300, tolerance: 50, url: "https://www.baidu.com", "expected-status": "200/302", lazy: true, hidden: true, "include-all": true, filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)", icon: "https://flagcdn.com/w320/cn.png" },
 ];
 
+
+// 远程规则集：与 YAML 的 rule-providers 保持同步。
 OVERRIDE["rule-providers"] = {
   reject: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.yaml", path: "./ruleset/metacubex/category-ads-all.yaml" },
   private: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.yaml", path: "./ruleset/metacubex/private.yaml" },
@@ -212,6 +227,8 @@ OVERRIDE["rule-providers"] = {
   telegramcidr: { type: "http", behavior: "ipcidr", format: "yaml", interval: 86400, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.yaml", path: "./ruleset/metacubex/telegramcidr.yaml" },
 };
 
+
+// 分流规则文本：与 YAML 的 rules 顺序和内容保持同步。
 const RULES_TEXT = `
 IP-CIDR,0.0.0.0/8,DIRECT,no-resolve
 IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
@@ -740,15 +757,21 @@ RULE-SET,geolocation-!cn,漏网之鱼
 MATCH,漏网之鱼
 `;
 
+
+// 将 RULES_TEXT 转为 rules 数组，过滤空行。
 OVERRIDE.rules = RULES_TEXT
   .split("\n")
   .map((rule) => rule.trim())
   .filter(Boolean);
 
+
+// 深拷贝，避免直接污染输入 config。
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+
+// 入口函数：客户端调用 main(config)，返回覆写后的配置。
 function main(config) {
   const next = deepClone(OVERRIDE);
   Object.assign(config, next);

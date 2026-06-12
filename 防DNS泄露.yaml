@@ -1,14 +1,35 @@
+# ============================================================
+# Mihomo / Clash Meta DNS 防泄露与分流主配置
+# 维护口径：YAML 是主配置，JS 覆写版本必须与本文件保持同步。
+# 说明：本文件通过 fake-ip、TUN DNS 劫持、规则分流和分应用绕过，降低 DNS 泄露与国内应用异常概率。
+# ============================================================
+
+# --- 1. 全局连接与性能选项 ---
+# unified-delay：统一延迟计算，减少不同节点测速口径差异。
 unified-delay: true
 
+
+# --- 2. Profile 持久化选项 ---
+# store-selected：保存各策略组当前选择。
+# store-fake-ip：保存 fake-ip 映射，减少重启后的解析抖动。
 profile:
   store-selected: true
   store-fake-ip: true
 
+
+# --- 3. GEO 数据自动更新 ---
+# geo-auto-update / geo-update-interval：定期更新 GEO 数据，配合 GEOIP/CN、GEOIP/VN 等规则使用。
 geo-auto-update: true
 geo-update-interval: 24
 
+
+# --- 4. TCP 并发连接 ---
+# tcp-concurrent：并发尝试连接以降低首包延迟。
 tcp-concurrent: true
 
+
+# --- 5. Sniffer 嗅探配置 ---
+# 用于从 HTTP/TLS/QUIC 流量中识别真实域名，改善 IP 直连时的分流准确性。
 sniffer:
   enable: true
   parse-pure-ip: true
@@ -30,6 +51,9 @@ sniffer:
     QUIC:
       ports: [443, 8443]
 
+
+# --- 6. TUN 配置 ---
+# TUN 接管系统流量；局域网和关键国内支付应用通过排除/绕过避免异常。
 tun:
   stack: mixed
   auto-route: true
@@ -54,6 +78,9 @@ tun:
   inet6-address:
     - fd00:1::1/126
 
+
+# --- 7. DNS 防泄露配置 ---
+# respect-rules 配合 nameserver-policy 按分流规则选择 DNS；fake-ip 减少直连 DNS 泄露。
 dns:
   enable: true
   listen: 127.0.0.1:1053
@@ -119,7 +146,12 @@ dns:
     "rule-set:github": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
     "+.googleapis.cn": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
 
+
+# --- 8. 策略组 proxy-groups ---
+# 按使用场景组织出口：默认选择、漏网之鱼、国内、越南、AI、Google、流媒体等。
 proxy-groups:
+
+  # 默认主策略组：手动选择或切到各地区自动组、地区节点、全部节点、DIRECT。
   - name: 节点选择
     type: select
     proxies: [自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, 全部节点, DIRECT]
@@ -128,6 +160,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg"
 
+
+  # 兜底策略组：未被前置规则命中的流量进入这里，默认跟随节点选择。
   - name: 漏网之鱼
     type: select
     proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT, 全部节点]
@@ -136,6 +170,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/fish.svg"
 
+
+  # 越南服务：优先越南节点，第二位 DIRECT；兼顾越南本地服务可用性和直连场景。
   - name: 越南服务
     type: select
     proxies: [越南-自动, DIRECT, 越南节点, 新加坡-自动, 新加坡节点, 节点选择]
@@ -144,6 +180,8 @@ proxy-groups:
     interval: 300
     icon: "https://flagcdn.com/w320/vn.png"
 
+
+  # 国内服务：优先 DIRECT，避免国内应用、支付、小程序、系统服务误入代理。
   - name: 国内服务
     type: select
     proxies: [DIRECT, 中国-自动, 中国节点, 香港-自动, 香港节点, 节点选择]
@@ -152,6 +190,8 @@ proxy-groups:
     interval: 300
     icon: "https://flagcdn.com/w320/cn.png"
 
+
+  # GitHub：面向代码托管、GitHub Desktop、相关域名与规则集。
   - name: GitHub
     type: select
     proxies: [香港-自动, 新加坡-自动, 日本-自动, 美国-自动, 香港节点, 新加坡节点, 日本节点, 美国节点, 节点选择]
@@ -160,6 +200,8 @@ proxy-groups:
     interval: 300
     icon: "https://github.githubassets.com/favicons/favicon.svg"
 
+
+  # YouTube：视频服务独立策略，便于按地区/速度单独调优。
   - name: YouTube
     type: select
     proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
@@ -168,6 +210,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/youtube.svg"
 
+
+  # Netflix：流媒体独立策略，便于选择解锁节点。
   - name: Netflix
     type: select
     proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
@@ -176,6 +220,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/netflix.svg"
 
+
+  # AI：ChatGPT、Claude、Perplexity、Copilot、Codex 等 AI 服务出口。
   - name: AI
     type: select
     proxies: [美国节点, 日本节点, 新加坡节点, 香港节点, 美国-自动, 日本-自动, 新加坡-自动, 香港-自动, 节点选择]
@@ -184,6 +230,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/chatgpt.svg"
 
+
+  # Google 全家桶：Google Play、Gmail、Maps、Drive、GMS 等相关服务。
   - name: 谷歌服务
     type: select
     proxies: [节点选择, 新加坡节点, 日本节点, 香港节点, 美国节点, 新加坡-自动, 日本-自动, 香港-自动, 美国-自动, 自动选择]
@@ -192,6 +240,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/google.svg"
 
+
+  # Telegram：优先新加坡自动，兼顾低延迟和稳定性。
   - name: 电报消息
     type: select
     proxies: [新加坡-自动, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
@@ -200,6 +250,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/telegram.svg"
 
+
+  # Microsoft：Windows 更新、商店、Edge、Microsoft 账号等服务。
   - name: 微软服务
     type: select
     proxies: [DIRECT, 香港-自动, 新加坡-自动, 中国-自动, 香港节点, 新加坡节点, 中国节点, 美国-自动, 美国节点, 节点选择]
@@ -208,6 +260,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/microsoft.svg"
 
+
+  # TikTok：短视频服务独立策略。
   - name: TikTok
     type: select
     proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
@@ -216,6 +270,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/tiktok.svg"
 
+
+  # Apple：默认 DIRECT，必要时可切代理。
   - name: 苹果服务
     type: select
     proxies: [DIRECT, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点]
@@ -224,6 +280,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/apple.svg"
 
+
+  # Spotify：音乐流媒体独立策略。
   - name: Spotify
     type: select
     proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
@@ -232,6 +290,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/spotify.svg"
 
+
+  # 哔哩哔哩港澳台：用于 B 站国际/港澳台相关访问。
   - name: 哔哩哔哩港澳台
     type: select
     proxies: [DIRECT, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点]
@@ -240,6 +300,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/bilibili.svg"
 
+
+  # 广告过滤：命中 reject 规则集后默认 REJECT。
   - name: 广告过滤
     type: select
     proxies: [REJECT, DIRECT]
@@ -248,6 +310,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/bug.svg"
 
+
+  # 全局直连：只包含 DIRECT，用于需要强制直连的场景。
   - name: 全局直连
     type: select
     proxies: [DIRECT]
@@ -256,6 +320,8 @@ proxy-groups:
     interval: 300
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/link.svg"
 
+
+  # 全部节点：展示所有可用节点，便于临时手选。
   - name: 全部节点
     type: select
     include-all: true
@@ -265,6 +331,8 @@ proxy-groups:
     filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群|VIP)).*$"
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg"
 
+
+  # 自动测速模板：地区自动组复用该 url-test 基础配置。
   - &urltest_base
     name: 自动选择
     type: url-test
@@ -278,6 +346,8 @@ proxy-groups:
     filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群|VIP|回国|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)).*$"
     icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg"
 
+
+  # 香港节点：手动选择香港地区节点。
   - name: 香港节点
     type: select
     include-all: true
@@ -293,6 +363,8 @@ proxy-groups:
     filter: "(?i)(广港|香港|HK|Hong Kong|🇭🇰|HongKong)"
     icon: "https://flagcdn.com/w320/hk.png"
 
+
+  # 台湾节点：手动选择台湾地区节点。
   - name: 台湾节点
     type: select
     include-all: true
@@ -308,6 +380,8 @@ proxy-groups:
     filter: "(?i)(广台|台湾|台灣|TW|Tai Wan|🇹🇼|TaiWan|Taiwan)"
     icon: "https://flagcdn.com/w320/tw.png"
 
+
+  # 日本节点：手动选择日本地区节点。
   - name: 日本节点
     type: select
     include-all: true
@@ -323,6 +397,8 @@ proxy-groups:
     filter: "(?i)(广日|日本|JP|川日|东京|大阪|泉日|埼玉|沪日|深日|🇯🇵|Japan)"
     icon: "https://flagcdn.com/w320/jp.png"
 
+
+  # 新加坡节点：手动选择新加坡地区节点。
   - name: 新加坡节点
     type: select
     include-all: true
@@ -338,6 +414,8 @@ proxy-groups:
     filter: "(?i)(广新|新加坡|SG|坡|狮城|🇸🇬|Singapore)"
     icon: "https://flagcdn.com/w320/sg.png"
 
+
+  # 美国节点：手动选择美国地区节点。
   - name: 美国节点
     type: select
     include-all: true
@@ -353,6 +431,8 @@ proxy-groups:
     filter: "(?i)(广美|US|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|🇺🇸|United States)"
     icon: "https://flagcdn.com/w320/us.png"
 
+
+  # 韩国节点：手动选择韩国地区节点。
   - name: 韩国节点
     type: select
     include-all: true
@@ -368,6 +448,8 @@ proxy-groups:
     filter: "(?i)(广韩|韩国|韓國|KR|首尔|春川|🇰🇷|Korea)"
     icon: "https://flagcdn.com/w320/kr.png"
 
+
+  # 越南节点：手动选择越南地区节点。
   - name: 越南节点
     type: select
     include-all: true
@@ -383,6 +465,8 @@ proxy-groups:
     filter: "(?i)(越南|VN|Vietnam|Ho Chi Minh|HoChiMinh|🇻🇳)"
     icon: "https://flagcdn.com/w320/vn.png"
 
+
+  # 中国节点：中国/回国节点集合，通常隐藏在常用组后侧。
   - name: 中国节点
     type: select
     include-all: true
@@ -391,6 +475,8 @@ proxy-groups:
     interval: 300
     filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)"
     icon: "https://flagcdn.com/w320/cn.png"
+
+  # 中国-自动：中国/回国节点自动测速组。
   - name: 中国-自动
     type: url-test
     interval: 300
@@ -403,7 +489,11 @@ proxy-groups:
     filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)"
     icon: "https://flagcdn.com/w320/cn.png"
 
+
+# --- 9. 远程规则集 rule-providers ---
+# 从 MetaCubeX meta-rules-dat 拉取常用 geosite/geoip 规则，供 RULE-SET 调用。
 rule-providers:
+  # 广告过滤规则集，作为 domain provider 模板。
   reject: &meta_domain
     type: http
     behavior: domain
@@ -411,62 +501,77 @@ rule-providers:
     interval: 86400
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.yaml"
     path: "./ruleset/metacubex/category-ads-all.yaml"
+  # 私有/局域网域名规则集。
   private:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.yaml"
     path: "./ruleset/metacubex/private.yaml"
+  # 中国大陆域名规则集。
   cn:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.yaml"
     path: "./ruleset/metacubex/cn.yaml"
+  # 非中国大陆地理域名规则集，作为漏网外站兜底前置。
   "geolocation-!cn":
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.yaml"
     path: "./ruleset/metacubex/geolocation-!cn.yaml"
+  # Google 域名规则集。
   google:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.yaml"
     path: "./ruleset/metacubex/google.yaml"
+  # YouTube 域名规则集。
   youtube:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.yaml"
     path: "./ruleset/metacubex/youtube.yaml"
+  # GitHub 域名规则集。
   github:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.yaml"
     path: "./ruleset/metacubex/github.yaml"
+  # Microsoft 域名规则集。
   microsoft:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.yaml"
     path: "./ruleset/metacubex/microsoft.yaml"
+  # OpenAI / ChatGPT 域名规则集。
   openai:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.yaml"
     path: "./ruleset/metacubex/openai.yaml"
+  # Telegram 域名规则集。
   telegram:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.yaml"
     path: "./ruleset/metacubex/telegram.yaml"
+  # Netflix 域名规则集。
   netflix:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.yaml"
     path: "./ruleset/metacubex/netflix.yaml"
+  # TikTok 域名规则集。
   tiktok:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.yaml"
     path: "./ruleset/metacubex/tiktok.yaml"
+  # Spotify 域名规则集。
   spotify:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.yaml"
     path: "./ruleset/metacubex/spotify.yaml"
+  # Apple 域名规则集。
   apple:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.yaml"
     path: "./ruleset/metacubex/apple.yaml"
+  # Bilibili 国际/港澳台规则集。
   biliintl:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.yaml"
     path: "./ruleset/metacubex/biliintl.yaml"
+  # Telegram IP-CIDR 规则集，需 no-resolve。
   telegramcidr:
     type: http
     behavior: ipcidr
@@ -475,6 +580,9 @@ rule-providers:
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.yaml"
     path: "./ruleset/metacubex/telegramcidr.yaml"
 
+
+# --- 10. 分流规则 rules ---
+# 规则按从上到下顺序命中：局域网/私有地址优先，其次分应用、域名、规则集、GEOIP，最后 MATCH 兜底。
 rules:
   # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
   - "IP-CIDR,0.0.0.0/8,DIRECT,no-resolve"
