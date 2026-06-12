@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "防DNS泄露.yaml"
+      - "防DNS泄露.js"
       - ".github/workflows/validate-config.yml"
   pull_request:
     paths:
       - "防DNS泄露.yaml"
+      - "防DNS泄露.js"
       - ".github/workflows/validate-config.yml"
   workflow_dispatch:
 
@@ -15,8 +17,8 @@ permissions:
   contents: read
 
 jobs:
-  validate-yaml:
-    name: Parse DNS config
+  validate-sources:
+    name: Validate YAML and JS sync
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -31,17 +33,80 @@ jobs:
         run: |
           ruby -e 'require "yaml"; ["防DNS泄露.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
+      - name: Check JavaScript syntax
+        run: |
+          node --version
+          node --check "防DNS泄露.js"
+
+      - name: Compare YAML and JS rules
+        run: |
+          ruby <<'RUBY'
+          require "yaml"
+
+          yaml_file = "防DNS泄露.yaml"
+          js_file = "防DNS泄露.js"
+
+          config = YAML.safe_load_file(yaml_file, aliases: true)
+          yaml_rules = Array(config["rules"]).map { |rule| rule.to_s.strip }.reject(&:empty?)
+
+          js = File.read(js_file)
+          match = js.match(/const\s+RULES_TEXT\s*=\s*`(?<rules>[\s\S]*?)`;/)
+          abort "Cannot find RULES_TEXT template string in #{js_file}" unless match
+
+          js_rules = match[:rules].lines.map(&:strip).reject { |rule| rule.empty? || rule.start_with?("#") }
+
+          unless yaml_rules == js_rules
+            puts "Rule sync check failed:"
+            puts "  #{yaml_file}: #{yaml_rules.length} rules"
+            puts "  #{js_file}: #{js_rules.length} rules"
+
+            limit = [yaml_rules.length, js_rules.length].max
+            first_diff = (0...limit).find { |i| yaml_rules[i] != js_rules[i] }
+            if first_diff
+              puts "First difference at rule ##{first_diff + 1}:"
+              puts "  YAML: #{yaml_rules[first_diff].inspect}"
+              puts "  JS:   #{js_rules[first_diff].inspect}"
+            end
+
+            yaml_only = yaml_rules - js_rules
+            js_only = js_rules - yaml_rules
+
+            unless yaml_only.empty?
+              puts "Rules only in YAML:"
+              yaml_only.first(20).each { |rule| puts "  - #{rule}" }
+              puts "  ... #{yaml_only.length - 20} more" if yaml_only.length > 20
+            end
+
+            unless js_only.empty?
+              puts "Rules only in JS:"
+              js_only.first(20).each { |rule| puts "  - #{rule}" }
+              puts "  ... #{js_only.length - 20} more" if js_only.length > 20
+            end
+
+            exit 1
+          end
+
+          puts "YAML and JS rules are synchronized (#{yaml_rules.length} rules)."
+          RUBY
+
   validate-mihomo:
     name: Load config with mihomo
     runs-on: ubuntu-latest
+    needs: validate-sources
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Download mihomo
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          release_json="$(curl -fsSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)"
+          release_json="$(curl -fsSL \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)"
           url="$(echo "$release_json" | jq -r '.assets[] | select(.name | test("^mihomo-linux-amd64-v1-v.*\\.gz$")) | .browser_download_url' | head -n 1)"
           if [ -z "$url" ]; then
             echo "No linux amd64 v1 mihomo asset found" >&2
