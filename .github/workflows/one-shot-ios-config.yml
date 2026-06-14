@@ -1,6 +1,6 @@
 name: One-shot iOS config generator
 
-# Trigger one-shot iOS config generation.
+# Trigger one-shot iOS config generation with untracked-file detection.
 on:
   push:
     paths:
@@ -91,7 +91,7 @@ jobs:
       - name: Commit iOS configs
         run: |
           set -euo pipefail
-          if git diff --quiet -- "防DNS泄露-iOS.yaml" "防DNS泄露-iOS.js"; then
+          if [ -z "$(git status --short -- "防DNS泄露-iOS.yaml" "防DNS泄露-iOS.js")" ]; then
             echo "No iOS config changes needed."
             exit 0
           fi
