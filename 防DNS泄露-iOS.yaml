@@ -1,0 +1,1147 @@
+# ============================================================
+# Mihomo / Clash Meta DNS 防泄露与分流 iOS 专用配置
+# 维护口径：YAML 是主配置，JS 覆写版本必须与本文件保持同步。
+# 说明：本文件适配 iOS Clash Mi，移除配置内 tun，由客户端接管 VPN 隧道。
+# ============================================================
+
+# --- 1. 全局连接与性能选项 ---
+# unified-delay：统一延迟计算，减少不同节点测速口径差异。
+unified-delay: true
+
+
+# --- 2. Profile 持久化选项 ---
+# store-selected：保存各策略组当前选择。
+# store-fake-ip：保存 fake-ip 映射，减少重启后的解析抖动。
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+
+# --- 3. GEO 数据自动更新 ---
+# geo-auto-update / geo-update-interval：定期更新 GEO 数据，配合 GEOIP/CN、GEOIP/VN 等规则使用。
+geo-auto-update: true
+geo-update-interval: 24
+
+
+# --- 4. TCP 并发连接 ---
+# tcp-concurrent：并发尝试连接以降低首包延迟。
+tcp-concurrent: true
+
+
+# --- 5. Sniffer 嗅探配置 ---
+# 用于从 HTTP/TLS/QUIC 流量中识别真实域名，改善 IP 直连时的分流准确性。
+sniffer:
+  enable: true
+  parse-pure-ip: true
+  # 这些域名本身依赖真实 DNS / 局域网 / 推送 / 时间服务，跳过嗅探避免目标被误改写。
+  skip-domain:
+    - "+.lan"
+    - "+.local"
+    - "+.home.arpa"
+    - "+.localdomain"
+    - "router.asus.com"
+    - "tplogin.cn"
+    - "miwifi.com"
+    - "tendawifi.com"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.windows.com"
+    - "pool.ntp.org"
+    - "+.ntp.org"
+    - "+.push.apple.com"
+    - "courier.push.apple.com"
+    - "localhost.ptlogin2.qq.com"
+    - "localhost.sec.qq.com"
+    - "localhost.work.weixin.qq.com"
+  # 跳过局域网目标嗅探，避免 NAS、投屏、设备发现等目标被改写
+  skip-dst-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+
+
+# --- 7. DNS 防泄露配置 ---
+# respect-rules 配合 nameserver-policy 按分流规则选择 DNS；fake-ip 减少直连 DNS 泄露。
+dns:
+  enable: true
+  listen: 127.0.0.1:1053
+  prefer-h3: false
+  respect-rules: true
+  use-system-hosts: false
+  cache-algorithm: arc
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  # 显式使用 blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "+.lan"
+    - "+.local"
+    - "+.home.arpa"
+    - "+.localdomain"
+    - "router.asus.com"
+    - "tplogin.cn"
+    - "miwifi.com"
+    - "tendawifi.com"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "+.push.apple.com"
+    - "courier.push.apple.com"
+    - "localhost.ptlogin2.qq.com"
+    - "localhost.sec.qq.com"
+    - "+.in-addr.arpa"
+    - "+.ip6.arpa"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.windows.com"
+    - "pool.ntp.org"
+    - "+.ntp.org"
+    - "+.stun.*"
+    - "stun.*.*"
+    - "localhost.work.weixin.qq.com"
+  default-nameserver: [223.5.5.5, 119.29.29.29]
+  nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  direct-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  direct-nameserver-follow-policy: false
+  nameserver-policy:
+    "rule-set:private": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:microsoft": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.download.windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "+.dl.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:geolocation-!cn": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:google": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:youtube": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:openai": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "rule-set:github": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+    "+.googleapis.cn": [https://1.1.1.1/dns-query#自动选择, https://8.8.8.8/dns-query#自动选择]
+
+
+# --- 8. 策略组 proxy-groups ---
+# 按使用场景组织出口：默认选择、漏网之鱼、国内、越南、AI、Google、流媒体等。
+proxy-groups:
+
+  # 默认主策略组：手动选择或切到各地区自动组、地区节点、全部节点、DIRECT。
+  - name: 节点选择
+    type: select
+    proxies: [自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, 全部节点, DIRECT]
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg"
+
+
+  # 兜底策略组：未被前置规则命中的流量进入这里，默认跟随节点选择。
+  - name: 漏网之鱼
+    type: select
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT, 全部节点]
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/fish.svg"
+
+
+  # 越南服务：优先越南节点，第二位 DIRECT；兼顾越南本地服务可用性和直连场景。
+  - name: 越南服务
+    type: select
+    proxies: [越南-自动, DIRECT, 越南节点, 新加坡-自动, 新加坡节点, 节点选择]
+    url: "https://zalo.me"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://flagcdn.com/w320/vn.png"
+
+
+  # 国内服务：优先 DIRECT，避免国内应用、支付、小程序、系统服务误入代理。
+  - name: 国内服务
+    type: select
+    proxies: [DIRECT, 中国-自动, 中国节点, 香港-自动, 香港节点, 节点选择]
+    url: "https://www.baidu.com"
+    expected-status: 200/302
+    interval: 300
+    icon: "https://flagcdn.com/w320/cn.png"
+
+
+  # GitHub：面向代码托管、GitHub Desktop、相关域名与规则集。
+  - name: GitHub
+    type: select
+    proxies: [香港-自动, 新加坡-自动, 日本-自动, 美国-自动, 香港节点, 新加坡节点, 日本节点, 美国节点, 节点选择]
+    url: "https://github.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://github.githubassets.com/favicons/favicon.svg"
+
+
+  # YouTube：视频服务独立策略，便于按地区/速度单独调优。
+  - name: YouTube
+    type: select
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
+    url: "https://www.youtube.com/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/youtube.svg"
+
+
+  # Netflix：流媒体独立策略，便于选择解锁节点。
+  - name: Netflix
+    type: select
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
+    url: "https://www.netflix.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/netflix.svg"
+
+
+  # AI：ChatGPT、Claude、Perplexity、Copilot、Codex 等 AI 服务出口。
+  - name: AI
+    type: select
+    proxies: [美国节点, 日本节点, 新加坡节点, 香港节点, 美国-自动, 日本-自动, 新加坡-自动, 香港-自动, 节点选择]
+    url: "https://chatgpt.com/cdn-cgi/trace"
+    expected-status: 200
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/chatgpt.svg"
+
+
+  # Google 全家桶：Google Play、Gmail、Maps、Drive、GMS 等相关服务。
+  - name: 谷歌服务
+    type: select
+    proxies: [节点选择, 新加坡节点, 日本节点, 香港节点, 美国节点, 新加坡-自动, 日本-自动, 香港-自动, 美国-自动, 自动选择]
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/google.svg"
+
+
+  # Telegram：优先新加坡自动，兼顾低延迟和稳定性。
+  - name: 电报消息
+    type: select
+    proxies: [新加坡-自动, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点, DIRECT]
+    url: "https://core.telegram.org"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/telegram.svg"
+
+
+  # Microsoft：Windows 更新、商店、Edge、Microsoft 账号等服务。
+  - name: 微软服务
+    type: select
+    proxies: [DIRECT, 香港-自动, 新加坡-自动, 中国-自动, 香港节点, 新加坡节点, 中国节点, 美国-自动, 美国节点, 节点选择]
+    url: "http://www.msftconnecttest.com/connecttest.txt"
+    expected-status: 200
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/microsoft.svg"
+
+
+  # TikTok：短视频服务独立策略。
+  - name: TikTok
+    type: select
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
+    url: "https://www.tiktok.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/tiktok.svg"
+
+
+  # Apple：默认 DIRECT，必要时可切代理。
+  - name: 苹果服务
+    type: select
+    proxies: [DIRECT, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点]
+    url: "https://www.apple.com/library/test/success.html"
+    expected-status: 200
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/apple.svg"
+
+
+  # Spotify：音乐流媒体独立策略。
+  - name: Spotify
+    type: select
+    proxies: [节点选择, 自动选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, DIRECT]
+    url: "https://open.spotify.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/spotify.svg"
+
+
+  # 哔哩哔哩港澳台：用于 B 站国际/港澳台相关访问。
+  - name: 哔哩哔哩港澳台
+    type: select
+    proxies: [DIRECT, 自动选择, 节点选择, 香港-自动, 香港节点, 台湾-自动, 台湾节点, 日本-自动, 日本节点, 新加坡-自动, 新加坡节点, 美国-自动, 美国节点, 韩国-自动, 韩国节点, 越南-自动, 越南节点, 中国-自动, 中国节点]
+    url: "https://www.bilibili.com"
+    expected-status: 200/301/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/bilibili.svg"
+
+
+  # 广告过滤：命中 reject 规则集后默认 REJECT。
+  - name: 广告过滤
+    type: select
+    proxies: [REJECT, DIRECT]
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/bug.svg"
+
+
+  # 全局直连：只包含 DIRECT，用于需要强制直连的场景。
+  - name: 全局直连
+    type: select
+    proxies: [DIRECT]
+    url: "https://www.baidu.com"
+    expected-status: 200/302
+    interval: 300
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/link.svg"
+
+
+  # 全部节点：展示所有可用节点，便于临时手选。
+  - name: 全部节点
+    type: select
+    include-all: true
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    interval: 300
+    filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群|VIP)).*$"
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg"
+
+
+  # 自动测速模板：地区自动组复用该 url-test 基础配置。
+  - &urltest_base
+    name: 自动选择
+    type: url-test
+    interval: 300
+    tolerance: 50
+    url: "https://www.gstatic.com/generate_204"
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群|VIP|回国|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)).*$"
+    icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg"
+
+
+  # 香港节点：手动选择香港地区节点。
+  - name: 香港节点
+    type: select
+    include-all: true
+    url: "https://www.google.com.hk/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广港|香港|HK|Hong Kong|🇭🇰|HongKong)"
+    icon: "https://flagcdn.com/w320/hk.png"
+  - <<: *urltest_base
+    name: 香港-自动
+    url: "https://www.google.com.hk/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广港|香港|HK|Hong Kong|🇭🇰|HongKong)"
+    icon: "https://flagcdn.com/w320/hk.png"
+
+
+  # 台湾节点：手动选择台湾地区节点。
+  - name: 台湾节点
+    type: select
+    include-all: true
+    url: "https://www.google.com.tw/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广台|台湾|台灣|TW|Tai Wan|🇹🇼|TaiWan|Taiwan)"
+    icon: "https://flagcdn.com/w320/tw.png"
+  - <<: *urltest_base
+    name: 台湾-自动
+    url: "https://www.google.com.tw/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广台|台湾|台灣|TW|Tai Wan|🇹🇼|TaiWan|Taiwan)"
+    icon: "https://flagcdn.com/w320/tw.png"
+
+
+  # 日本节点：手动选择日本地区节点。
+  - name: 日本节点
+    type: select
+    include-all: true
+    url: "https://www.google.co.jp/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广日|日本|JP|川日|东京|大阪|泉日|埼玉|沪日|深日|🇯🇵|Japan)"
+    icon: "https://flagcdn.com/w320/jp.png"
+  - <<: *urltest_base
+    name: 日本-自动
+    url: "https://www.google.co.jp/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广日|日本|JP|川日|东京|大阪|泉日|埼玉|沪日|深日|🇯🇵|Japan)"
+    icon: "https://flagcdn.com/w320/jp.png"
+
+
+  # 新加坡节点：手动选择新加坡地区节点。
+  - name: 新加坡节点
+    type: select
+    include-all: true
+    url: "https://www.google.com.sg/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广新|新加坡|SG|坡|狮城|🇸🇬|Singapore)"
+    icon: "https://flagcdn.com/w320/sg.png"
+  - <<: *urltest_base
+    name: 新加坡-自动
+    url: "https://www.google.com.sg/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广新|新加坡|SG|坡|狮城|🇸🇬|Singapore)"
+    icon: "https://flagcdn.com/w320/sg.png"
+
+
+  # 美国节点：手动选择美国地区节点。
+  - name: 美国节点
+    type: select
+    include-all: true
+    url: "https://www.google.com/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广美|US|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|🇺🇸|United States)"
+    icon: "https://flagcdn.com/w320/us.png"
+  - <<: *urltest_base
+    name: 美国-自动
+    url: "https://www.google.com/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广美|US|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|🇺🇸|United States)"
+    icon: "https://flagcdn.com/w320/us.png"
+
+
+  # 韩国节点：手动选择韩国地区节点。
+  - name: 韩国节点
+    type: select
+    include-all: true
+    url: "https://www.google.co.kr/generate_204"
+    expected-status: 200/204/301/302
+    interval: 300
+    filter: "(?i)(广韩|韩国|韓國|KR|首尔|春川|🇰🇷|Korea)"
+    icon: "https://flagcdn.com/w320/kr.png"
+  - <<: *urltest_base
+    name: 韩国-自动
+    url: "https://www.google.co.kr/generate_204"
+    expected-status: 200/204/301/302
+    filter: "(?i)(广韩|韩国|韓國|KR|首尔|春川|🇰🇷|Korea)"
+    icon: "https://flagcdn.com/w320/kr.png"
+
+
+  # 越南节点：手动选择越南地区节点。
+  - name: 越南节点
+    type: select
+    include-all: true
+    url: "https://zalo.me"
+    expected-status: 200/301/302
+    interval: 300
+    filter: "(?i)(越南|VN|Vietnam|Ho Chi Minh|HoChiMinh|🇻🇳)"
+    icon: "https://flagcdn.com/w320/vn.png"
+  - <<: *urltest_base
+    name: 越南-自动
+    url: "https://zalo.me"
+    expected-status: 200/301/302
+    filter: "(?i)(越南|VN|Vietnam|Ho Chi Minh|HoChiMinh|🇻🇳)"
+    icon: "https://flagcdn.com/w320/vn.png"
+
+
+  # 中国节点：中国/回国节点集合，通常隐藏在常用组后侧。
+  - name: 中国节点
+    type: select
+    include-all: true
+    url: "https://www.baidu.com"
+    expected-status: 200/302
+    interval: 300
+    filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)"
+    icon: "https://flagcdn.com/w320/cn.png"
+
+  # 中国-自动：中国/回国节点自动测速组。
+  - name: 中国-自动
+    type: url-test
+    interval: 300
+    tolerance: 50
+    url: "https://www.baidu.com"
+    expected-status: 200/302
+    lazy: true
+    hidden: true
+    include-all: true
+    filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)"
+    icon: "https://flagcdn.com/w320/cn.png"
+
+
+# --- 9. 远程规则集 rule-providers ---
+# 从 MetaCubeX meta-rules-dat 拉取常用 geosite/geoip 规则，供 RULE-SET 调用。
+rule-providers:
+  # 广告过滤规则集，作为 domain provider 模板。
+  reject: &meta_domain
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"
+    path: "./ruleset/metacubex/category-ads-all.mrs"
+  # 私有/局域网域名规则集。
+  private:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+    path: "./ruleset/metacubex/private.mrs"
+  # 中国大陆域名规则集。
+  cn:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
+    path: "./ruleset/metacubex/cn.mrs"
+  # 非中国大陆地理域名规则集，作为漏网外站兜底前置。
+  "geolocation-!cn":
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"
+    path: "./ruleset/metacubex/geolocation-!cn.mrs"
+  # Google 域名规则集。
+  google:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"
+    path: "./ruleset/metacubex/google.mrs"
+  # YouTube 域名规则集。
+  youtube:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"
+    path: "./ruleset/metacubex/youtube.mrs"
+  # GitHub 域名规则集。
+  github:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"
+    path: "./ruleset/metacubex/github.mrs"
+  # Microsoft 域名规则集。
+  microsoft:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs"
+    path: "./ruleset/metacubex/microsoft.mrs"
+  # OpenAI / ChatGPT 域名规则集。
+  openai:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs"
+    path: "./ruleset/metacubex/openai.mrs"
+  # Telegram 域名规则集。
+  telegram:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"
+    path: "./ruleset/metacubex/telegram.mrs"
+  # Netflix 域名规则集。
+  netflix:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"
+    path: "./ruleset/metacubex/netflix.mrs"
+  # TikTok 域名规则集。
+  tiktok:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"
+    path: "./ruleset/metacubex/tiktok.mrs"
+  # Spotify 域名规则集。
+  spotify:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs"
+    path: "./ruleset/metacubex/spotify.mrs"
+  # Apple 域名规则集。
+  apple:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"
+    path: "./ruleset/metacubex/apple.mrs"
+  # Bilibili 国际/港澳台规则集。
+  biliintl:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs"
+    path: "./ruleset/metacubex/biliintl.mrs"
+  # Telegram IP-CIDR 规则集，需 no-resolve。
+  telegramcidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"
+    path: "./ruleset/metacubex/telegramcidr.mrs"
+
+
+# --- 10. 分流规则 rules ---
+# 规则按从上到下顺序命中：局域网/私有地址优先，其次分应用、域名、规则集、GEOIP，最后 MATCH 兜底。
+rules:
+  # --- 局域网 / 私有地址：最高优先级直连，避免被 PROCESS-NAME 抢先命中 ---
+  - "IP-CIDR,0.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve"
+  - "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
+  - "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
+  - "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
+  - "IP-CIDR,224.0.0.0/4,DIRECT,no-resolve"
+  - "IP-CIDR,255.255.255.255/32,DIRECT,no-resolve"
+  - "IP-CIDR6,::1/128,DIRECT,no-resolve"
+  - "IP-CIDR6,fc00::/7,DIRECT,no-resolve"
+  - "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
+  - "DOMAIN-SUFFIX,local,DIRECT"
+  - "DOMAIN-SUFFIX,lan,DIRECT"
+  - "RULE-SET,private,DIRECT"
+  - "GEOIP,LAN,DIRECT,no-resolve"
+  # --- AI ---
+  - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
+  - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini
+  - PROCESS-NAME,com.anthropic.claude,AI # Claude
+  - PROCESS-NAME,ai.perplexity.app.android,AI # Perplexity
+  - PROCESS-NAME,com.microsoft.copilot,AI # Microsoft Copilot
+
+  # --- 海外社交 / 通讯 ---
+  - PROCESS-NAME,com.twitter.android,节点选择 # X / Twitter
+  - PROCESS-NAME,com.facebook.katana,节点选择 # Facebook
+  - PROCESS-NAME,com.facebook.orca,节点选择 # Messenger
+  - PROCESS-NAME,com.instagram.android,节点选择 # Instagram
+  - PROCESS-NAME,com.instagram.barcelona,节点选择 # Threads
+  - PROCESS-NAME,org.telegram.messenger,电报消息 # Telegram
+  - PROCESS-NAME,org.telegram.group,电报消息 # Turrit
+  - PROCESS-NAME,com.whatsapp,节点选择 # WhatsApp
+  - PROCESS-NAME,com.reddit.frontpage,节点选择 # Reddit
+  - PROCESS-NAME,com.discord,节点选择 # Discord
+  - PROCESS-NAME,org.thoughtcrime.securesms,节点选择 # Signal
+  - PROCESS-NAME,jp.naver.line.android,节点选择 # LINE
+  - PROCESS-NAME,com.snapchat.android,节点选择 # Snapchat
+  - PROCESS-NAME,com.pinterest,节点选择 # Pinterest
+  - PROCESS-NAME,com.linkedin.android,节点选择 # LinkedIn
+  - PROCESS-NAME,com.duolingo,节点选择 # Duolingo
+
+  # --- Google 全家桶 ---
+  - PROCESS-NAME,com.google.android.googlequicksearchbox,谷歌服务 # Google
+  - PROCESS-NAME,com.google.android.apps.maps,谷歌服务 # Google 地图
+  - PROCESS-NAME,com.google.android.gm,谷歌服务 # Gmail
+  - PROCESS-NAME,com.google.android.apps.docs,谷歌服务 # Google 云端硬盘
+  - PROCESS-NAME,com.google.android.apps.translate,谷歌服务 # Google 翻译
+  - PROCESS-NAME,com.android.vending,谷歌服务 # Google Play 商店
+  - PROCESS-NAME,com.google.android.gms,谷歌服务 # Google Play 服务
+  - PROCESS-NAME,com.google.android.gsf,谷歌服务 # Google 服务框架
+  - PROCESS-NAME,com.google.android.gsf.login,谷歌服务 # Google 账号登录
+  - PROCESS-NAME,com.google.android.partnersetup,谷歌服务 # Google Partner Setup
+  - PROCESS-NAME,com.google.android.configupdater,谷歌服务 # Google ConfigUpdater
+  - PROCESS-NAME,com.google.android.onetimeinitializer,谷歌服务 # Google One Time Init
+  - PROCESS-NAME,com.google.android.as.oss,谷歌服务 # Private Compute Services
+  - PROCESS-NAME,com.google.android.contactkeys,谷歌服务 # Android System Key Verifier
+  - PROCESS-NAME,com.google.android.inputmethod.latin,谷歌服务 # Gboard
+  - PROCESS-NAME,com.google.android.apps.authenticator2,谷歌服务 # Authenticator
+  - PROCESS-NAME,com.google.ar.core,谷歌服务 # ARCore
+  - PROCESS-NAME,com.google.android.marvin.talkback,谷歌服务 # Android 无障碍套件
+  - PROCESS-NAME,com.google.android.accessibility.switchaccess,谷歌服务 # 开关控制
+  - PROCESS-NAME,com.google.android.printservice.recommendation,谷歌服务 # Print Service Recommendation Service
+  # - PROCESS-NAME,com.google.android.webview,谷歌服务 # Android System WebView（WebView 不按包名固定，交给域名规则分流）
+  - PROCESS-NAME,com.google.android.apps.photos,谷歌服务 # Google Photos
+  # - PROCESS-NAME,com.android.chrome,谷歌服务 # Google Chrome（浏览器不按包名固定，交给域名规则分流）
+  - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
+  - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
+  - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth
+  - PROCESS-NAME,com.microsoft.appmanager,微软服务 # 连接至 Windows
+  - PROCESS-NAME,com.microsoft.deviceintegrationservice,微软服务 # Microsoft Device Integration Service
+  - PROCESS-NAME,com.microsoftsdk.crossdeviceservicebroker,微软服务 # Microsoft Cross Device Service Broker
+
+  # --- 国内 App：按包名固定到国内服务，避免掉到漏网之鱼 ---
+  # - PROCESS-NAME,com.tencent.mm,国内服务 # 微信（由 Clash Mi 分应用黑名单绕过 VPN）
+  - PROCESS-NAME,com.tencent.mobileqq,国内服务 # QQ
+  - PROCESS-NAME,com.tencent.tim,国内服务 # TIM
+  - PROCESS-NAME,com.tencent.soter.soterserver,国内服务 # SoterService / 腾讯安全认证服务
+  - PROCESS-NAME,com.sina.weibo,国内服务 # 微博
+  - PROCESS-NAME,com.zhihu.android,国内服务 # 知乎
+  # - PROCESS-NAME,com.eg.android.AlipayGphone,国内服务 # 支付宝（由 Clash Mi 分应用黑名单绕过 VPN）
+  - PROCESS-NAME,com.taobao.taobao,国内服务 # 淘宝
+  - PROCESS-NAME,com.tmall.wireless,国内服务 # 天猫
+  - PROCESS-NAME,com.jingdong.app.mall,国内服务 # 京东
+  - PROCESS-NAME,com.xunmeng.pinduoduo,国内服务 # 拼多多
+  - PROCESS-NAME,me.ele,国内服务 # 饿了么
+  - PROCESS-NAME,com.sankuai.meituan,国内服务 # 美团
+  - PROCESS-NAME,com.sankuai.meituan.takeoutnew,国内服务 # 美团外卖
+  - PROCESS-NAME,com.dianping.v1,国内服务 # 大众点评
+  - PROCESS-NAME,ctrip.android.view,国内服务 # 携程
+  - PROCESS-NAME,com.Qunar,国内服务 # 去哪儿
+  - PROCESS-NAME,com.autonavi.minimap,国内服务 # 高德地图
+  - PROCESS-NAME,com.baidu.BaiduMap,国内服务 # 百度地图
+  - PROCESS-NAME,com.sdu.didi.psnger,国内服务 # 滴滴出行
+  - PROCESS-NAME,com.MobileTicket,国内服务 # 铁路12306
+  - PROCESS-NAME,com.unionpay,国内服务 # 云闪付
+  - PROCESS-NAME,com.ss.android.ugc.aweme,国内服务 # 抖音
+  - PROCESS-NAME,com.ss.android.ugc.aweme.mobile,国内服务 # 抖音部分渠道版
+  - PROCESS-NAME,com.ss.android.ugc.aweme.lite,国内服务 # 抖音极速版
+  - PROCESS-NAME,com.smile.gifmaker,国内服务 # 快手
+  - PROCESS-NAME,com.kuaishou.nebula,国内服务 # 快手极速版
+  - PROCESS-NAME,com.xingin.xhs,国内服务 # 小红书 / REDnote
+  - PROCESS-NAME,com.youku.phone,国内服务 # 优酷
+  - PROCESS-NAME,com.qiyi.video,国内服务 # 爱奇艺
+  - PROCESS-NAME,com.tencent.qqlive,国内服务 # 腾讯视频
+  - PROCESS-NAME,com.ss.android.article.news,国内服务 # 今日头条
+  - PROCESS-NAME,com.netease.cloudmusic,国内服务 # 网易云音乐
+  - PROCESS-NAME,com.tencent.qqmusic,国内服务 # QQ音乐
+  - PROCESS-NAME,com.kugou.android,国内服务 # 酷狗音乐
+  - PROCESS-NAME,com.icbc,国内服务 # 工商银行
+  - PROCESS-NAME,com.chinamworld.main,国内服务 # 建设银行
+  - PROCESS-NAME,com.cmbchina.ccd.pluto.cmbActivity,国内服务 # 招商银行
+  - PROCESS-NAME,com.greenpoint.android.mc10086.activity,国内服务 # 中国移动
+  - PROCESS-NAME,com.sinovatech.unicom.ui,国内服务 # 中国联通
+  - PROCESS-NAME,com.ct.client,国内服务 # 中国电信
+  - PROCESS-NAME,com.tencent.wework,国内服务 # 企业微信
+  - PROCESS-NAME,com.alibaba.android.rimet,国内服务 # 钉钉
+  - PROCESS-NAME,com.ss.android.lark,国内服务 # 飞书
+  - PROCESS-NAME,com.baidu.netdisk,国内服务 # 百度网盘
+  - PROCESS-NAME,com.tencent.weiyun,国内服务 # 腾讯微云
+  - PROCESS-NAME,cn.wps.moffice_eng,国内服务 # WPS Office
+
+  - PROCESS-NAME,com.tencent.androidqqmail,国内服务 # QQ邮箱
+  - PROCESS-NAME,com.tencent.wemeet.app,国内服务 # 腾讯会议
+  - PROCESS-NAME,com.taobao.idlefish,国内服务 # 闲鱼
+  - PROCESS-NAME,com.achievo.vipshop,国内服务 # 唯品会
+  - PROCESS-NAME,com.alibaba.wireless,国内服务 # 1688 / 阿里巴巴
+  - PROCESS-NAME,com.cainiao.wireless,国内服务 # 菜鸟
+  - PROCESS-NAME,com.fcbox.hiveconsumer,国内服务 # 丰巢
+  - PROCESS-NAME,com.intsig.camscanner,国内服务 # 扫描全能王
+  - PROCESS-NAME,com.manmanbuy.bijia,国内服务 # 慢慢买
+  - PROCESS-NAME,com.max.xiaoheihe,国内服务 # 小黑盒
+  - PROCESS-NAME,com.umetrip.android.msky.app,国内服务 # 航旅纵横
+  - PROCESS-NAME,com.oneplus.bbs,国内服务 # 一加社区
+  - PROCESS-NAME,com.oneplus.member,国内服务 # 我的一加
+  - PROCESS-NAME,com.oppo.store,国内服务 # OPPO 商城
+  - PROCESS-NAME,com.heytap.market,国内服务 # 软件商店
+  - PROCESS-NAME,com.heytap.browser,国内服务 # OPPO 浏览器
+  - PROCESS-NAME,com.nearme.instant.platform,国内服务 # 快应用服务框架
+  - PROCESS-NAME,com.netease.uuremote,国内服务 # UU远程
+  - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
+  - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek
+  - PROCESS-NAME,com.larus.nova,国内服务 # 豆包
+  - PROCESS-NAME,com.tencent.tmgp.cf,国内服务 # 穿越火线-枪战王者
+  - PROCESS-NAME,com.x7890.shortcutcreator,国内服务 # 创建快捷方式
+  - PROCESS-NAME,com.tryfun.intelligent,国内服务 # 春风元力
+  - PROCESS-NAME,com.ktls.fileinfo,国内服务 # 存储空间清理
+  - PROCESS-NAME,com.jingcai.apps.qualitydev,国内服务 # 到梦空间
+  - PROCESS-NAME,com.dragon.read,国内服务 # 番茄免费小说
+  - PROCESS-NAME,com.example.gxcs_app,国内服务 # 广西人社
+  - PROCESS-NAME,com.jingyao.easybike,国内服务 # 哈啰
+  - PROCESS-NAME,com.cmic.heduohao,国内服务 # 和多号
+  - PROCESS-NAME,com.lemon.lv,国内服务 # 剪映
+  - PROCESS-NAME,com.ksjhaoka.a,国内服务 # 卡世界
+  - PROCESS-NAME,com.coolapk.market,国内服务 # 酷安
+  - PROCESS-NAME,com.taou.maimai,国内服务 # 脉脉
+  - PROCESS-NAME,com.eusoft.ting.en,国内服务 # 每日英语听力
+  - PROCESS-NAME,com.mt.mtxx.mtxx,国内服务 # 美图秀秀
+  - PROCESS-NAME,com.midea.connect,国内服务 # 美信
+  - PROCESS-NAME,com.job.android,国内服务 # 前程无忧51Job
+  - PROCESS-NAME,com.redteamobile.roaming,国内服务 # 逍遥游
+  - PROCESS-NAME,com.tianyancha.skyeye,国内服务 # 天眼查
+  - PROCESS-NAME,com.newcapec.mobile.ncp,国内服务 # 完美校园
+  - PROCESS-NAME,com.tencent.weread,国内服务 # 微信读书
+  - PROCESS-NAME,com.mi.health,国内服务 # 小米运动健康
+  - PROCESS-NAME,com.xt.retouch,国内服务 # 醒图
+  - PROCESS-NAME,com.iflytek.inputmethod,国内服务 # 讯飞输入法
+  - PROCESS-NAME,com.chaoxing.mobile,国内服务 # 学习通
+  - PROCESS-NAME,cn.com.chsi.chsiapp,国内服务 # 学信网
+  - PROCESS-NAME,com.youdao.dict,国内服务 # 网易有道词典
+  - PROCESS-NAME,com.maxframing.mipad,国内服务 # 远程控制
+  - PROCESS-NAME,com.able.wisdomtree,国内服务 # 知到
+  - PROCESS-NAME,com.fifedu.fifiplat,国内服务 # 智教学
+  - PROCESS-NAME,com.zte.smarthome,国内服务 # 中兴智慧生活
+  - PROCESS-NAME,com.netease.mail,国内服务 # 网易邮箱大师
+  - PROCESS-NAME,com.jd.jrapp,国内服务 # 京东金融
+  - PROCESS-NAME,com.xiaomi.smarthome,国内服务 # 米家
+  - PROCESS-NAME,com.xiaomi.shop,国内服务 # 小米商城
+  - PROCESS-NAME,com.xiaomi.market,国内服务 # 小米应用商店
+  - PROCESS-NAME,com.xiaomi.vipaccount,国内服务 # 小米社区
+  - PROCESS-NAME,cn.wps.moffice_eng.xiaomi.lite,国内服务 # 小米文档查看器/WPS定制
+  - PROCESS-NAME,com.iflytek.inputmethod.miui,国内服务 # 讯飞输入法小米版
+  - PROCESS-NAME,com.sohu.inputmethod.sogou.xiaomi,国内服务 # 搜狗输入法小米版
+  - PROCESS-NAME,com.heytap.health,国内服务 # OPPO健康
+  - PROCESS-NAME,com.heytap.themestore,国内服务 # OPPO主题商店
+  - PROCESS-NAME,com.oplus.member,国内服务 # 我的OPPO
+  - PROCESS-NAME,com.cnspeedtest.globalspeed,国内服务 # 全球网测
+  - PROCESS-NAME,com.chinamworld.bocmbci,国内服务 # 中国银行
+  - PROCESS-NAME,com.bankcomm.Bankcomm,国内服务 # 交通银行
+  - PROCESS-NAME,cn.com.spdb.mobilebank.per,国内服务 # 浦发银行
+  - PROCESS-NAME,cmb.pb,国内服务 # 招商银行
+  - PROCESS-NAME,com.kingpoint.gmcchh,国内服务 # 中国移动广东
+  - PROCESS-NAME,cn.gov.pbc.dcep,国内服务 # 数字人民币
+  - PROCESS-NAME,cn.gov.tax.its,国内服务 # 个人所得税
+  - PROCESS-NAME,com.cdb.sla,国内服务 # 国家助学贷款
+  - PROCESS-NAME,cn.cyberIdentity.certification,国内服务 # 国家网络身份认证
+  - PROCESS-NAME,com.sohu.inputmethod.sogouoem,国内服务 # 搜狗输入法定制版
+  - PROCESS-NAME,com.android.browser,国内服务 # 国内系统浏览器
+  - PROCESS-NAME,com.finshell.wallet,国内服务 # 钱包
+  - PROCESS-NAME,com.unionpay.tsmservice,国内服务 # 银联可信服务安全组件
+  - PROCESS-NAME,com.heytap.cloud,国内服务 # HeyTap 云服务
+  - PROCESS-NAME,com.heytap.mcs,国内服务 # HeyTap 系统消息/推送
+  - PROCESS-NAME,com.heytap.openid,国内服务 # HeyTap OpenID
+  - PROCESS-NAME,com.heytap.vip,国内服务 # HeyTap 账号服务
+  - PROCESS-NAME,com.heytap.htms,国内服务 # HeyTap 移动服务
+  - PROCESS-NAME,com.heytap.tas,国内服务 # HeyTap 系统卡包
+  - PROCESS-NAME,com.heytap.accessory,国内服务 # HeyTap 设备快连
+  - PROCESS-NAME,com.heytap.mydevices,国内服务 # HeyTap 设备空间
+  - PROCESS-NAME,com.heytap.opluscarlink,国内服务 # OPPO CarLink
+  - PROCESS-NAME,andes.oplus.documentsreader,国内服务 # OPPO 文档
+  - PROCESS-NAME,com.coloros.findmyphone,国内服务 # ColorOS 查找手机
+  - PROCESS-NAME,com.coloros.oshare,国内服务 # OPPO互传
+  - PROCESS-NAME,com.coloros.phonemanager,国内服务 # ColorOS 手机管家
+  - PROCESS-NAME,com.coloros.filemanager,国内服务 # ColorOS 文件管理
+  - PROCESS-NAME,com.coloros.gallery3d,国内服务 # ColorOS 相册
+  - PROCESS-NAME,com.coloros.weather2,国内服务 # ColorOS 天气
+  - PROCESS-NAME,com.coloros.weather.service,国内服务 # ColorOS 天气服务
+  - PROCESS-NAME,com.coloros.note,国内服务 # ColorOS 便签
+  - PROCESS-NAME,com.coloros.calendar,国内服务 # ColorOS 日历
+  - PROCESS-NAME,com.coloros.video,国内服务 # ColorOS 视频
+  - PROCESS-NAME,com.coloros.backuprestore,国内服务 # ColorOS 备份恢复
+  - PROCESS-NAME,com.coloros.remoteguardservice,国内服务 # ColorOS 远程守护
+  - PROCESS-NAME,com.coloros.operationManual,国内服务 # ColorOS 帮助与反馈
+  - PROCESS-NAME,com.coloros.assistantscreen,国内服务 # ColorOS 速览
+  - PROCESS-NAME,com.coloros.translate,国内服务 # ColorOS 翻译
+  - PROCESS-NAME,com.oplus.account,国内服务 # OPLUS 账号中心
+  - PROCESS-NAME,com.oplus.vip,国内服务 # OPLUS 账号服务
+  - PROCESS-NAME,com.oplus.ota,国内服务 # OPLUS 软件更新
+  - PROCESS-NAME,com.oplus.romupdate,国内服务 # OPLUS ROM更新
+  - PROCESS-NAME,com.oplus.sau,国内服务 # OPLUS 系统升级服务
+  - PROCESS-NAME,com.oplus.cota,国内服务 # OPLUS 配置更新
+  - PROCESS-NAME,com.oplus.apprecover,国内服务 # OPLUS 应用找回
+  - PROCESS-NAME,com.oplus.pay,国内服务 # OPLUS 钱包/支付
+  - PROCESS-NAME,com.oplus.safecenter,国内服务 # OPLUS 安全中心
+  - PROCESS-NAME,com.oplus.games,国内服务 # OPLUS 游戏助手
+  - PROCESS-NAME,com.oplus.ocar,国内服务 # OPLUS Car+
+  - PROCESS-NAME,com.oplus.linker,国内服务 # OPLUS 设备互联
+  - PROCESS-NAME,com.oplus.cast,国内服务 # OPLUS 投屏
+  - PROCESS-NAME,com.oplus.remotecontrol,国内服务 # OPLUS 远程控制
+  - PROCESS-NAME,com.oplus.dfs,国内服务 # OPLUS 跨设备文件
+  - PROCESS-NAME,com.oplus.melody,国内服务 # OPLUS 耳机服务
+  - PROCESS-NAME,com.oplus.location,国内服务 # OPLUS 定位服务
+  - PROCESS-NAME,com.oplus.acc.gac,国内服务 # OPLUS 智慧云加速
+  - PROCESS-NAME,com.oplus.networksense,国内服务 # OPLUS 网络感知
+  - PROCESS-NAME,com.oplus.nas,国内服务 # OPLUS 网络服务
+  - PROCESS-NAME,com.oplus.nhs,国内服务 # OPLUS 网络健康服务
+  - PROCESS-NAME,com.oplus.beaconlink,国内服务 # OPLUS 无网畅聊
+  - PROCESS-NAME,com.oplus.healthservice,国内服务 # OPLUS 健康数据平台
+  - PROCESS-NAME,com.oplus.aiwriter,国内服务 # OPLUS AI写作
+  - PROCESS-NAME,com.oplus.aiunit,国内服务 # OPLUS AI服务引擎
+  - PROCESS-NAME,com.oplus.aicall,国内服务 # OPLUS AI通话
+  - PROCESS-NAME,com.oplus.aimemory,国内服务 # OPLUS 小布记忆
+  - PROCESS-NAME,com.oplus.owork,国内服务 # OPLUS OWork
+  - PROCESS-NAME,com.newcall,国内服务 # 国内新通话
+  - PROCESS-NAME,com.ted.number,国内服务 # 智能识别陌生号码
+  - PROCESS-NAME,com.opos.ads,国内服务 # 国内智能推荐服务
+  - PROCESS-NAME,com.xiaomi.xmsf,国内服务 # 小米服务框架
+  - PROCESS-NAME,com.xiaomi.account,国内服务 # 小米账号
+  - PROCESS-NAME,com.miui.cloudservice,国内服务 # 小米云服务
+  - PROCESS-NAME,com.miui.cloudbackup,国内服务 # 小米云备份
+  - PROCESS-NAME,com.miui.micloudsync,国内服务 # MiCloud同步
+  - PROCESS-NAME,com.xiaomi.micloud.sdk,国内服务 # 小米云SDK
+  - PROCESS-NAME,com.miui.newmidrive,国内服务 # 小米云盘
+  - PROCESS-NAME,com.xiaomi.finddevice,国内服务 # 小米查找设备
+  - PROCESS-NAME,com.miui.findmy,国内服务 # MIUI查找设备
+  - PROCESS-NAME,com.xiaomi.mi_connect_service,国内服务 # 小米互联通信服务
+  - PROCESS-NAME,com.miui.mishare.connectivity,国内服务 # 小米互传
+  - PROCESS-NAME,com.xiaomi.mirror,国内服务 # 小米跨屏协同
+  - PROCESS-NAME,com.milink.service,国内服务 # 设备互联
+  - PROCESS-NAME,com.xiaomi.payment,国内服务 # 小米支付
+  - PROCESS-NAME,com.miui.weather2,国内服务 # MIUI 天气
+  - PROCESS-NAME,com.miui.gallery,国内服务 # MIUI 相册
+  - PROCESS-NAME,com.miui.notes,国内服务 # MIUI 笔记
+  - PROCESS-NAME,com.miui.securitycenter,国内服务 # MIUI 安全中心
+  - PROCESS-NAME,com.miui.securitymanager,国内服务 # MIUI 安全管理
+  - PROCESS-NAME,com.miui.packageinstaller,国内服务 # MIUI 包管理
+  - PROCESS-NAME,com.miui.hybrid,国内服务 # MIUI 快应用框架
+  - PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,国内服务 # 小米游戏服务
+  - PROCESS-NAME,com.xiaomi.migameservice,国内服务 # 小米游戏AI服务
+  - PROCESS-NAME,com.xiaomi.minigame,国内服务 # 小米小游戏服务
+  - PROCESS-NAME,com.miui.yellowpage,国内服务 # MIUI 生活黄页
+  - PROCESS-NAME,com.miui.bugreport,国内服务 # MIUI 用户反馈
+  - PROCESS-NAME,com.miui.personalassistant,国内服务 # MIUI 智能助理
+  - PROCESS-NAME,com.xiaomi.mibrain.speech,国内服务 # 小米语音引擎
+  - PROCESS-NAME,com.miui.voiceassist,国内服务 # 小爱同学
+  - PROCESS-NAME,com.miui.voiceassistProxy,国内服务 # 小爱代理
+  - PROCESS-NAME,com.xiaomi.scanner,国内服务 # 小米扫描
+  - PROCESS-NAME,com.miui.cleanmaster,国内服务 # MIUI 垃圾清理
+  - PROCESS-NAME,com.xiaomi.ugd,国内服务 # 小米 GPU驱动更新
+  - PROCESS-NAME,com.android.updater,国内服务 # 系统更新
+  - PROCESS-NAME,com.lbe.security.miui,国内服务 # MIUI 权限管理服务
+  - PROCESS-NAME,com.miuix.editor,国内服务 # MIUI 编辑组件
+  - PROCESS-NAME,com.mobiletools.systemhelper,国内服务 # SystemHelper
+
+  # --- YouTube / 流媒体 ---
+  - PROCESS-NAME,com.google.android.youtube,YouTube # YouTube
+  - PROCESS-NAME,com.google.android.apps.youtube.music,YouTube # YouTube Music
+  - PROCESS-NAME,com.google.android.apps.youtube.kids,YouTube # YouTube Kids
+  - PROCESS-NAME,com.netflix.mediaclient,Netflix # Netflix
+  - PROCESS-NAME,com.spotify.music,Spotify # Spotify
+  - PROCESS-NAME,com.zhiliaoapp.musically,TikTok # TikTok 国际版
+  - PROCESS-NAME,tv.twitch.android.app,节点选择 # Twitch
+  - PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台 # 哔哩哔哩
+  - PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台 # BiliBili 国际版 / 东南亚版
+
+  # --- GitHub / 浏览器 / 游戏平台 ---
+  - PROCESS-NAME,com.github.android,GitHub # GitHub
+  - PROCESS-NAME,com.valvesoftware.android.steam.community,节点选择 # Steam
+  - PROCESS-NAME,zed.rainxch.githubstore,GitHub # GitHub Store
+  # - PROCESS-NAME,com.yjllq.chrome.beta,节点选择 # 雨见 cBeta（浏览器不按包名固定，交给域名规则分流）
+
+  # --- 越南 App：中国使用时也走代理，统一归到“越南服务”策略组 ---
+  - PROCESS-NAME,com.zing.zalo,越南服务 # Zalo
+  - PROCESS-NAME,com.shopee.vn,越南服务 # Shopee 越南
+  - PROCESS-NAME,com.grabtaxi.passenger,越南服务 # Grab
+  - PROCESS-NAME,xyz.be.customer,越南服务 # be
+  - PROCESS-NAME,com.jtexpress.customer.vn,越南服务 # J&T Express 越南
+  - PROCESS-NAME,com.viettel.ViettelPost,越南服务 # ViettelPost
+  - PROCESS-NAME,com.vnp.myvinaphone,越南服务 # My VNPT / Vinaphone
+
+  # --- 测速 / NAT / 词典 ---
+  - PROCESS-NAME,org.zwanoo.android.speedtest,节点选择 # Speedtest
+  - PROCESS-NAME,com.mynat.android,节点选择 # My NAT
+  - PROCESS-NAME,com.eup.hanzii,节点选择 # Hanzii Dict
+  
+  # --- 桌面端 AI / 开发工具 ---
+  - PROCESS-NAME,ChatGPT.exe,AI # ChatGPT Desktop
+  - PROCESS-NAME,Claude.exe,AI # Claude Desktop
+  - PROCESS-NAME,Perplexity.exe,AI # Perplexity Desktop
+  - PROCESS-NAME,Copilot.exe,AI # Microsoft Copilot Desktop
+  - PROCESS-NAME,Codex.exe,AI # OpenAI Codex Desktop / Windows
+  - PROCESS-NAME,codex.exe,AI # Codex CLI / Windows
+  - PROCESS-NAME,codex,AI # Codex CLI / macOS / Linux
+
+  # --- 桌面端海外社交 / 通讯 ---
+  - PROCESS-NAME,Telegram.exe,电报消息 # Telegram Desktop
+  - PROCESS-NAME,Discord.exe,节点选择 # Discord Desktop
+  - PROCESS-NAME,WhatsApp.exe,节点选择 # WhatsApp Desktop
+  - PROCESS-NAME,Signal.exe,节点选择 # Signal Desktop
+  - PROCESS-NAME,LINE.exe,节点选择 # LINE Desktop
+  - PROCESS-NAME,Messenger.exe,节点选择 # Messenger Desktop
+
+  # --- 桌面端越南服务 ---
+  - PROCESS-NAME,Zalo.exe,越南服务 # Zalo PC
+  - PROCESS-NAME,Zalo,越南服务 # Zalo macOS / Linux 兼容写法
+  # --- 桌面端国内服务 / 预防性 ---
+  - PROCESS-NAME,WeChat.exe,国内服务 # 微信 PC
+  - PROCESS-NAME,WeChatAppEx.exe,国内服务 # 微信 PC 内置组件
+  - PROCESS-NAME,Weixin.exe,国内服务 # 微信新版 PC
+  - PROCESS-NAME,QQ.exe,国内服务 # QQ PC
+  - PROCESS-NAME,TIM.exe,国内服务 # TIM PC
+  - PROCESS-NAME,DingTalk.exe,国内服务 # 钉钉 PC
+  - PROCESS-NAME,WXWork.exe,国内服务 # 企业微信 PC
+  - PROCESS-NAME,Feishu.exe,国内服务 # 飞书 PC
+  - PROCESS-NAME,Lark.exe,节点选择 # Lark 国际版 PC
+  - PROCESS-NAME,wps.exe,国内服务 # WPS Office PC
+  - PROCESS-NAME,et.exe,国内服务 # WPS 表格
+  - PROCESS-NAME,wpp.exe,国内服务 # WPS 演示
+  - PROCESS-NAME,baidunetdisk.exe,国内服务 # 百度网盘 PC
+  - PROCESS-NAME,BaiduNetdisk.exe,国内服务 # 百度网盘 PC
+  - PROCESS-NAME,AliYunDrive.exe,国内服务 # 阿里云盘 PC
+  - PROCESS-NAME,QuarkCloudDrive.exe,国内服务 # 夸克网盘 PC
+  - PROCESS-NAME,TencentMeeting.exe,国内服务 # 腾讯会议 PC
+  - PROCESS-NAME,WeMeetApp.exe,国内服务 # 腾讯会议 PC
+  - PROCESS-NAME,NeteaseMailMaster.exe,国内服务 # 网易邮箱大师 PC
+  - PROCESS-NAME,QQMail.exe,国内服务 # QQ邮箱 PC
+  - PROCESS-NAME,cloudmusic.exe,国内服务 # 网易云音乐 PC
+  - PROCESS-NAME,QQMusic.exe,国内服务 # QQ音乐 PC
+  - PROCESS-NAME,KuGou.exe,国内服务 # 酷狗音乐 PC
+  - PROCESS-NAME,KuwoMusic.exe,国内服务 # 酷我音乐 PC
+  - PROCESS-NAME,iQIYI.exe,国内服务 # 爱奇艺 PC
+  - PROCESS-NAME,Youku.exe,国内服务 # 优酷 PC
+  - PROCESS-NAME,QQLive.exe,国内服务 # 腾讯视频 PC
+  - PROCESS-NAME,Douyin.exe,国内服务 # 抖音 PC
+  - PROCESS-NAME,JianyingPro.exe,国内服务 # 剪映专业版 PC
+  - PROCESS-NAME,CapCut.exe,节点选择 # CapCut 国际版 PC
+  - PROCESS-NAME,SogouInput.exe,国内服务 # 搜狗输入法 PC
+  - PROCESS-NAME,SogouImeBroker.exe,国内服务 # 搜狗输入法组件
+  - PROCESS-NAME,iFlyIME.exe,国内服务 # 讯飞输入法 PC
+  - PROCESS-NAME,LenovoVantage.exe,国内服务 # 联想管家 / Vantage
+  - PROCESS-NAME,Lenovo.Modern.ImController.exe,国内服务 # 联想系统组件
+  - PROCESS-NAME,HuaweiPCManager.exe,国内服务 # 华为电脑管家
+  - PROCESS-NAME,MiService.exe,国内服务 # 小米电脑服务
+  - PROCESS-NAME,MiPhoneManager.exe,国内服务 # 小米手机助手
+  - PROCESS-NAME,OPPOPCSuite.exe,国内服务 # OPPO PC 工具
+  - PROCESS-NAME,OnePlusPCSuite.exe,国内服务 # 一加 PC 工具
+
+  # --- 桌面端影音 / 游戏 / 开发 ---
+  - PROCESS-NAME,Spotify.exe,Spotify # Spotify Desktop
+  - PROCESS-NAME,steam.exe,节点选择 # Steam
+  - PROCESS-NAME,steamwebhelper.exe,节点选择 # Steam Web Helper
+  - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
+  - PROCESS-NAME,Cursor.exe,AI # Cursor Editor
+  - PROCESS-NAME,Windsurf.exe,AI # Windsurf Editor
+  - PROCESS-NAME,Code.exe,节点选择 # VS Code（通用开发工具，走节点选择）
+  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
+  - PROCESS-NAME,Postman.exe,节点选择 # Postman
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
+  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
+  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
+  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
+  - PROCESS-NAME,EpicGamesLauncher.exe,节点选择 # Epic Games Launcher
+  - PROCESS-NAME,EpicWebHelper.exe,节点选择 # Epic Games Web Helper
+  - PROCESS-NAME,Battle.net.exe,节点选择 # Battle.net
+  - PROCESS-NAME,RiotClientServices.exe,节点选择 # Riot Client
+  - PROCESS-NAME,UbisoftConnect.exe,节点选择 # Ubisoft Connect
+  - PROCESS-NAME,EA app.exe,节点选择 # EA App
+  - PROCESS-NAME,EADesktop.exe,节点选择 # EA Desktop
+  - PROCESS-NAME,ms-teams.exe,节点选择 # Microsoft Teams
+  - PROCESS-NAME,Teams.exe,节点选择 # Microsoft Teams Classic
+  - PROCESS-NAME,Zoom.exe,节点选择 # Zoom
+  - PROCESS-NAME,slack.exe,节点选择 # Slack
+  # --- 桌面端硬件 / 驱动更新 / 预防性 ---
+  - PROCESS-NAME,NVIDIA App.exe,节点选择 # NVIDIA App
+  - PROCESS-NAME,NVIDIA GeForce Experience.exe,节点选择 # GeForce Experience
+  - PROCESS-NAME,NvContainer.exe,节点选择 # NVIDIA Container / 更新检查
+  - PROCESS-NAME,AMDSoftware.exe,节点选择 # AMD Software
+  - PROCESS-NAME,AMDRSServ.exe,节点选择 # AMD Radeon Settings Service
+  - PROCESS-NAME,Intel Driver & Support Assistant.exe,节点选择 # Intel 驱动支持助手
+  
+  - "PROCESS-NAME,aria2c,DIRECT"
+  - "PROCESS-NAME,aria2c.exe,DIRECT"
+  - "PROCESS-NAME,BitComet,DIRECT"
+  - "PROCESS-NAME,BitComet.exe,DIRECT"
+  - "PROCESS-NAME,qBittorrent,DIRECT"
+  - "PROCESS-NAME,qbittorrent.exe,DIRECT"
+  - "PROCESS-NAME,Transmission,DIRECT"
+  - "PROCESS-NAME,transmission-daemon,DIRECT"
+  - "PROCESS-NAME,utorrent,DIRECT"
+  - "PROCESS-NAME,uTorrent.exe,DIRECT"
+  - "PROCESS-NAME,Thunder,DIRECT"
+  - "PROCESS-NAME,Xunlei,DIRECT"
+  # - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT" # 可选：全局禁用 QUIC/HTTP3；默认注释，避免影响视频和部分 App 性能
+
+  - "DOMAIN-SUFFIX,chatgpt.com,AI"
+  - "DOMAIN-SUFFIX,openai.com,AI"
+  - "DOMAIN-SUFFIX,oaistatic.com,AI"
+  - "DOMAIN-SUFFIX,oaiusercontent.com,AI"
+  - "DOMAIN-SUFFIX,auth0.com,AI"
+  - "DOMAIN-SUFFIX,statsigapi.net,AI"
+  - "DOMAIN-SUFFIX,intercom.io,AI"
+  - "DOMAIN-SUFFIX,intercomcdn.com,AI"
+  - "RULE-SET,openai,AI"
+
+  - "DOMAIN,accounts.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"
+  - "DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务"
+  - "DOMAIN,play.google.com,谷歌服务"
+  - "DOMAIN,dl.google.com,谷歌服务"
+  - "DOMAIN,dl-ssl.google.com,谷歌服务"
+  - "DOMAIN,android.apis.google.com,谷歌服务"
+  - "DOMAIN,android.clients.google.com,谷歌服务"
+  - "DOMAIN,android.googleapis.com,谷歌服务"
+  - "DOMAIN-SUFFIX,googleapis.cn,谷歌服务"
+  - "DOMAIN-SUFFIX,gstatic.com,谷歌服务"
+  - "DOMAIN-SUFFIX,googleusercontent.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt1.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt2.com,谷歌服务"
+  - "DOMAIN-SUFFIX,gvt3.com,谷歌服务"
+  - "DOMAIN-SUFFIX,ggpht.com,谷歌服务"
+  - "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,谷歌服务"
+  - "DOMAIN,mtalk.google.com,谷歌服务"
+  - "RULE-SET,youtube,YouTube"
+  - "RULE-SET,google,谷歌服务"
+
+  - "DOMAIN-SUFFIX,github.io,GitHub"
+  - "DOMAIN,v2rayse.com,GitHub"
+  - "RULE-SET,github,GitHub"
+
+  - "DOMAIN-SUFFIX,displaycatalog.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,delivery.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,dl.delivery.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,prod.do.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,do.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,windowsupdate.com,微软服务"
+  - "DOMAIN-SUFFIX,update.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,download.windowsupdate.com,微软服务"
+  - "DOMAIN-SUFFIX,mp.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,wns.windows.com,微软服务"
+  - "DOMAIN-SUFFIX,windows.com,微软服务"
+  - "DOMAIN-SUFFIX,msedge.net,微软服务"
+  - "DOMAIN-SUFFIX,microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,microsoftonline.com,微软服务"
+  - "DOMAIN-SUFFIX,msauth.net,微软服务"
+  - "DOMAIN-SUFFIX,live.com,微软服务"
+  - "DOMAIN-SUFFIX,storecatalogrevocation.storequality.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,img-prod-cms-rt-microsoft-com.akamaized.net,微软服务"
+  - "DOMAIN-SUFFIX,img-s-msn-com.akamaized.net,微软服务"
+  - "DOMAIN-SUFFIX,manage.devcenter.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,share.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,pipe.aria.microsoft.com,微软服务"
+  - "DOMAIN-SUFFIX,api.cdp.microsoft.com,微软服务"
+  - "DOMAIN,storeedgefd.dsx.mp.microsoft.com,微软服务"
+  - "DOMAIN,livetileedge.dsx.mp.microsoft.com,微软服务"
+  - "DOMAIN,licensing.mp.microsoft.com,微软服务"
+  - "DOMAIN,tsfe.trafficshaping.dsp.mp.microsoft.com,微软服务"
+  - "DOMAIN,adl.windows.com,微软服务"
+  - "DOMAIN,ctldl.windowsupdate.com,微软服务"
+  - "DOMAIN,definitionupdates.microsoft.com,微软服务"
+  - "DOMAIN,msedge.api.cdp.microsoft.com,微软服务"
+  - "RULE-SET,microsoft,微软服务"
+
+  - "RULE-SET,telegram,电报消息"
+  - "RULE-SET,telegramcidr,电报消息,no-resolve"
+  - "RULE-SET,netflix,Netflix"
+  - "RULE-SET,tiktok,TikTok"
+  - "RULE-SET,spotify,Spotify"
+  - "RULE-SET,apple,苹果服务"
+  - "RULE-SET,biliintl,哔哩哔哩港澳台"
+
+  - "RULE-SET,reject,广告过滤"
+
+  - "DOMAIN-KEYWORD,midea,DIRECT"  # 美的=客户，永远直连，置于越南/CN块之前
+  - "DOMAIN-SUFFIX,zalo.me,越南服务"
+  - "DOMAIN-SUFFIX,zaloapp.com,越南服务"
+  - "DOMAIN-KEYWORD,zalo,越南服务"
+  - "DOMAIN-SUFFIX,grab.com,越南服务"
+  - "DOMAIN-KEYWORD,grab,越南服务"
+  - "DOMAIN-SUFFIX,gojek.com,越南服务"
+  - "DOMAIN-KEYWORD,gojek,越南服务"
+  - "DOMAIN-KEYWORD,tiki,越南服务"
+  - "DOMAIN-KEYWORD,zing,越南服务"
+  - "DOMAIN-SUFFIX,nhaccuatui.com,越南服务"
+  - "DOMAIN-SUFFIX,vnexpress.net,越南服务"
+  - "DOMAIN-KEYWORD,momo,越南服务"
+  - "DOMAIN-KEYWORD,zalopay,越南服务"
+  # --- 越南服务补充域名 ---
+  - "DOMAIN-SUFFIX,vn,越南服务"
+  - "DOMAIN-SUFFIX,com.vn,越南服务"
+  - "DOMAIN-SUFFIX,net.vn,越南服务"
+  - "DOMAIN-SUFFIX,org.vn,越南服务"
+  - "DOMAIN-SUFFIX,edu.vn,越南服务"
+  - "DOMAIN-SUFFIX,gov.vn,越南服务"
+  - "DOMAIN-SUFFIX,biz.vn,越南服务"
+  - "DOMAIN-SUFFIX,info.vn,越南服务"
+  - "DOMAIN-SUFFIX,name.vn,越南服务"
+  - "DOMAIN-SUFFIX,pro.vn,越南服务"
+  - "DOMAIN-SUFFIX,baomoi.com,越南服务"
+  - "DOMAIN-SUFFIX,thegioididong.com,越南服务"
+  - "DOMAIN-SUFFIX,dienmayxanh.com,越南服务"
+  - "DOMAIN-SUFFIX,bachhoaxanh.com,越南服务"
+  - "DOMAIN-SUFFIX,gearvn.com,越南服务"
+  - "DOMAIN-SUFFIX,nguyenkim.com,越南服务"
+  - "DOMAIN-SUFFIX,hoanghamobile.com,越南服务"
+  - "DOMAIN-SUFFIX,ahamove.com,越南服务"
+  - "DOMAIN-KEYWORD,baemin,越南服务"
+  - "DOMAIN-KEYWORD,shopeefood,越南服务"
+  - "DOMAIN-SUFFIX,fpt.net,越南服务"
+  - "DOMAIN-SUFFIX,ghnexpress.com,越南服务"
+  - "DOMAIN-SUFFIX,vietnamairlines.com,越南服务"
+  - "DOMAIN-SUFFIX,vietjetair.com,越南服务"
+  - "DOMAIN-SUFFIX,bambooairways.com,越南服务"
+  - "DOMAIN-SUFFIX,vexere.com,越南服务"
+  - "DOMAIN-SUFFIX,traveloka.com,越南服务"
+  - "DOMAIN-SUFFIX,chotot.com,越南服务"
+  - "DOMAIN-SUFFIX,muaban.net,越南服务"
+  - "DOMAIN-SUFFIX,vietnamworks.com,越南服务"
+  - "GEOIP,VN,越南服务,no-resolve"
+
+  - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
+  - "DOMAIN-SUFFIX,coolapk.com,国内服务"
+  - "DOMAIN-SUFFIX,www.coolapk.com,国内服务"
+  - "DOMAIN-SUFFIX,m.coolapk.com,国内服务"
+  - "DOMAIN-KEYWORD,coolapk,国内服务"
+
+  - "RULE-SET,cn,国内服务"
+  - "GEOIP,CN,国内服务,no-resolve"
+  - "RULE-SET,geolocation-!cn,漏网之鱼"
+  - "MATCH,漏网之鱼"
