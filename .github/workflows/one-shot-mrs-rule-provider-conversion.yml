@@ -1,5 +1,6 @@
 name: One-shot MRS rule-provider conversion
 
+# Trigger one-shot conversion.
 on:
   push:
     paths:
