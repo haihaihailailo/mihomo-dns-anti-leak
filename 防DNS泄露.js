@@ -14,7 +14,7 @@
 const META_DOMAIN_PROVIDER = {
   type: "http",
   behavior: "domain",
-  format: "yaml",
+  format: "mrs",
   interval: 86400,
 };
 
@@ -238,22 +238,22 @@ OVERRIDE["proxy-groups"] = [
 
 // 远程规则集：与 YAML 的 rule-providers 保持同步。
 OVERRIDE["rule-providers"] = {
-  reject: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.yaml", path: "./ruleset/metacubex/category-ads-all.yaml" },
-  private: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.yaml", path: "./ruleset/metacubex/private.yaml" },
-  cn: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.yaml", path: "./ruleset/metacubex/cn.yaml" },
-  "geolocation-!cn": { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.yaml", path: "./ruleset/metacubex/geolocation-!cn.yaml" },
-  google: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.yaml", path: "./ruleset/metacubex/google.yaml" },
-  youtube: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.yaml", path: "./ruleset/metacubex/youtube.yaml" },
-  github: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.yaml", path: "./ruleset/metacubex/github.yaml" },
-  microsoft: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.yaml", path: "./ruleset/metacubex/microsoft.yaml" },
-  openai: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.yaml", path: "./ruleset/metacubex/openai.yaml" },
-  telegram: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.yaml", path: "./ruleset/metacubex/telegram.yaml" },
-  netflix: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.yaml", path: "./ruleset/metacubex/netflix.yaml" },
-  tiktok: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.yaml", path: "./ruleset/metacubex/tiktok.yaml" },
-  spotify: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.yaml", path: "./ruleset/metacubex/spotify.yaml" },
-  apple: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.yaml", path: "./ruleset/metacubex/apple.yaml" },
-  biliintl: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.yaml", path: "./ruleset/metacubex/biliintl.yaml" },
-  telegramcidr: { type: "http", behavior: "ipcidr", format: "yaml", interval: 86400, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.yaml", path: "./ruleset/metacubex/telegramcidr.yaml" },
+  reject: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs", path: "./ruleset/metacubex/category-ads-all.mrs" },
+  private: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs", path: "./ruleset/metacubex/private.mrs" },
+  cn: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs", path: "./ruleset/metacubex/cn.mrs" },
+  "geolocation-!cn": { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs", path: "./ruleset/metacubex/geolocation-!cn.mrs" },
+  google: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs", path: "./ruleset/metacubex/google.mrs" },
+  youtube: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs", path: "./ruleset/metacubex/youtube.mrs" },
+  github: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs", path: "./ruleset/metacubex/github.mrs" },
+  microsoft: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs", path: "./ruleset/metacubex/microsoft.mrs" },
+  openai: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs", path: "./ruleset/metacubex/openai.mrs" },
+  telegram: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs", path: "./ruleset/metacubex/telegram.mrs" },
+  netflix: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs", path: "./ruleset/metacubex/netflix.mrs" },
+  tiktok: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs", path: "./ruleset/metacubex/tiktok.mrs" },
+  spotify: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs", path: "./ruleset/metacubex/spotify.mrs" },
+  apple: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs", path: "./ruleset/metacubex/apple.mrs" },
+  biliintl: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs", path: "./ruleset/metacubex/biliintl.mrs" },
+  telegramcidr: { type: "http", behavior: "ipcidr", format: "mrs", interval: 86400, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs", path: "./ruleset/metacubex/telegramcidr.mrs" },
 };
 
 

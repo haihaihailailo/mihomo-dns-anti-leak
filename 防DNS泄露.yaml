@@ -525,88 +525,88 @@ rule-providers:
   reject: &meta_domain
     type: http
     behavior: domain
-    format: yaml
+    format: mrs
     interval: 86400
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.yaml"
-    path: "./ruleset/metacubex/category-ads-all.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"
+    path: "./ruleset/metacubex/category-ads-all.mrs"
   # 私有/局域网域名规则集。
   private:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.yaml"
-    path: "./ruleset/metacubex/private.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+    path: "./ruleset/metacubex/private.mrs"
   # 中国大陆域名规则集。
   cn:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.yaml"
-    path: "./ruleset/metacubex/cn.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
+    path: "./ruleset/metacubex/cn.mrs"
   # 非中国大陆地理域名规则集，作为漏网外站兜底前置。
   "geolocation-!cn":
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.yaml"
-    path: "./ruleset/metacubex/geolocation-!cn.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"
+    path: "./ruleset/metacubex/geolocation-!cn.mrs"
   # Google 域名规则集。
   google:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.yaml"
-    path: "./ruleset/metacubex/google.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"
+    path: "./ruleset/metacubex/google.mrs"
   # YouTube 域名规则集。
   youtube:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.yaml"
-    path: "./ruleset/metacubex/youtube.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"
+    path: "./ruleset/metacubex/youtube.mrs"
   # GitHub 域名规则集。
   github:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.yaml"
-    path: "./ruleset/metacubex/github.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"
+    path: "./ruleset/metacubex/github.mrs"
   # Microsoft 域名规则集。
   microsoft:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.yaml"
-    path: "./ruleset/metacubex/microsoft.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs"
+    path: "./ruleset/metacubex/microsoft.mrs"
   # OpenAI / ChatGPT 域名规则集。
   openai:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.yaml"
-    path: "./ruleset/metacubex/openai.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs"
+    path: "./ruleset/metacubex/openai.mrs"
   # Telegram 域名规则集。
   telegram:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.yaml"
-    path: "./ruleset/metacubex/telegram.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"
+    path: "./ruleset/metacubex/telegram.mrs"
   # Netflix 域名规则集。
   netflix:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.yaml"
-    path: "./ruleset/metacubex/netflix.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"
+    path: "./ruleset/metacubex/netflix.mrs"
   # TikTok 域名规则集。
   tiktok:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.yaml"
-    path: "./ruleset/metacubex/tiktok.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"
+    path: "./ruleset/metacubex/tiktok.mrs"
   # Spotify 域名规则集。
   spotify:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.yaml"
-    path: "./ruleset/metacubex/spotify.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs"
+    path: "./ruleset/metacubex/spotify.mrs"
   # Apple 域名规则集。
   apple:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.yaml"
-    path: "./ruleset/metacubex/apple.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"
+    path: "./ruleset/metacubex/apple.mrs"
   # Bilibili 国际/港澳台规则集。
   biliintl:
     <<: *meta_domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.yaml"
-    path: "./ruleset/metacubex/biliintl.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs"
+    path: "./ruleset/metacubex/biliintl.mrs"
   # Telegram IP-CIDR 规则集，需 no-resolve。
   telegramcidr:
     type: http
     behavior: ipcidr
-    format: yaml
+    format: mrs
     interval: 86400
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.yaml"
-    path: "./ruleset/metacubex/telegramcidr.yaml"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"
+    path: "./ruleset/metacubex/telegramcidr.mrs"
 
 
 # --- 10. 分流规则 rules ---
