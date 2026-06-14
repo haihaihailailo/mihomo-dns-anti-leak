@@ -1,5 +1,6 @@
 name: One-shot iOS config generator
 
+# Trigger one-shot iOS config generation.
 on:
   push:
     paths:
