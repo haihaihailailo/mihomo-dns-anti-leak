@@ -66,3 +66,5 @@ jobs:
             git commit -m "chore: clean up Stash override rules"
             git push
           fi
+
+# trigger
