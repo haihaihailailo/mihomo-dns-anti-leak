@@ -1,6 +1,6 @@
 # Mihomo DNS 防泄露配置
 
-面向 Mihomo / Clash Meta / Clash Party / Mihomoparty / Clash Party 的个人 DNS 防泄露、fake-ip、TUN 接管与规则分流配置。
+面向 Mihomo / Clash Meta / Clash Party / Mihomo Party 的个人 DNS 防泄露、fake-ip、TUN 接管与规则分流配置。
 
 ## 文件
 
@@ -15,6 +15,35 @@
 - Sniffer 稳定性：对局域网、路由器、NTP、Apple Push、QQ/微信本地登录等域名配置 `skip-domain`，避免被嗅探误改写目标。
 - 规则分流：覆盖国内、越南、AI、Google、YouTube、GitHub、微软、Telegram、Netflix、TikTok、Spotify、Apple、哔哩哔哩港澳台等常见场景。
 - 国内服务保护：国内应用、小程序、支付、系统服务优先直连，避免进入漏网之鱼导致加载异常。
+
+## 使用方法
+
+### YAML 覆写
+
+适合支持 YAML 覆写、配置片段或 merge/override 的客户端。
+
+1. 复制 `防DNS泄露.yaml` 的内容。
+2. 在客户端的覆写/扩展配置中粘贴或引用该文件。
+3. 更新订阅后检查策略组是否出现 `节点选择`、`漏网之鱼`、`国内服务`、`越南服务`、`AI`、`谷歌服务` 等分组。
+4. 运行一次配置测试，确认无 YAML 解析错误和规则引用错误。
+
+### JavaScript 覆写
+
+适合支持 JavaScript override 的 Clash Party / Mihomo Party 客户端。
+
+1. 复制 `防DNS泄露.js` 的内容。
+2. 在客户端中新建 JavaScript 覆写。
+3. 确认入口函数为 `main(config)`，并返回修改后的 `config`。
+4. 更新订阅后检查 DNS、TUN、Sniffer、策略组和规则是否生效。
+
+## 使用注意
+
+- 本配置默认启用 fake-ip 和 TUN DNS 劫持，建议先备份原客户端配置。
+- Android 场景下，微信和支付宝已通过 `tun.exclude-package` 绕过 TUN，减少支付、小程序、扫码登录异常。
+- 国内服务、系统更新、局域网、NTP、推送等规则优先直连，避免误入代理导致加载异常。
+- 越南服务独立分组，适合 Zalo、Grab、Shopee 越南、越南航空/票务/本地站点等场景。
+- `midea` 相关域名固定直连，避免客户/工作相关系统误走代理。
+- 如修改策略组名称，必须同步修改 `rules`、`nameserver-policy` 以及 JS 覆写版本。
 
 ## 维护口径
 
