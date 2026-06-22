@@ -97,7 +97,7 @@ const OVERRIDE = {
     "respect-rules": true,
     "use-system-hosts": false,
     "cache-algorithm": "arc",
-    ipv6: false,
+    ipv6: true,
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
     // blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。
