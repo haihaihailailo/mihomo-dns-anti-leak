@@ -110,3 +110,5 @@ jobs:
             git commit -m "fix: use scalar nameserver policies for Stash"
             git push
           fi
+
+# trigger rerun
