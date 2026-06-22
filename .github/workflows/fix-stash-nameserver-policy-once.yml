@@ -1,0 +1,112 @@
+name: Fix Stash nameserver policy once
+
+on:
+  push:
+    paths:
+      - ".github/workflows/fix-stash-nameserver-policy-once.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-stash-nameserver-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Convert Stash nameserver-policy values to strings
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("stash.stoverride")
+          text = path.read_text(encoding="utf-8")
+
+          old = """  nameserver-policy:
+    geosite:private:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    geosite:cn:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    geosite:microsoft:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    +.windowsupdate.com:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    +.download.windowsupdate.com:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    +.mp.microsoft.com:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    +.delivery.mp.microsoft.com:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    +.dl.delivery.mp.microsoft.com:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+    geosite:geolocation-!cn:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    geosite:google:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    geosite:youtube:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    geosite:openai:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    geosite:github:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    +.googleapis.cn:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+"""
+
+          new = """  nameserver-policy:
+    geosite:private: https://223.5.5.5/dns-query
+    geosite:cn: https://223.5.5.5/dns-query
+    geosite:microsoft: https://223.5.5.5/dns-query
+    +.windowsupdate.com: https://223.5.5.5/dns-query
+    +.download.windowsupdate.com: https://223.5.5.5/dns-query
+    +.mp.microsoft.com: https://223.5.5.5/dns-query
+    +.delivery.mp.microsoft.com: https://223.5.5.5/dns-query
+    +.dl.delivery.mp.microsoft.com: https://223.5.5.5/dns-query
+    geosite:geolocation-!cn: https://1.1.1.1/dns-query
+    geosite:google: https://1.1.1.1/dns-query
+    geosite:youtube: https://1.1.1.1/dns-query
+    geosite:openai: https://1.1.1.1/dns-query
+    geosite:github: https://1.1.1.1/dns-query
+    +.googleapis.cn: https://1.1.1.1/dns-query
+"""
+
+          if old not in text:
+              raise SystemExit("expected nameserver-policy block not found")
+
+          text = text.replace(old, new)
+          path.write_text(text, encoding="utf-8")
+
+          workflow = Path(".github/workflows/fix-stash-nameserver-policy-once.yml")
+          if workflow.exists():
+              workflow.unlink()
+          PY
+
+      - name: Commit changes
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stash.stoverride .github/workflows/fix-stash-nameserver-policy-once.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "fix: use scalar nameserver policies for Stash"
+            git push
+          fi
