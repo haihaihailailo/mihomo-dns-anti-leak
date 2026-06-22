@@ -2,6 +2,7 @@ name: Mihomo DNS 防泄露 Stash 覆写
 summary: DNS 防泄露、fake-ip、IPv6、策略组和规则全接管；原订阅只提供节点。
 
 # Stash 接管版：数组字段使用 #!replace，避免与原订阅的 proxy-groups / rules 追加合并导致同名组冲突。
+# 注意：proxy-groups / rule-providers / rules 必须保留 #!replace；否则 Stash 会追加合并原订阅数组，导致 AI / YouTube / GitHub 等策略组重名。
 
 dns: #!replace
   enable: true
@@ -426,7 +427,6 @@ rules: #!replace
   - DOMAIN-SUFFIX,vietnamairlines.com,越南服务
   - DOMAIN-SUFFIX,vietjetair.com,越南服务
   - DOMAIN-SUFFIX,bambooairways.com,越南服务
-  - DOMAIN-SUFFIX,bambooairways.com,越南服务
   - DOMAIN-SUFFIX,vexere.com,越南服务
   - DOMAIN-SUFFIX,traveloka.com,越南服务
   - DOMAIN-SUFFIX,chotot.com,越南服务
@@ -435,8 +435,6 @@ rules: #!replace
   - GEOIP,VN,越南服务,no-resolve
   - DOMAIN-SUFFIX,yhglobal.com,国内服务
   - DOMAIN-SUFFIX,coolapk.com,国内服务
-  - DOMAIN-SUFFIX,www.coolapk.com,国内服务
-  - DOMAIN-SUFFIX,m.coolapk.com,国内服务
   - DOMAIN-KEYWORD,coolapk,国内服务
   - RULE-SET,cn,国内服务
   - GEOIP,CN,国内服务,no-resolve
