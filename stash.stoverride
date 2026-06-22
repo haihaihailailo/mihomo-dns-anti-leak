@@ -1,8 +1,9 @@
 name: Mihomo DNS 防泄露 Stash 覆写
-summary: DNS 防泄露、fake-ip、IPv6、策略组和规则全接管；原订阅只提供节点。
+summary: DNS 防泄露、fake-ip、IPv6、策略组和规则全接管；策略组从主配置里的 SubStore proxy-provider 读取节点。
 
-# Stash 接管版：数组字段使用 #!replace，避免与原订阅的 proxy-groups / rules 追加合并导致同名组冲突。
-# 注意：proxy-groups / rule-providers / rules 必须保留 #!replace；否则 Stash 会追加合并原订阅数组，导致 AI / YouTube / GitHub 等策略组重名。
+# Stash provider 接管版：主配置必须存在 proxy-providers.SubStore。
+# 适用结构：stash-full 主配置只放一个 SubStore provider 链接，覆写接管 DNS / 策略组 / 规则。
+# 注意：proxy-groups / rule-providers / rules 必须保留 #!replace；否则 Stash 会追加合并原配置数组，导致策略组重名。
 
 dns: #!replace
   enable: true
@@ -128,12 +129,12 @@ proxy-groups: #!replace
 
   - name: 全部节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群|VIP)).*$"
 
   - name: 自动选择
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.gstatic.com/generate_204
@@ -141,12 +142,12 @@ proxy-groups: #!replace
 
   - name: 香港节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广港|香港|HK|Hong Kong|🇭🇰|HongKong)"
 
   - name: 香港-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.com.hk/generate_204
@@ -154,12 +155,12 @@ proxy-groups: #!replace
 
   - name: 台湾节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广台|台湾|台灣|TW|Tai Wan|🇹🇼|TaiWan|Taiwan)"
 
   - name: 台湾-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.com.tw/generate_204
@@ -167,12 +168,12 @@ proxy-groups: #!replace
 
   - name: 日本节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广日|日本|JP|川日|东京|大阪|泉日|埼玉|沪日|深日|🇯🇵|Japan)"
 
   - name: 日本-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.co.jp/generate_204
@@ -180,12 +181,12 @@ proxy-groups: #!replace
 
   - name: 新加坡节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广新|新加坡|SG|坡|狮城|🇸🇬|Singapore)"
 
   - name: 新加坡-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.com.sg/generate_204
@@ -193,12 +194,12 @@ proxy-groups: #!replace
 
   - name: 美国节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广美|US|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|🇺🇸|United States)"
 
   - name: 美国-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.com/generate_204
@@ -206,12 +207,12 @@ proxy-groups: #!replace
 
   - name: 韩国节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广韩|韩国|韓國|KR|首尔|春川|🇰🇷|Korea)"
 
   - name: 韩国-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.google.co.kr/generate_204
@@ -219,12 +220,12 @@ proxy-groups: #!replace
 
   - name: 越南节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(越南|VN|Vietnam|Ho Chi Minh|HoChiMinh|🇻🇳)"
 
   - name: 越南-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://zalo.me
@@ -232,12 +233,12 @@ proxy-groups: #!replace
 
   - name: 中国节点
     type: select
-    include-all: true
+    use: [SubStore]
     filter: "(?i)(广中|中国|CN|China|上海|北京|广州|深圳|江苏|浙江|🇨🇳)"
 
   - name: 中国-自动
     type: url-test
-    include-all: true
+    use: [SubStore]
     interval: 300
     tolerance: 50
     url: https://www.baidu.com
