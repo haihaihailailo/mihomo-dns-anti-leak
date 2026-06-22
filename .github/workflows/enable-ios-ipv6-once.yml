@@ -1,0 +1,60 @@
+name: Enable iOS IPv6 once
+
+on:
+  push:
+    paths:
+      - ".github/workflows/enable-ios-ipv6-once.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-ios-ipv6:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Enable IPv6 in iOS configs
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          files = [
+              Path("防DNS泄露-iOS.yaml"),
+              Path("防DNS泄露-iOS.js"),
+          ]
+
+          changed = False
+          for path in files:
+              text = path.read_text(encoding="utf-8")
+              new_text = text.replace("ipv6: false", "ipv6: true").replace('ipv6: false', 'ipv6: true')
+              new_text = new_text.replace('ipv6: false', 'ipv6: true')
+              new_text = new_text.replace('"ipv6": false', '"ipv6": true')
+              if new_text != text:
+                  path.write_text(new_text, encoding="utf-8")
+                  changed = True
+
+          workflow = Path(".github/workflows/enable-ios-ipv6-once.yml")
+          if workflow.exists():
+              workflow.unlink()
+              changed = True
+
+          if not changed:
+              print("No changes needed.")
+          PY
+
+      - name: Commit changes
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 防DNS泄露-iOS.yaml 防DNS泄露-iOS.js .github/workflows/enable-ios-ipv6-once.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "fix: enable IPv6 for iOS configs"
+            git push
+          fi
