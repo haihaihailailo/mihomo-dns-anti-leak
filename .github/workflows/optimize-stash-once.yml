@@ -1,0 +1,68 @@
+name: Optimize Stash override once
+
+on:
+  push:
+    paths:
+      - ".github/workflows/optimize-stash-once.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize-stash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply low-risk Stash cleanup
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("stash.stoverride")
+          text = path.read_text(encoding="utf-8")
+
+          old_comment = "# Stash 接管版：数组字段使用 #!replace，避免与原订阅的 proxy-groups / rules 追加合并导致同名组冲突。"
+          new_comment = """# Stash 接管版：数组字段使用 #!replace，避免与原订阅的 proxy-groups / rules 追加合并导致同名组冲突。
+# 注意：proxy-groups / rule-providers / rules 必须保留 #!replace；否则 Stash 会追加合并原订阅数组，导致 AI / YouTube / GitHub 等策略组重名。"""
+          if old_comment in text and new_comment not in text:
+              text = text.replace(old_comment, new_comment)
+
+          lines = text.splitlines()
+          out = []
+          seen_bamboo = False
+          for line in lines:
+              if line == "  - DOMAIN-SUFFIX,bambooairways.com,越南服务":
+                  if seen_bamboo:
+                      continue
+                  seen_bamboo = True
+              if line in {
+                  "  - DOMAIN-SUFFIX,www.coolapk.com,国内服务",
+                  "  - DOMAIN-SUFFIX,m.coolapk.com,国内服务",
+              }:
+                  continue
+              out.append(line)
+
+          text = "\n".join(out) + "\n"
+          path.write_text(text, encoding="utf-8")
+
+          workflow = Path(".github/workflows/optimize-stash-once.yml")
+          if workflow.exists():
+              workflow.unlink()
+          PY
+
+      - name: Commit changes
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stash.stoverride .github/workflows/optimize-stash-once.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: clean up Stash override rules"
+            git push
+          fi
