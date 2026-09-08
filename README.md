@@ -8,6 +8,7 @@
 - `防DNS泄露.js`：JavaScript 覆写版本，适合 Clash Party / Mihomo Party 的 JS 覆写功能使用。
 - `stash.stoverride`：Stash 覆写配置，适合 Stash 的 override 导入使用。
 - `shadowrocket.conf`：Shadowrocket 专用配置，策略组、回国节点关键词和测速端点单独按其语法维护。
+- `Windows-国内网络覆写.yaml` / `Windows-国内网络覆写.js`：可选的国内网络补充层，在主配置之后二选一应用；不用于 Stash / Shadowrocket。
 
 ## 功能
 
@@ -54,6 +55,20 @@
 3. 更新订阅后检查 DNS、Sniffer、策略组、规则集和分流规则是否生效。
 
 ## 使用注意
+
+### Windows / Sparkle 国内网络补充层
+
+当国内 DoH 可达，而 `1.1.1.1` / `8.8.8.8` 的 HTTPS DNS 直连失败时，可在主覆写之后追加 `Windows-国内网络覆写.js`（推荐）或 YAML 版本。它使用已测通的国内 DoH 进行启动解析、节点解析和直连解析；保留主配置的 `nameserver-policy`、经代理的境外 DNS、地区分组与选择。出境后禁用这层，恢复通用配置；本层不会自动判断所在地。
+
+- 本层保留客户端运行模式。`Global` 会绕过业务分流；切到 **规则 / Rule** 前，先核对 Codex 等关键应用的策略与节点连通性，避免切换后无法连接。
+- `find-process-mode: strict` 让内核按规则需要识别进程；保留主配置的应用规则。若客户端强制覆盖此字段，应在客户端核对实际值。
+- TUN 和 IPv6 继续由客户端管理。本层不修改 TUN、MTU、网卡绑定、系统 DNS 或 Windows 路由表。
+- 系统代理模式仅接管遵循系统代理设置的应用，不能据此保证所有应用及其 DNS 都被接管。有其他 VPN / 隧道时，先核对其路由，再由客户端决定是否启用 TUN。
+- YAML 补充层必须合并到主配置并替换列出的 DNS 数组，不能单独当成完整配置使用。撤销时禁用补充层即可恢复原 DNS 和进程识别设置。
+
+字段语义参考 [Mihomo 全局配置](https://wiki.metacubex.one/config/general/) 与 [DNS 配置](https://wiki.metacubex.one/config/dns/)。
+
+### 通用注意事项
 
 - 本配置默认启用 fake-ip；TUN 是否启用由客户端/软件决定。主配置包含启用 TUN 后使用的 DNS 劫持参数，建议先备份原客户端配置。
 - Android 场景下，微信和支付宝通过包名固定到 `国内服务`，因此应用内请求、小程序和 H5 都随整个应用进入该组；桌面微信也有独立进程规则。微信、支付宝的维护中远程域名规则同时覆盖 Stash 等不支持 Android 包名匹配的客户端。

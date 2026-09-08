@@ -554,7 +554,8 @@ for policy in (
     "rule-set:category-games-cn",
     "rule-set:wechat",
     "rule-set:alipay",
-    "+.aliapp.org",
+    "aliapp.org",
+    ".aliapp.org",
 ):
     if policy not in yaml_text or policy not in js_text:
         fail(f"Mihomo domestic DNS policy is missing: {policy}")
@@ -888,6 +889,8 @@ process.stdout.write(JSON.stringify({
       .map(([name, provider]) => [name, provider["size-limit"] ?? null])
   ),
   dnsFallback: enabled.dns.fallback,
+  dnsPolicies: enabled.dns["nameserver-policy"],
+  routingRules: enabled.rules,
   proxyGroups: enabled["proxy-groups"].map((group) => ({
     name: group.name,
     type: group.type,
@@ -971,5 +974,32 @@ expected_external_fallback = [
 ]
 if js_result.get("dnsFallback") != expected_external_fallback:
     fail("防DNS泄露.js: external DNS fallback does not follow 节点选择")
+
+dns_policies = js_result.get("dnsPolicies", {})
+for domain in (
+    "aliapp.org", "yhglobal.com", "windowsupdate.com",
+    "download.windowsupdate.com", "mp.microsoft.com",
+    "delivery.mp.microsoft.com", "dl.delivery.mp.microsoft.com", "googleapis.cn",
+):
+    expected_dns = expected_external_fallback if domain == "googleapis.cn" else [
+        "https://223.5.5.5/dns-query", "https://doh.pub/dns-query"
+    ]
+    for policy in (domain, "." + domain):
+        if dns_policies.get(policy) != expected_dns:
+            fail(f"DNS root/subdomain policy missing or changed: {policy}")
+if any(key.startswith("+") and isinstance(value, list) for key, value in dns_policies.items()):
+    fail("DNS array keys must not trigger Sparkle's leading-plus merge operator")
+
+routing_rules = js_result.get("routingRules", [])
+company_rule = "DOMAIN-SUFFIX,yhglobal.com,国内服务"
+if routing_rules.count(company_rule) != 1:
+    fail("company domain must have exactly one rule")
+company_index = routing_rules.index(company_rule)
+first_process = next(i for i, rule in enumerate(routing_rules) if rule.startswith("PROCESS-"))
+if not routing_rules.index("RULE-SET,reject,广告过滤") < company_index < first_process:
+    fail("company domain must follow LAN/ads and precede application rules")
+for process in ("iFlyInput.exe", "iFlyPlatform.exe"):
+    if routing_rules.count(f"PROCESS-NAME,{process},国内服务") != 1:
+        fail(f"input-method process rule missing or duplicated: {process}")
 
 print("health-check and routing topology OK")

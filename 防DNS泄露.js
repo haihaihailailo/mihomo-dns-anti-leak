@@ -174,26 +174,35 @@ const OVERRIDE = {
     ],
     "direct-nameserver-follow-policy": true,
     "nameserver-policy": {
+      // 根域名与子域名分开写，与 Sparkle YAML 覆写兼容。
       "rule-set:private": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:steam-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:category-games-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:wechat": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:alipay": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:microsoft": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.download.windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "+.dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "download.windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".download.windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "rule-set:geolocation-!cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:github": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
-      "+.googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
     },
   },
   "proxy-groups": [],
@@ -291,6 +300,7 @@ DOMAIN-SUFFIX,lan,DIRECT
 RULE-SET,private,DIRECT
 GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
+DOMAIN-SUFFIX,yhglobal.com,国内服务
 PROCESS-NAME,com.openai.chatgpt,AI
 PROCESS-NAME,com.google.android.apps.bard,AI
 PROCESS-NAME,com.anthropic.claude,AI
@@ -634,6 +644,8 @@ PROCESS-NAME,CapCut.exe,节点选择
 PROCESS-NAME,SogouInput.exe,国内服务
 PROCESS-NAME,SogouImeBroker.exe,国内服务
 PROCESS-NAME,iFlyIME.exe,国内服务
+PROCESS-NAME,iFlyInput.exe,国内服务
+PROCESS-NAME,iFlyPlatform.exe,国内服务
 PROCESS-NAME,LenovoVantage.exe,国内服务
 PROCESS-NAME,Lenovo.Modern.ImController.exe,国内服务
 PROCESS-NAME,HuaweiPCManager.exe,国内服务
@@ -821,7 +833,6 @@ DOMAIN-SUFFIX,chotot.com,越南服务
 DOMAIN-SUFFIX,muaban.net,越南服务
 DOMAIN-SUFFIX,vietnamworks.com,越南服务
 GEOIP,VN,越南服务,no-resolve
-DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,coolapk.com,国内服务
 DOMAIN-SUFFIX,www.coolapk.com,国内服务
 DOMAIN-SUFFIX,m.coolapk.com,国内服务

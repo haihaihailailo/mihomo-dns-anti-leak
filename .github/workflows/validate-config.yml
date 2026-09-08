@@ -5,6 +5,8 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "Windows-国内网络覆写.yaml"
+      - "Windows-国内网络覆写.js"
       - "stash.stoverride"
       - "shadowrocket.conf"
       - ".github/scripts/validate_health_checks.py"
@@ -13,6 +15,8 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "Windows-国内网络覆写.yaml"
+      - "Windows-国内网络覆写.js"
       - "stash.stoverride"
       - "shadowrocket.conf"
       - ".github/scripts/validate_health_checks.py"
@@ -45,12 +49,13 @@ jobs:
 
       - name: Parse YAML with aliases enabled
         run: |
-          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "stash.stoverride"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
+          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "stash.stoverride", "Windows-国内网络覆写.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
       - name: Check JavaScript syntax
         run: |
           node --version
           node --check "防DNS泄露.js"
+          node --check "Windows-国内网络覆写.js"
 
       - name: Check routing and health-check topology
         run: python3 .github/scripts/validate_health_checks.py
@@ -99,6 +104,32 @@ jobs:
           abort "YAML and JS full config are not synchronized" unless yaml_selected == js_selected
 
           puts "YAML and JS full config are synchronized for: #{keys.join(', ')}."
+
+          local_yaml = YAML.safe_load_file("Windows-国内网络覆写.yaml", aliases: true)
+          local_node = <<~'NODE'
+            const fs = require("fs");
+            const vm = require("vm");
+            const assert = require("assert/strict");
+            const sandbox = {};
+            vm.createContext(sandbox);
+            vm.runInContext(fs.readFileSync("Windows-国内网络覆写.js", "utf8"), sandbox);
+            const base = {mode: "global", ipv6: true, tun: {enable: false}, dns: {
+              fallback: ["https://1.1.1.1/dns-query#节点选择"],
+              "nameserver-policy": {"rule-set:openai": ["https://1.1.1.1/dns-query#节点选择"]}
+            }, "proxy-groups": [{name: "AI", type: "select", proxies: ["DIRECT"]}], rules: ["MATCH,AI"]};
+            const before = JSON.stringify(base);
+            const result = JSON.parse(JSON.stringify(sandbox.main(base)));
+            assert.equal(JSON.stringify(base), before);
+            for (const key of ["mode", "ipv6", "tun", "proxy-groups", "rules"]) assert.deepEqual(result[key], base[key]);
+            for (const key of ["fallback", "nameserver-policy"]) assert.deepEqual(result.dns[key], base.dns[key]);
+            delete result.dns.fallback;
+            delete result.dns["nameserver-policy"];
+            process.stdout.write(JSON.stringify({"find-process-mode": result["find-process-mode"], dns: result.dns}));
+          NODE
+          local_stdout, local_stderr, local_status = Open3.capture3("node", "-e", local_node)
+          abort local_stderr unless local_status.success?
+          abort "Windows supplemental YAML/JS differ" unless local_yaml == JSON.parse(local_stdout)
+          puts "Windows supplemental YAML/JS match and preserve client mode, TUN, IPv6 and routing."
           RUBY
 
       - name: Check rule references
@@ -202,10 +233,12 @@ jobs:
           errors << "main direct-nameserver must use encrypted resolvers" unless direct_dns.any? && direct_dns.all? { |item| encrypted_resolver.call(item) }
           errors << "direct-nameserver-follow-policy must be true" unless dns["direct-nameserver-follow-policy"] == true
           domestic_dns = ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"]
-          errors << "yhglobal DNS must use domestic resolvers" unless Array(Hash(dns["nameserver-policy"])["+.yhglobal.com"]) == domestic_dns
+          %w[yhglobal.com .yhglobal.com].each do |policy|
+            errors << "yhglobal DNS must use domestic resolvers: #{policy}" unless Array(Hash(dns["nameserver-policy"])[policy]) == domestic_dns
+          end
           errors << "yhglobal must follow 国内服务" unless Array(main["rules"]).include?("DOMAIN-SUFFIX,yhglobal.com,国内服务")
           errors << "external fallback DNS must follow 节点选择" unless Array(dns["fallback"]) == external_dns
-          %w[rule-set:geolocation-!cn rule-set:google rule-set:youtube rule-set:openai rule-set:github +.googleapis.cn].each do |policy|
+          %w[rule-set:geolocation-!cn rule-set:google rule-set:youtube rule-set:openai rule-set:github googleapis.cn .googleapis.cn].each do |policy|
             errors << "external DNS policy #{policy} must follow 节点选择" unless Array(Hash(dns["nameserver-policy"])[policy]) == external_dns
           end
 
