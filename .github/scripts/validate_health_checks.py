@@ -81,7 +81,7 @@ FORBIDDEN_BROWSER_PACKAGES = (
     "com.android.browser",
 )
 GOOD_ALL_NODES_FILTER = (
-    "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$"
+    "(?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$"
 )
 RETURN_TO_CHINA_PATTERN = (
     "(?:回国|港广|港沪|港深|沪港|深港|广中)"
@@ -117,7 +117,7 @@ GOOD_CHINA_FILTER = (
     f"(?!.*{FOREIGN_REGION_PATTERN}).*{DOMESTIC_NODE_PATTERN}).*$"
 )
 GOOD_AUTO_FILTER = (
-    "(?i)^(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))"
+    "(?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))"
     f"(?!(?:.*{RETURN_TO_CHINA_PATTERN}|"
     f"(?!.*{FOREIGN_REGION_PATTERN}).*{DOMESTIC_NODE_PATTERN})).*$"
 )
@@ -679,6 +679,20 @@ for package in DOMESTIC_APP_PACKAGES:
 
 china_pattern = re.compile(GOOD_CHINA_FILTER)
 auto_pattern = re.compile(GOOD_AUTO_FILTER)
+all_nodes_pattern = re.compile(GOOD_ALL_NODES_FILTER)
+for proxy_name in (
+    "Traffic: 0 GB | 150 GB", "Expire: 2026-10-09",
+    " traffic : 1 GB", "EXPIRY：2026-10-09", "Expiration: tomorrow",
+    "剩余流量：100 GB", "套餐到期：2026-10-09",
+):
+    if all_nodes_pattern.search(proxy_name) or auto_pattern.search(proxy_name):
+        fail(f"subscription metadata accepted as usable node: {proxy_name}")
+for proxy_name in (
+    "🇸🇬 新加坡标准 IEPL 专线 5", "🇺🇸 美国实验性 IEPL 专线 1",
+    "🇨🇳 台湾标准 IEPL 专线 1", "Traffic-SG-01", "Expiry-US-02",
+):
+    if not all_nodes_pattern.search(proxy_name) or not auto_pattern.search(proxy_name):
+        fail(f"metadata filter rejected a usable node: {proxy_name}")
 return_exclude_pattern = re.compile(RETURN_TO_CHINA_EXCLUDE_FILTER)
 for proxy_name in RETURN_TO_CHINA_SAMPLES:
     if not china_pattern.search(proxy_name):
@@ -872,12 +886,29 @@ if '{ name: "国内服务", type: "select", proxies: ["DIRECT", "中国-自动",
 node_code = r'''
 const fs = require("fs");
 const vm = require("vm");
+const assert = require("assert/strict");
 const code = fs.readFileSync("防DNS泄露.js", "utf8");
 const sandbox = { console };
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox, { filename: "防DNS泄露.js" });
 const enabled = vm.runInContext("main({ tun: { enable: true } })", sandbox);
 const disabled = vm.runInContext("main({ tun: { enable: false } })", sandbox);
+const plain = (value) => JSON.parse(JSON.stringify(value));
+for (const ipv6 of [true, false]) {
+  const input = {mode: "rule", ipv6, "find-process-mode": "off",
+    tun: {enable: ipv6, "inet6-address": ["fdfe:dcba:9876::1/126"]},
+    dns: {ipv6, "fake-ip-range6": "fdfe:dcba:9876::1/64"}};
+  const expected = plain(input);
+  const result = plain(sandbox.main(input));
+  for (const key of ["mode", "ipv6", "find-process-mode"]) assert.equal(result[key], expected[key]);
+  for (const section of ["tun", "dns"]) {
+    for (const key of Object.keys(expected[section])) assert.deepEqual(result[section][key], expected[section][key]);
+  }
+}
+const unspecified = sandbox.main({});
+for (const [section, keys] of Object.entries({tun: ["enable", "inet6-address"], dns: ["ipv6", "fake-ip-range6"]})) {
+  for (const key of keys) assert.equal(Object.hasOwn(unspecified[section], key), false);
+}
 process.stdout.write(JSON.stringify({
   enabled: enabled.tun && enabled.tun.enable,
   disabled: disabled.tun && disabled.tun.enable,
@@ -894,6 +925,7 @@ process.stdout.write(JSON.stringify({
   proxyGroups: enabled["proxy-groups"].map((group) => ({
     name: group.name,
     type: group.type,
+    filter: group.filter ?? null,
     url: group.url ?? null,
     expectedStatus: group["expected-status"] ?? null,
     interval: group.interval ?? null,
@@ -926,6 +958,9 @@ if {key: js_result.get(key) for key in ("enabled", "disabled")} != {
 js_groups = {
     group["name"]: group for group in js_result.get("proxyGroups", [])
 }
+for group_name, expected in (("全部节点", GOOD_ALL_NODES_FILTER), ("自动选择", GOOD_AUTO_FILTER)):
+    if js_groups.get(group_name, {}).get("filter") != expected:
+        fail(f"JavaScript effective filter differs: {group_name}")
 for group_name, (expected_url, expected_status) in SELECT_HEALTH_CHECKS.items():
     group = js_groups.get(group_name)
     if not group:

@@ -33,7 +33,7 @@ const URLTEST_BASE = {
   "include-all": true,
   "empty-fallback": "REJECT",
   timeout: 10000,
-  filter: "(?i)^(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))(?!(?:.*(?:回国|港广|港沪|港深|沪港|深港|广中)|(?!.*(?:广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$)|广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$)|广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$)|广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$)|广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$)|广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$)|越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$)|澳门|澳門|Macao|Macau|🇲🇴|(^|[^A-Z])MO([^A-Z]|$)|(^|[^A-Z])MFM([^A-Z]|$))).*(?:中国|上海|北京|广州|深圳|江苏|浙江|🇨🇳|(^|[^A-Z])China([^A-Z]|$)|(^|[^A-Z])CN(?!2(?:[^0-9]|$))([^A-Z]|$)))).*$",
+  filter: "(?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))(?!(?:.*(?:回国|港广|港沪|港深|沪港|深港|广中)|(?!.*(?:广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$)|广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$)|广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$)|广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$)|广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$)|广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$)|越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$)|澳门|澳門|Macao|Macau|🇲🇴|(^|[^A-Z])MO([^A-Z]|$)|(^|[^A-Z])MFM([^A-Z]|$))).*(?:中国|上海|北京|广州|深圳|江苏|浙江|🇨🇳|(^|[^A-Z])China([^A-Z]|$)|(^|[^A-Z])CN(?!2(?:[^0-9]|$))([^A-Z]|$)))).*$",
   icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg",
 };
 
@@ -231,7 +231,7 @@ OVERRIDE["proxy-groups"] = [
   { name: "Spotify", type: "select", proxies: ["节点选择", "自动选择", "香港-自动", "香港节点", "台湾-自动", "台湾节点", "日本-自动", "日本节点", "新加坡-自动", "新加坡节点", "美国-自动", "美国节点", "韩国-自动", "韩国节点", "越南-自动", "越南节点", "DIRECT"], url: "https://open.spotify.com/favicon.ico", "expected-status": 200, timeout: 10000, icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/spotify.svg" },
   { name: "哔哩哔哩港澳台", type: "select", proxies: ["DIRECT", "自动选择", "节点选择", "香港-自动", "香港节点", "台湾-自动", "台湾节点", "日本-自动", "日本节点", "新加坡-自动", "新加坡节点", "美国-自动", "美国节点", "韩国-自动", "韩国节点", "越南-自动", "越南节点", "中国-自动", "中国节点"], url: "https://p.bstarstatic.com/fe-static/deps/bilibili_tv.ico?v=1", "expected-status": 200, timeout: 10000, icon: "https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/bilibili.svg" },
   { name: "广告过滤", type: "select", proxies: ["REJECT", "DIRECT"], icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/bug.svg" },
-  { name: "全部节点", type: "select", "include-all": true, "empty-fallback": "REJECT", filter: "(?i)^(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$", url: "https://connectivitycheck.gstatic.com/generate_204", "expected-status": 204, timeout: 10000, icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg" },
+  { name: "全部节点", type: "select", "include-all": true, "empty-fallback": "REJECT", filter: "(?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$", url: "https://connectivitycheck.gstatic.com/generate_204", "expected-status": 204, timeout: 10000, icon: "https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg" },
   { ...URLTEST_BASE, name: "自动选择" },
   { name: "香港节点", type: "select", "include-all": true, "empty-fallback": "REJECT", filter: "(?i)(广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$))", "exclude-filter": "(?i)(回国|港广|港沪|港深|沪港|深港|广中)", url: "https://www.google.com.hk/generate_204", "expected-status": 204, timeout: 10000, icon: "https://flagcdn.com/w320/hk.png" },
   { ...URLTEST_BASE, name: "香港-自动", url: "https://www.google.com.hk/generate_204", "expected-status": 204, lazy: true, filter: "(?i)(广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$))", "exclude-filter": "(?i)(回国|港广|港沪|港深|沪港|深港|广中)", icon: "https://flagcdn.com/w320/hk.png" },
@@ -862,15 +862,19 @@ function deepClone(value) {
 
 // 入口函数：客户端调用 main(config)，返回覆写后的配置。
 function main(config) {
-  const hadTunEnable = Boolean(
-    config.tun && Object.prototype.hasOwnProperty.call(config.tun, "enable")
-  );
-  const tunEnable = hadTunEnable ? config.tun.enable : undefined;
   const next = deepClone(OVERRIDE);
-
-  Object.assign(config, next);
-  if (hadTunEnable) {
-    config.tun.enable = tunEnable;
+  // 这些字段由客户端管理；替换整个 DNS/TUN 对象时也要保留显式设置。
+  // 未设置的字段不补默认值，与 YAML 覆写保持一致。
+  for (const [section, keys] of Object.entries({
+    tun: ["enable", "inet6-address"],
+    dns: ["ipv6", "fake-ip-range6"],
+  })) {
+    for (const key of keys) {
+      if (config[section] && Object.prototype.hasOwnProperty.call(config[section], key)) {
+        next[section][key] = deepClone(config[section][key]);
+      }
+    }
   }
+  Object.assign(config, next);
   return config;
 }
