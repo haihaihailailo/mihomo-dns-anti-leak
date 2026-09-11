@@ -1,0 +1,11 @@
+{
+  "name": "mihomo-dns-anti-leak",
+  "private": true,
+  "scripts": {
+    "build:profiles": "node .github/scripts/build_profiles.cjs",
+    "check:profiles": "node .github/scripts/build_profiles.cjs --check"
+  },
+  "devDependencies": {
+    "yaml": "2.8.1"
+  }
+}

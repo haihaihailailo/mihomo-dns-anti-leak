@@ -5,6 +5,11 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "防DNS泄露-*版.*"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/scripts/build_profiles.cjs"
+      - ".github/scripts/validate_profiles.cjs"
       - "Windows-国内网络覆写.yaml"
       - "Windows-国内网络覆写.js"
       - "stash.stoverride"
@@ -15,6 +20,11 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "防DNS泄露-*版.*"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/scripts/build_profiles.cjs"
+      - ".github/scripts/validate_profiles.cjs"
       - "Windows-国内网络覆写.yaml"
       - "Windows-国内网络覆写.js"
       - "stash.stoverride"
@@ -49,13 +59,18 @@ jobs:
 
       - name: Parse YAML with aliases enabled
         run: |
-          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "stash.stoverride", "Windows-国内网络覆写.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
+          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "防DNS泄露-国内版.yaml", "防DNS泄露-国外版.yaml", "stash.stoverride", "Windows-国内网络覆写.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
       - name: Check JavaScript syntax
         run: |
           node --version
           node --check "防DNS泄露.js"
           node --check "Windows-国内网络覆写.js"
+          node --check "防DNS泄露-国内版.js"
+          node --check "防DNS泄露-国外版.js"
+
+      - name: Install pinned config validation dependency
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Check routing and health-check topology
         run: python3 .github/scripts/validate_health_checks.py
@@ -332,4 +347,7 @@ jobs:
           ./mihomo -v
 
       - name: Test config load
-        run: ./mihomo -t -f "防DNS泄露.yaml"
+        run: |
+          ./mihomo -t -f "防DNS泄露.yaml"
+          ./mihomo -t -f "防DNS泄露-国内版.yaml"
+          ./mihomo -t -f "防DNS泄露-国外版.yaml"

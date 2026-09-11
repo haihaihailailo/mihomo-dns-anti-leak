@@ -1,3 +1,6 @@
+// 国外使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。
+// 与主覆写二选一；不要叠加旧国内补充层。TUN / IPv6 / 运行模式由客户端决定。
+const applySharedConfig = (() => {
 /**
  * 文件说明：Clash Party / Mihomo Party JavaScript 覆写版本。
  * 维护口径：本文件必须与 防DNS泄露.yaml 的关键配置保持同步，CI 会自动比对。
@@ -887,4 +890,261 @@ function main(config) {
   }
   Object.assign(config, next);
   return config;
+}
+
+return main;
+})();
+
+const ENVIRONMENT = {
+  "dns": {
+    "default-nameserver": [
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query"
+    ],
+    "proxy-server-nameserver": [
+      "https://1.1.1.1/dns-query#DIRECT",
+      "https://8.8.8.8/dns-query#DIRECT"
+    ],
+    "nameserver": [
+      "https://1.1.1.1/dns-query#节点选择",
+      "https://8.8.8.8/dns-query#节点选择"
+    ],
+    "fallback": [],
+    "fallback-filter": {
+      "geoip": false,
+      "ipcidr": [],
+      "domain": [],
+      "geosite": []
+    },
+    "direct-nameserver": [
+      "https://1.1.1.1/dns-query#DIRECT",
+      "https://8.8.8.8/dns-query#DIRECT"
+    ],
+    "direct-nameserver-follow-policy": true,
+    "nameserver-policy": {
+      "rule-set:private": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "rule-set:cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:steam-cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:category-games-cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:wechat": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:alipay": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "aliapp.org": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".aliapp.org": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "yhglobal.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".yhglobal.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "download.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      ".download.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "download.nvidia.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      ".download.nvidia.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "ota.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "gfwsl.geforce.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "rule-set:microsoft": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "download.windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".download.windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "dl.delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".dl.delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "rule-set:geolocation-!cn": [
+        "https://1.1.1.1/dns-query#节点选择",
+        "https://8.8.8.8/dns-query#节点选择"
+      ],
+      "rule-set:google": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "rule-set:youtube": [
+        "https://1.1.1.1/dns-query#YouTube",
+        "https://8.8.8.8/dns-query#YouTube"
+      ],
+      "rule-set:openai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "rule-set:github": [
+        "https://1.1.1.1/dns-query#GitHub",
+        "https://8.8.8.8/dns-query#GitHub"
+      ],
+      "googleapis.cn": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".googleapis.cn": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "chatgpt.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".chatgpt.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "openai.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".openai.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "oaistatic.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".oaistatic.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "oaiusercontent.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".oaiusercontent.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "auth0.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".auth0.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "statsigapi.net": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".statsigapi.net": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "intercom.io": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".intercom.io": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "intercomcdn.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".intercomcdn.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ]
+    }
+  },
+  "defaults": {
+    "节点选择": "DIRECT",
+    "GitHub": "DIRECT",
+    "电报消息": "DIRECT"
+  },
+  "lazyAutomatic": true
+};
+
+function applyEnvironment(config, settings) {
+  Object.assign(config.dns, JSON.parse(JSON.stringify(settings.dns)));
+  for (const [name, preferred] of Object.entries(settings.defaults)) {
+    const group = config["proxy-groups"].find(item => item.name === name);
+    if (!group || group.type !== "select" || !group.proxies.includes(preferred)) {
+      throw new Error(`环境首选策略不存在：${name} / ${preferred}`);
+    }
+    group.proxies = [preferred, ...group.proxies.filter(item => item !== preferred)];
+  }
+  if (settings.lazyAutomatic) config["proxy-groups"].find(item => item.name === "自动选择").lazy = true;
+  return config;
+}
+
+function main(config) {
+  return applyEnvironment(applySharedConfig(config), ENVIRONMENT);
 }

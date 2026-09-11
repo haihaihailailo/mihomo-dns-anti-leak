@@ -5,6 +5,13 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "防DNS泄露-*版.*"
+      - "Windows-国内网络覆写.yaml"
+      - "Windows-国内网络覆写.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/scripts/build_profiles.cjs"
+      - ".github/scripts/validate_profiles.cjs"
       - "stash.stoverride"
       - "shadowrocket.conf"
       - ".github/scripts/validate_health_checks.py"
@@ -13,6 +20,13 @@ on:
     paths:
       - "防DNS泄露.yaml"
       - "防DNS泄露.js"
+      - "防DNS泄露-*版.*"
+      - "Windows-国内网络覆写.yaml"
+      - "Windows-国内网络覆写.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/scripts/build_profiles.cjs"
+      - ".github/scripts/validate_profiles.cjs"
       - "stash.stoverride"
       - "shadowrocket.conf"
       - ".github/scripts/validate_health_checks.py"
@@ -30,6 +44,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install pinned config validation dependency
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Validate proxy-group health-check topology
         run: python3 .github/scripts/validate_health_checks.py

@@ -944,8 +944,9 @@ try:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        timeout=30,
     )
-except (OSError, subprocess.CalledProcessError) as exc:
+except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
     fail(f"could not evaluate JavaScript override: {exc}")
 
 js_result = json.loads(completed.stdout)
@@ -1037,4 +1038,10 @@ for process in ("iFlyInput.exe", "iFlyPlatform.exe"):
     if routing_rules.count(f"PROCESS-NAME,{process},国内服务") != 1:
         fail(f"input-method process rule missing or duplicated: {process}")
 
-print("health-check and routing topology OK")
+subprocess.run(
+    ["node", str(Path(__file__).with_name("validate_profiles.cjs"))],
+    check=True,
+    timeout=60,
+)
+
+print("health-check, routing topology and environment profiles OK")

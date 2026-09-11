@@ -162,6 +162,13 @@ dns:
     ".aliapp.org": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "yhglobal.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     ".yhglobal.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    # 下载直连时使用本地适用的 CDN 解析；国外入口由生成器改用境外直连 DoH。
+    "download.nvidia.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    ".download.nvidia.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "download.nvidia.cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    ".download.nvidia.cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "ota.nvidia.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "gfwsl.geforce.cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "rule-set:microsoft": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     ".windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
@@ -738,6 +745,11 @@ rules:
   - "RULE-SET,reject,广告过滤"
   # 公司域名优先于开发工具整进程代理；仍跟随 国内服务 的手动选择。
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
+  # 仅驱动下载/CDN 与更新检查直连，先于 NVIDIA 进程代理规则；不放行整个 nvidia.com。
+  - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
+  - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
+  - DOMAIN,ota.nvidia.com,DIRECT
+  - DOMAIN,gfwsl.geforce.cn,DIRECT
   # --- AI ---
   - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
   - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini

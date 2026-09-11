@@ -1,3 +1,6 @@
+// 国内使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。
+// 与主覆写二选一；不要叠加旧国内补充层。TUN / IPv6 / 运行模式由客户端决定。
+const applySharedConfig = (() => {
 /**
  * 文件说明：Clash Party / Mihomo Party JavaScript 覆写版本。
  * 维护口径：本文件必须与 防DNS泄露.yaml 的关键配置保持同步，CI 会自动比对。
@@ -887,4 +890,42 @@ function main(config) {
   }
   Object.assign(config, next);
   return config;
+}
+
+return main;
+})();
+
+const ENVIRONMENT = {
+  "dns": {
+    "default-nameserver": [
+      "https://223.5.5.5/dns-query"
+    ],
+    "proxy-server-nameserver": [
+      "https://223.5.5.5/dns-query#DIRECT",
+      "https://doh.pub/dns-query#DIRECT"
+    ],
+    "direct-nameserver": [
+      "https://223.5.5.5/dns-query",
+      "https://doh.pub/dns-query"
+    ],
+    "direct-nameserver-follow-policy": true
+  },
+  "defaults": {}
+};
+
+function applyEnvironment(config, settings) {
+  Object.assign(config.dns, JSON.parse(JSON.stringify(settings.dns)));
+  for (const [name, preferred] of Object.entries(settings.defaults)) {
+    const group = config["proxy-groups"].find(item => item.name === name);
+    if (!group || group.type !== "select" || !group.proxies.includes(preferred)) {
+      throw new Error(`环境首选策略不存在：${name} / ${preferred}`);
+    }
+    group.proxies = [preferred, ...group.proxies.filter(item => item !== preferred)];
+  }
+  if (settings.lazyAutomatic) config["proxy-groups"].find(item => item.name === "自动选择").lazy = true;
+  return config;
+}
+
+function main(config) {
+  return applyEnvironment(applySharedConfig(config), ENVIRONMENT);
 }

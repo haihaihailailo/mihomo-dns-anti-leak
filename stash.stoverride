@@ -1,5 +1,5 @@
 name: Mihomo DNS 防泄露 Stash 覆写
-summary: DNS 防泄露、fake-ip、IPv6、策略组和规则全接管；主订阅直接提供节点。
+summary: 覆写 DNS、fake-ip、策略组和分流规则；主订阅提供节点，IPv6 由客户端管理。
 
 # 直接机场订阅版：主配置必须直接包含 proxies 节点。
 # 适用结构：Stash 直接导入机场 URL，然后用本覆写接管 DNS / Sniffer / 策略组 / 规则。
@@ -49,6 +49,10 @@ dns: #!replace
     "geosite:cn": https://223.5.5.5/dns-query
     "+.alipaylog.com": https://223.5.5.5/dns-query
     "+.aliapp.org": https://223.5.5.5/dns-query
+    "+.download.nvidia.com": https://223.5.5.5/dns-query
+    "+.download.nvidia.cn": https://223.5.5.5/dns-query
+    "ota.nvidia.com": https://223.5.5.5/dns-query
+    "gfwsl.geforce.cn": https://223.5.5.5/dns-query
     "geosite:microsoft": https://223.5.5.5/dns-query
     "+.windowsupdate.com": https://223.5.5.5/dns-query
     "+.download.windowsupdate.com": https://223.5.5.5/dns-query
@@ -525,6 +529,11 @@ rules: #!replace
   - RULE-SET,private,DIRECT
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
+  # 驱动下载精确直连，先于业务规则和国家 IP 兜底。
+  - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
+  - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
+  - DOMAIN,ota.nvidia.com,DIRECT
+  - DOMAIN,gfwsl.geforce.cn,DIRECT
   - DOMAIN-SUFFIX,chatgpt.com,AI
   - DOMAIN-SUFFIX,openai.com,AI
   - DOMAIN-SUFFIX,oaistatic.com,AI

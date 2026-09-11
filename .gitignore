@@ -5,6 +5,7 @@ Thumbs.db
 *.swo
 .vscode/
 .idea/
+node_modules/
 
 # Logs and temporary files
 *.log
