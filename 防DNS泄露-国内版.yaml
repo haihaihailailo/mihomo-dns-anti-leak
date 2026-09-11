@@ -740,6 +740,7 @@ proxy-groups:
     exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
   - name: 韩国节点
     type: select
+    hidden: true
     include-all: true
     empty-fallback: REJECT
     filter: (?i)(广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$))
