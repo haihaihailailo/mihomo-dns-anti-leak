@@ -10,6 +10,7 @@ on:
       - "package-lock.json"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
+      - ".github/scripts/validate_rule_sources.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
       - "stash-*版.stoverride"
@@ -29,6 +30,7 @@ on:
       - "package-lock.json"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
+      - ".github/scripts/validate_rule_sources.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
       - "stash-*版.stoverride"
@@ -235,7 +237,7 @@ jobs:
           end
           errors << "yhglobal must follow 国内服务" unless Array(main["rules"]).include?("DOMAIN-SUFFIX,yhglobal.com,国内服务")
           errors << "external fallback DNS must follow 节点选择" unless Array(dns["fallback"]) == external_dns
-          %w[rule-set:geolocation-!cn rule-set:google rule-set:youtube rule-set:openai rule-set:github googleapis.cn .googleapis.cn].each do |policy|
+          %w[rule-set:geolocation-!cn rule-set:google rule-set:youtube rule-set:openai rule-set:anthropic rule-set:google-gemini rule-set:github-copilot rule-set:github googleapis.cn .googleapis.cn].each do |policy|
             errors << "external DNS policy #{policy} must follow 节点选择" unless Array(Hash(dns["nameserver-policy"])[policy]) == external_dns
           end
 

@@ -184,6 +184,9 @@ dns:
     "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:anthropic": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:google-gemini": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:github-copilot": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:github": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
@@ -585,19 +588,24 @@ proxy-groups:
 # --- 9. 远程规则集 rule-providers ---
 # 从 MetaCubeX meta-rules-dat 拉取常用 geosite/geoip 规则，供 RULE-SET 调用。
 rule-providers:
-  # 广告过滤规则集，作为 domain provider 模板。
-  reject: &meta_domain
+  # 纯广告版：不叠加隐私统计、强制更新、推送/PCDN 拦截；classical 保留精确域名与关键词语义。
+  reject:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical-Only.Ads.yaml"
+    path: "./ruleset/awavenue/only-ads-classical.yaml"
+  # 私有/局域网域名规则集，同时提供其余 MetaCubeX domain provider 的模板。
+  private: &meta_domain
     type: http
     behavior: domain
     format: mrs
     interval: 86400
     size-limit: 4194304
     proxy: 节点选择
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"
-    path: "./ruleset/metacubex/category-ads-all.mrs"
-  # 私有/局域网域名规则集。
-  private:
-    <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
     path: "./ruleset/metacubex/private.mrs"
   # 中国大陆域名规则集。
@@ -613,8 +621,8 @@ rule-providers:
     interval: 86400
     size-limit: 4194304
     proxy: 节点选择
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml"
-    path: "./ruleset/blackmatrix7/wechat.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat_No_Resolve.yaml"
+    path: "./ruleset/blackmatrix7/wechat-no-resolve.yaml"
   # 支付宝专属域名规则集；与包名规则共同归入国内服务。
   alipay:
     type: http
@@ -655,6 +663,22 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs"
     path: "./ruleset/metacubex/openai.mrs"
+  # AI 专属小型域名集；使用上游 text 格式，优先于 Google / GitHub 的通用规则。
+  anthropic:
+    <<: *meta_domain
+    format: text
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.list"
+    path: "./ruleset/metacubex/anthropic.list"
+  google-gemini:
+    <<: *meta_domain
+    format: text
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google-gemini.list"
+    path: "./ruleset/metacubex/google-gemini.list"
+  github-copilot:
+    <<: *meta_domain
+    format: text
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github-copilot.list"
+    path: "./ruleset/metacubex/github-copilot.list"
   # Telegram 域名规则集。
   telegram:
     <<: *meta_domain
@@ -1184,6 +1208,9 @@ rules:
   - "DOMAIN-SUFFIX,intercom.io,AI"
   - "DOMAIN-SUFFIX,intercomcdn.com,AI"
   - "RULE-SET,openai,AI"
+  - "RULE-SET,anthropic,AI"
+  - "RULE-SET,google-gemini,AI"
+  - "RULE-SET,github-copilot,AI"
 
   - "DOMAIN,accounts.google.com,谷歌服务"
   - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"

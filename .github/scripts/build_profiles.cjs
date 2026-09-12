@@ -49,6 +49,7 @@ function environmentSettings(base, environment) {
     "rule-set:geolocation-!cn": "节点选择",
     "rule-set:google": "谷歌服务", "googleapis.cn": "谷歌服务", ".googleapis.cn": "谷歌服务",
     "rule-set:youtube": "YouTube", "rule-set:github": "GitHub", "rule-set:openai": "AI",
+    "rule-set:anthropic": "AI", "rule-set:google-gemini": "AI", "rule-set:github-copilot": "AI",
     "rule-set:microsoft": "微软服务",
     "download.nvidia.com": "DIRECT", ".download.nvidia.com": "DIRECT",
     "download.nvidia.cn": "DIRECT", ".download.nvidia.cn": "DIRECT",

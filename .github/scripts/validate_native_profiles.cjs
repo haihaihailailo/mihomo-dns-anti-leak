@@ -110,7 +110,7 @@ for (const { client, environment, file, content, detailedContent } of rendered) 
     const expectedPolicies = Object.fromEntries(Object.entries(stashBase.dns["nameserver-policy"]).map(([key, value]) =>
       [key, !foreign || ["geosite:cn", "+.alipaylog.com", "+.aliapp.org"].includes(key) ? value : GLOBAL]));
     assert.deepEqual(policies, expectedPolicies);
-    if (foreign) for (const key of ["geosite:microsoft", "geosite:google", "geosite:youtube", "geosite:openai", "geosite:github"]) {
+    if (foreign) for (const key of ["geosite:anthropic", "geosite:google-gemini", "geosite:github-copilot", "geosite:microsoft", "geosite:google", "geosite:youtube", "geosite:openai", "geosite:github"]) {
       assert(Object.keys(policies).indexOf(key) < Object.keys(policies).indexOf("geosite:cn"), "专属 DNS 必须优先于 cn");
     }
     const markerLines = text => text.split("\n").filter(line => /^\s*[\w-]+: #!replace$/.test(line)).sort();

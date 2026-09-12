@@ -224,3 +224,4 @@ for (const file of [".github/config/shared.js", "防DNS泄露-国内版.js", "�
 }
 console.log("内部共同源码 / Stash 引用、驱动精确直连、三个 JS 语法、旧入口移除 OK");
 require("./validate_native_profiles.cjs");
+require("./validate_rule_sources.cjs");

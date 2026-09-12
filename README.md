@@ -37,7 +37,7 @@
 | Stash | [stash-国内版.stoverride](stash-国内版.stoverride) | [stash-国外版.stoverride](stash-国外版.stoverride) |
 | Shadowrocket | [shadowrocket-国内版.conf](shadowrocket-国内版.conf) | [shadowrocket-国外版.conf](shadowrocket-国外版.conf) |
 
-- 六套入口使用同一精简结构：国内版 21 组，国外版 24 组。节点选择在国内首选自动选择、国外首选 DIRECT；AI 均首选美国自动；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。原有规则谓词和顺序不变，韩国两个组均删除。
+- 六套入口使用同一精简结构：国内版 21 组，国外版 24 组。节点选择在国内首选自动选择、国外首选 DIRECT；AI 均首选美国自动；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。分组精简本身不改变规则匹配条件和相对顺序，韩国两个组均删除；规则源的后续调整见下文。
 - Stash 国内版使用国内 DoH 启动/节点解析；国外版改用 Cloudflare / Google DoH，并调整微软等服务 DNS，专属 geosite 策略优先于通用 cn。两版保留 `follow-rule`、独立节点解析和 `#!replace`；国外版仅将全局自动组改为懒测速，其他测速参数不变。[Stash DNS](https://stash.wiki/en/features/dns-server)、[覆写合并语义](https://stash.wiki/en/configuration/override)。
 - Shadowrocket 国内版保留国内主 DNS 和经代理的备用 DNS，节点解析只使用国内 IP 型 DoH；国外版主、备用、节点 DNS 改为境外 DoH，不强制让备用 DNS 依赖默认代理。两版继续禁用系统 DNS 回退，保留现有 IPv6 和隧道旁路设置，不新增未验证的 Mihomo 字段。
 - **DNS 出口不能跨客户端等同。** Stash 使用自身的 `follow-rule`，Shadowrocket 保留自身 DNS 逻辑；不承诺像 Mihomo 国外版一样，将每个 AI / 回国域名 DNS 逐项绑定到同名业务组。AI 请求走 AI 组不等于所有相关 DNS 都走同一出口。
@@ -146,6 +146,22 @@
 - 如修改策略组名称，必须同步修改 `rules`、`nameserver-policy`、JS 覆写版本和 Stash 覆写版本。
 
 ## 维护口径
+
+### 规则源选型（2026-09-13 审核）
+
+规则更多、更新更频繁并不自动代表分流更准确。本仓库优先选择仍在维护、原生格式匹配、覆盖边界清楚的来源，不叠加多个全量广告库。
+
+| 用途 | 当前来源与格式 | 选择理由 / 边界 |
+| --- | --- | --- |
+| Mihomo / Stash 常用服务、中国域名与地域分类 | [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)，保留原有 MRS | 上游定期汇总维护中的数据；大域名集继续使用优化格式，不因更换广告源一并改成 classical。[Stash 支持的格式](https://stash.wiki/en/rules/rule-set) |
+| 三类客户端广告过滤 | [秋风 AWAvenue Only.Ads](https://github.com/TG-Twilight/AWAvenue-Ads-Rule/blob/main/assets/README_Update.md) | 选纯广告版，不额外叠加其 Privacy / Unwelcome 分类。Mihomo、Stash 用 Clash Classical YAML，Shadowrocket 用 Surge RULE-SET，以保留相同的精确域名、后缀和关键词语义。覆盖较保守，不追求最大拦截量，也不保证零误杀。 |
+| 微信 / 支付宝 | [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script) 的专属规则 | Mihomo、Stash 微信改为 `WeChat_No_Resolve.yaml`，规则调用继续带 `no-resolve`；Shadowrocket 原微信源的 ASN 已带该标记。支付宝保留原源，`aliapp.org` 本地补充保留。 |
+| Claude / Gemini / GitHub Copilot | MetaCubeX 专属 domain/text 列表 | Mihomo、Stash 在 Google、GitHub、微软等通用规则之前归入现有 AI 组，并同步 DNS 策略；Shadowrocket 保留已有专属规则。不是新增策略组，也不保证覆盖所有 AI 产品。 |
+| Shadowrocket 中国域名 | blackmatrix7 的 `China_Domain.list` | 按[上游调用说明](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/China/README.md)使用 `DOMAIN-SET`，不再将纯域名内容当 `RULE-SET`。不扩大为实验性 ChinaMax。 |
+
+- 广告缓存使用独立路径，避免旧 MRS 与新 classical 文件混用。切换后若业务异常，先查看是否命中 `广告过滤`，可临时将该组改为 DIRECT 对照；不需要关闭 TLS 证书校验或清空全部客户端数据。
+- 微信 / 支付宝的 classical provider 用于 DNS 策略时，Mihomo 只取其中域名规则，相关提示不表示 ASN 也参与 DNS 匹配。`no-resolve` 避免仅为匹配 IP/ASN 而触发解析，不禁止业务请求本身的正常 DNS 查询。
+- 新增来源由 `validate_rule_sources.cjs` 检查格式、缓存隔离、AI 优先级和 DNS 同步，并纳入唯一离线验证入口。离线测试不能保证远程源永远可用；上游文件会继续变化，实机仍须核对命中日志。手机 ChatGPT 的 SSL 提示、支付或导航体验不能仅凭更换规则集宣告修复。
 
 ### TUN / IPv6 / 订阅故障先分层判断
 

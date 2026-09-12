@@ -240,7 +240,7 @@ VIETNAM_EXACT_DOMAINS = (
     "techcombank.com",
 )
 DOMESTIC_RULE_PROVIDERS = {
-    "wechat": "rule/Clash/WeChat/WeChat.yaml",
+    "wechat": "rule/Clash/WeChat/WeChat_No_Resolve.yaml",
     "alipay": "rule/Clash/AliPay/AliPay.yaml",
 }
 RULE_PROVIDER_SIZE_LIMIT = 4194304
@@ -572,7 +572,7 @@ if re.search(r"(?m)^\s+-\s+(?:223\.5\.5\.5|119\.29\.29\.29)\s*$", stash_text):
     fail(".github/config/shared.stoverride: plaintext bootstrap DNS remains")
 
 expected_size_line = f"    size-limit: {RULE_PROVIDER_SIZE_LIMIT}"
-if yaml_text.count(expected_size_line) != 4:
+if yaml_text.count(expected_size_line) != 5:
     fail(".github/config/shared.yaml: rule-provider size limits are incomplete")
 if js_text.count(f'"size-limit": {RULE_PROVIDER_SIZE_LIMIT}') != 4:
     fail(".github/config/shared.js: rule-provider size limits are incomplete")
@@ -812,7 +812,7 @@ for server in shadowrocket_setting(shadowrocket_text, "fallback-dns-server"):
 
 shadow_rules = shadowrocket_text.split("[Rule]", 1)[-1]
 advertising_rule = (
-    "rule/Shadowrocket/Advertising/Advertising.list,广告过滤"
+    "Filters/AWAvenue-Ads-Rule-Surge-RULE-SET-Only.Ads.list,广告过滤"
 )
 advertising_position = shadow_rules.find(advertising_rule)
 first_service_position = shadow_rules.find("DOMAIN-SUFFIX,chatgpt.com,AI")

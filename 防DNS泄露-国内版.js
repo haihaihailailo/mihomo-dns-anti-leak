@@ -209,6 +209,9 @@ const OVERRIDE = {
       "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:anthropic": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:google-gemini": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:github-copilot": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:github": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
@@ -263,10 +266,10 @@ OVERRIDE["proxy-groups"] = [
 
 // 远程规则集：与 YAML 的 rule-providers 保持同步。
 OVERRIDE["rule-providers"] = {
-  reject: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs", path: "./ruleset/metacubex/category-ads-all.mrs" },
+  reject: { ...META_DOMAIN_PROVIDER, behavior: "classical", format: "yaml", url: "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical-Only.Ads.yaml", path: "./ruleset/awavenue/only-ads-classical.yaml" },
   private: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs", path: "./ruleset/metacubex/private.mrs" },
   cn: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs", path: "./ruleset/metacubex/cn.mrs" },
-  wechat: { type: "http", behavior: "classical", format: "yaml", interval: 86400, "size-limit": 4194304, proxy: "节点选择", url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml", path: "./ruleset/blackmatrix7/wechat.yaml" },
+  wechat: { type: "http", behavior: "classical", format: "yaml", interval: 86400, "size-limit": 4194304, proxy: "节点选择", url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat_No_Resolve.yaml", path: "./ruleset/blackmatrix7/wechat-no-resolve.yaml" },
   alipay: { type: "http", behavior: "classical", format: "yaml", interval: 86400, "size-limit": 4194304, proxy: "节点选择", url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AliPay/AliPay.yaml", path: "./ruleset/blackmatrix7/alipay.yaml" },
   "geolocation-!cn": { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs", path: "./ruleset/metacubex/geolocation-!cn.mrs" },
   google: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs", path: "./ruleset/metacubex/google.mrs" },
@@ -274,6 +277,9 @@ OVERRIDE["rule-providers"] = {
   github: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs", path: "./ruleset/metacubex/github.mrs" },
   microsoft: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs", path: "./ruleset/metacubex/microsoft.mrs" },
   openai: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs", path: "./ruleset/metacubex/openai.mrs" },
+  anthropic: { ...META_DOMAIN_PROVIDER, format: "text", url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.list", path: "./ruleset/metacubex/anthropic.list" },
+  "google-gemini": { ...META_DOMAIN_PROVIDER, format: "text", url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google-gemini.list", path: "./ruleset/metacubex/google-gemini.list" },
+  "github-copilot": { ...META_DOMAIN_PROVIDER, format: "text", url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github-copilot.list", path: "./ruleset/metacubex/github-copilot.list" },
   telegram: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs", path: "./ruleset/metacubex/telegram.mrs" },
   netflix: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs", path: "./ruleset/metacubex/netflix.mrs" },
   tiktok: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs", path: "./ruleset/metacubex/tiktok.mrs" },
@@ -715,6 +721,9 @@ DOMAIN-SUFFIX,statsigapi.net,AI
 DOMAIN-SUFFIX,intercom.io,AI
 DOMAIN-SUFFIX,intercomcdn.com,AI
 RULE-SET,openai,AI
+RULE-SET,anthropic,AI
+RULE-SET,google-gemini,AI
+RULE-SET,github-copilot,AI
 DOMAIN,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务
