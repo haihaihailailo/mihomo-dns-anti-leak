@@ -3,32 +3,40 @@ name: Validate Clash config
 on:
   push:
     paths:
-      - "防DNS泄露.yaml"
-      - "防DNS泄露.js"
+      - ".github/config/shared.yaml"
+      - ".github/config/shared.js"
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
-      - "Windows-国内网络覆写.yaml"
-      - "Windows-国内网络覆写.js"
-      - "stash.stoverride"
-      - "shadowrocket.conf"
+      - ".github/config/shared.stoverride"
+      - ".github/config/shared.conf"
+      - "stash-*版.stoverride"
+      - "shadowrocket-*版.conf"
+      - ".github/scripts/build_native_profiles.cjs"
+      - ".github/scripts/validate_native_profiles.cjs"
+      - ".github/scripts/consolidate_groups.cjs"
+      - ".github/scripts/validate_consolidation.cjs"
       - ".github/scripts/validate_health_checks.py"
       - ".github/workflows/validate-config.yml"
   pull_request:
     paths:
-      - "防DNS泄露.yaml"
-      - "防DNS泄露.js"
+      - ".github/config/shared.yaml"
+      - ".github/config/shared.js"
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
-      - "Windows-国内网络覆写.yaml"
-      - "Windows-国内网络覆写.js"
-      - "stash.stoverride"
-      - "shadowrocket.conf"
+      - ".github/config/shared.stoverride"
+      - ".github/config/shared.conf"
+      - "stash-*版.stoverride"
+      - "shadowrocket-*版.conf"
+      - ".github/scripts/build_native_profiles.cjs"
+      - ".github/scripts/validate_native_profiles.cjs"
+      - ".github/scripts/consolidate_groups.cjs"
+      - ".github/scripts/validate_consolidation.cjs"
       - ".github/scripts/validate_health_checks.py"
       - ".github/workflows/validate-config.yml"
   schedule:
@@ -59,13 +67,12 @@ jobs:
 
       - name: Parse YAML with aliases enabled
         run: |
-          ruby -e 'require "yaml"; ["防DNS泄露.yaml", "防DNS泄露-国内版.yaml", "防DNS泄露-国外版.yaml", "stash.stoverride", "Windows-国内网络覆写.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
+          ruby -e 'require "yaml"; [".github/config/shared.yaml", "防DNS泄露-国内版.yaml", "防DNS泄露-国外版.yaml", ".github/config/shared.stoverride", "stash-国内版.stoverride", "stash-国外版.stoverride"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
       - name: Check JavaScript syntax
         run: |
           node --version
-          node --check "防DNS泄露.js"
-          node --check "Windows-国内网络覆写.js"
+          node --check ".github/config/shared.js"
           node --check "防DNS泄露-国内版.js"
           node --check "防DNS泄露-国外版.js"
 
@@ -83,22 +90,22 @@ jobs:
           require "yaml"
 
           keys = %w[unified-delay profile geo-auto-update geo-update-interval tcp-concurrent sniffer tun dns proxy-groups rule-providers rules]
-          yaml_config = YAML.safe_load_file("防DNS泄露.yaml", aliases: true)
+          yaml_config = YAML.safe_load_file(".github/config/shared.yaml", aliases: true)
 
           node_code = <<~'NODE'
             const fs = require("fs");
             const vm = require("vm");
-            const code = fs.readFileSync("防DNS泄露.js", "utf8");
+            const code = fs.readFileSync(".github/config/shared.js", "utf8");
             const sandbox = { console };
             vm.createContext(sandbox);
-            const result = vm.runInContext(`${code}\n;main({});`, sandbox, { filename: "防DNS泄露.js" });
+            const result = vm.runInContext(`${code}\n;main({});`, sandbox, { filename: ".github/config/shared.js" });
             process.stdout.write(JSON.stringify(result));
           NODE
 
           stdout, stderr, status = Open3.capture3("node", "-e", node_code)
           unless status.success?
             warn stderr
-            abort "Failed to evaluate 防DNS泄露.js"
+            abort "Failed to evaluate .github/config/shared.js"
           end
           js_config = JSON.parse(stdout)
 
@@ -120,31 +127,6 @@ jobs:
 
           puts "YAML and JS full config are synchronized for: #{keys.join(', ')}."
 
-          local_yaml = YAML.safe_load_file("Windows-国内网络覆写.yaml", aliases: true)
-          local_node = <<~'NODE'
-            const fs = require("fs");
-            const vm = require("vm");
-            const assert = require("assert/strict");
-            const sandbox = {};
-            vm.createContext(sandbox);
-            vm.runInContext(fs.readFileSync("Windows-国内网络覆写.js", "utf8"), sandbox);
-            const base = {mode: "global", ipv6: true, tun: {enable: false}, dns: {
-              fallback: ["https://1.1.1.1/dns-query#节点选择"],
-              "nameserver-policy": {"rule-set:openai": ["https://1.1.1.1/dns-query#节点选择"]}
-            }, "proxy-groups": [{name: "AI", type: "select", proxies: ["DIRECT"]}], rules: ["MATCH,AI"]};
-            const before = JSON.stringify(base);
-            const result = JSON.parse(JSON.stringify(sandbox.main(base)));
-            assert.equal(JSON.stringify(base), before);
-            for (const key of ["mode", "ipv6", "tun", "proxy-groups", "rules"]) assert.deepEqual(result[key], base[key]);
-            for (const key of ["fallback", "nameserver-policy"]) assert.deepEqual(result.dns[key], base.dns[key]);
-            delete result.dns.fallback;
-            delete result.dns["nameserver-policy"];
-            process.stdout.write(JSON.stringify({"find-process-mode": result["find-process-mode"], dns: result.dns}));
-          NODE
-          local_stdout, local_stderr, local_status = Open3.capture3("node", "-e", local_node)
-          abort local_stderr unless local_status.success?
-          abort "Windows supplemental YAML/JS differ" unless local_yaml == JSON.parse(local_stdout)
-          puts "Windows supplemental YAML/JS match and preserve client mode, TUN, IPv6 and routing."
           RUBY
 
       - name: Check rule references
@@ -152,7 +134,7 @@ jobs:
           ruby <<'RUBY'
           require "yaml"
 
-          files = ["防DNS泄露.yaml", "stash.stoverride"]
+          files = [".github/config/shared.yaml", ".github/config/shared.stoverride"]
           built_in = %w[DIRECT REJECT REJECT-DROP REJECT-TINYGIF PASS COMPATIBLE]
           all_errors = []
 
@@ -217,8 +199,8 @@ jobs:
           require "uri"
           require "yaml"
 
-          main = YAML.safe_load_file("防DNS泄露.yaml", aliases: true)
-          stash = YAML.safe_load_file("stash.stoverride", aliases: true)
+          main = YAML.safe_load_file(".github/config/shared.yaml", aliases: true)
+          stash = YAML.safe_load_file(".github/config/shared.stoverride", aliases: true)
           errors = []
 
           encrypted_ip_resolver = lambda do |value|
@@ -348,6 +330,6 @@ jobs:
 
       - name: Test config load
         run: |
-          ./mihomo -t -f "防DNS泄露.yaml"
+          ./mihomo -t -f ".github/config/shared.yaml"
           ./mihomo -t -f "防DNS泄露-国内版.yaml"
           ./mihomo -t -f "防DNS泄露-国外版.yaml"

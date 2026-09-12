@@ -1,4 +1,4 @@
-name: Mihomo DNS 防泄露 Stash 覆写
+name: Stash 两地版内部共同源码（非导入入口）
 summary: 覆写 DNS、fake-ip、策略组和分流规则；主订阅提供节点，IPv6 由客户端管理。
 
 # 直接机场订阅版：主配置必须直接包含 proxies 节点。

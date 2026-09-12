@@ -1,9 +1,11 @@
-// 唯一环境差异来源；主 YAML / JS 仍负责共同分流，不手改生成的国内版 / 国外版。
+// 唯一环境差异来源；.github/config/shared.* 负责共同分流，不手改生成的国内版 / 国外版。
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const YAML = require("yaml");
+const { renderNativeProfiles } = require("./build_native_profiles.cjs");
+const { consolidateGroups } = require("./consolidate_groups.cjs");
 
 const ROOT = path.resolve(__dirname, "../..");
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -100,20 +102,21 @@ function applyEnvironment(config, settings) {
 }
 
 function renderProfiles() {
-  const yamlSource = read("防DNS泄露.yaml");
-  const jsSource = read("防DNS泄露.js");
+  const yamlSource = read(".github/config/shared.yaml");
+  const jsSource = read(".github/config/shared.js");
   const base = parse(yamlSource);
   assert.deepEqual(normalize(base), normalize(evaluate(jsSource)), "主 YAML/JS 必须先全配置同步");
   return ["国内", "国外"].map(environment => {
     const settings = environmentSettings(base, environment);
-    const config = applyEnvironment(clone(base), settings);
+    const detailedConfig = applyEnvironment(clone(base), settings);
+    const config = consolidateGroups(clone(detailedConfig), environment === "国内");
     const stem = `防DNS泄露-${environment}版`;
-    const note = `${environment}使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。\n与主覆写二选一；不要叠加旧国内补充层。TUN / IPv6 / 运行模式由客户端决定。`;
+    const note = `${environment}使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。\n国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN / IPv6 / 运行模式由客户端决定。`;
     // 输出完整配置供单次导入，保留共有规则与 provider；不要复制本机订阅和手选状态。
     const yaml = note.split("\n").map(line => `# ${line}\n`).join("") + YAML.stringify(config, { lineWidth: 0, aliasDuplicateObjects: false });
-    const js = `// ${note.replace(/\n/g, "\n// ")}\nconst applySharedConfig = (() => {\n${jsSource}\nreturn main;\n})();\n\nconst ENVIRONMENT = ${JSON.stringify(settings, null, 2)};\n\n${applyEnvironment.toString()}\n\nfunction main(config) {\n  return applyEnvironment(applySharedConfig(config), ENVIRONMENT);\n}\n`;
+    const js = `// ${note.replace(/\n/g, "\n// ")}\nconst applySharedConfig = (() => {\n${jsSource}\nreturn main;\n})();\n\nconst ENVIRONMENT = ${JSON.stringify(settings, null, 2)};\n\n${applyEnvironment.toString()}\n\n${consolidateGroups.toString()}\n\nfunction main(config) {\n  return consolidateGroups(applyEnvironment(applySharedConfig(config), ENVIRONMENT), ${environment === "国内"});\n}\n`;
     assert.deepEqual(normalize(parse(yaml)), normalize(evaluate(js)), `${stem} YAML/JS 不同步`);
-    return { environment, stem, yaml, js, config, settings, base };
+    return { environment, stem, yaml, js, config, detailedConfig, settings, base };
   });
 }
 
@@ -126,6 +129,11 @@ if (require.main === module) {
       else fs.writeFileSync(path.join(ROOT, file), result[ext]);
       console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
     }
+  }
+  for (const { file, content } of renderNativeProfiles()) {
+    if (check) assert.equal(read(file), content, `${file} 已过期；运行 npm run build:profiles`);
+    else fs.writeFileSync(path.join(ROOT, file), content);
+    console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
   }
 }
 

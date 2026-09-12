@@ -325,7 +325,7 @@ def first_inline_item(raw: str) -> str:
 def shadowrocket_group(text: str, name: str) -> str:
     match = re.search(rf"(?m)^{re.escape(name)}\s*=\s*(.+?)\s*$", text)
     if not match:
-        fail(f"shadowrocket.conf: policy group {name!r} was not found")
+        fail(f".github/config/shared.conf: policy group {name!r} was not found")
     return match.group(1)
 
 
@@ -335,21 +335,21 @@ def shadowrocket_regex(group: str) -> str:
         group,
     )
     if not match:
-        fail("shadowrocket.conf: policy-regex-filter was not found")
+        fail(".github/config/shared.conf: policy-regex-filter was not found")
     return match.group(1).strip()
 
 
 def shadowrocket_setting(text: str, key: str) -> list[str]:
     match = re.search(rf"(?m)^{re.escape(key)}\s*=\s*(.+?)\s*$", text)
     if not match:
-        fail(f"shadowrocket.conf: setting {key!r} was not found")
+        fail(f".github/config/shared.conf: setting {key!r} was not found")
     return [item.strip() for item in match.group(1).split(",") if item.strip()]
 
 
 def shadowrocket_select_members(group: str) -> list[str]:
     parts = [part.strip() for part in group.split(",")]
     if not parts or parts[0] != "select":
-        fail("shadowrocket.conf: expected a select policy group")
+        fail(".github/config/shared.conf: expected a select policy group")
     return [part for part in parts[1:] if part and "=" not in part]
 
 
@@ -521,13 +521,13 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             )
 
 
-check_group_file("防DNS泄露.yaml", stash=False)
-check_group_file("stash.stoverride", stash=True)
+check_group_file(".github/config/shared.yaml", stash=False)
+check_group_file(".github/config/shared.stoverride", stash=True)
 
-yaml_text = Path("防DNS泄露.yaml").read_text(encoding="utf-8")
-js_text = Path("防DNS泄露.js").read_text(encoding="utf-8")
-stash_text = Path("stash.stoverride").read_text(encoding="utf-8")
-shadowrocket_text = Path("shadowrocket.conf").read_text(encoding="utf-8")
+yaml_text = Path(".github/config/shared.yaml").read_text(encoding="utf-8")
+js_text = Path(".github/config/shared.js").read_text(encoding="utf-8")
+stash_text = Path(".github/config/shared.stoverride").read_text(encoding="utf-8")
+shadowrocket_text = Path(".github/config/shared.conf").read_text(encoding="utf-8")
 
 if "#自动选择" in yaml_text or "#自动选择" in js_text:
     fail("DNS still depends on 自动选择")
@@ -562,26 +562,26 @@ for policy in (
 
 for domain in ("+.alipaylog.com", "+.aliapp.org"):
     if domain not in stash_text:
-        fail(f"stash.stoverride: domestic DNS policy is missing: {domain}")
+        fail(f".github/config/shared.stoverride: domestic DNS policy is missing: {domain}")
 
 if "  follow-rule: true" not in stash_text:
-    fail("stash.stoverride: DNS queries do not follow routing rules")
+    fail(".github/config/shared.stoverride: DNS queries do not follow routing rules")
 if "  proxy-server-nameserver: #!replace" not in stash_text:
-    fail("stash.stoverride: proxy bootstrap DNS is missing")
+    fail(".github/config/shared.stoverride: proxy bootstrap DNS is missing")
 if re.search(r"(?m)^\s+-\s+(?:223\.5\.5\.5|119\.29\.29\.29)\s*$", stash_text):
-    fail("stash.stoverride: plaintext bootstrap DNS remains")
+    fail(".github/config/shared.stoverride: plaintext bootstrap DNS remains")
 
 expected_size_line = f"    size-limit: {RULE_PROVIDER_SIZE_LIMIT}"
 if yaml_text.count(expected_size_line) != 4:
-    fail("防DNS泄露.yaml: rule-provider size limits are incomplete")
+    fail(".github/config/shared.yaml: rule-provider size limits are incomplete")
 if js_text.count(f'"size-limit": {RULE_PROVIDER_SIZE_LIMIT}') != 4:
-    fail("防DNS泄露.js: rule-provider size limits are incomplete")
+    fail(".github/config/shared.js: rule-provider size limits are incomplete")
 
 for filename, text in (
-    ("防DNS泄露.yaml", yaml_text),
-    ("防DNS泄露.js", js_text),
-    ("stash.stoverride", stash_text),
-    ("shadowrocket.conf", shadowrocket_text),
+    (".github/config/shared.yaml", yaml_text),
+    (".github/config/shared.js", js_text),
+    (".github/config/shared.stoverride", stash_text),
+    (".github/config/shared.conf", shadowrocket_text),
 ):
     for keyword in FORBIDDEN_VIETNAM_KEYWORDS:
         if f"DOMAIN-KEYWORD,{keyword},越南服务" in text:
@@ -592,9 +592,9 @@ for filename, text in (
             fail(f"{filename}: precise Vietnam domain is missing: {domain}")
 
 for filename, text in (
-    ("防DNS泄露.yaml", yaml_text),
-    ("防DNS泄露.js", js_text),
-    ("stash.stoverride", stash_text),
+    (".github/config/shared.yaml", yaml_text),
+    (".github/config/shared.js", js_text),
+    (".github/config/shared.stoverride", stash_text),
 ):
     for package in FORBIDDEN_BROWSER_PACKAGES:
         if f"PROCESS-NAME,{package},国内服务" in text:
@@ -608,7 +608,7 @@ for filename, text in (
         fail(f"{filename}: return-to-China filter is missing")
     expected_region_filters = (
         PORTABLE_REGION_GROUP_FILTERS
-        if filename == "stash.stoverride"
+        if filename == ".github/config/shared.stoverride"
         else REGION_GROUP_FILTERS
     )
     for group_name, pattern in expected_region_filters.items():
@@ -641,9 +641,9 @@ for package in VIETNAM_APP_PACKAGES:
         fail(f"Android Vietnam process rule is missing: {package}")
 
 for filename, text in (
-    ("防DNS泄露.yaml", yaml_text),
-    ("防DNS泄露.js", js_text),
-    ("stash.stoverride", stash_text),
+    (".github/config/shared.yaml", yaml_text),
+    (".github/config/shared.js", js_text),
+    (".github/config/shared.stoverride", stash_text),
 ):
     for provider, (source_name, policy) in GAME_PROVIDER_ROUTES.items():
         if source_name not in text:
@@ -657,12 +657,12 @@ for filename, text in (
     if "RULE-SET,category-games,游戏平台" in text:
         fail(f"{filename}: combined China/global game provider is still active")
 
-for filename, text in (("防DNS泄露.yaml", yaml_text), ("防DNS泄露.js", js_text)):
+for filename, text in ((".github/config/shared.yaml", yaml_text), (".github/config/shared.js", js_text)):
     for process_rule in FORBIDDEN_STEAM_PROCESS_RULES:
         if process_rule in text:
             fail(f"{filename}: Steam process rule bypasses CN/global domain split")
 
-for filename, text in (("防DNS泄露.yaml", yaml_text), ("防DNS泄露.js", js_text)):
+for filename, text in ((".github/config/shared.yaml", yaml_text), (".github/config/shared.js", js_text)):
     if "PROCESS-NAME,tv.danmaku.bili,国内服务" not in text:
         fail(f"{filename}: mainland Bilibili app must use 国内服务")
     if "PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台" not in text:
@@ -672,10 +672,10 @@ if re.search(
     r"(?m)^\s+-\s+(?:com\.tencent\.mm|com\.eg\.android\.AlipayGphone)\s*$",
     yaml_text,
 ):
-    fail("防DNS泄露.yaml: WeChat or Alipay still bypasses TUN")
+    fail(".github/config/shared.yaml: WeChat or Alipay still bypasses TUN")
 for package in DOMESTIC_APP_PACKAGES:
     if f'"{package}",' in js_text:
-        fail(f"防DNS泄露.js: {package} still bypasses TUN")
+        fail(f".github/config/shared.js: {package} still bypasses TUN")
 
 china_pattern = re.compile(GOOD_CHINA_FILTER)
 auto_pattern = re.compile(GOOD_AUTO_FILTER)
@@ -741,20 +741,20 @@ for group_name, (expected_url, _) in GROUP_HEALTH_CHECKS.items():
     match = re.search(r"(?:^|,)\s*url\s*=\s*([^,\s]+)", group)
     if not match or match.group(1) != expected_url:
         fail(
-            f"shadowrocket.conf: group {group_name!r} does not use "
+            f".github/config/shared.conf: group {group_name!r} does not use "
             f"{expected_url}"
         )
     if group_name in SELECT_HEALTH_CHECKS:
         timeout_match = re.search(r"(?:^|,)\s*timeout\s*=\s*(\d+)", group)
         if not timeout_match or timeout_match.group(1) != "10":
             fail(
-                f"shadowrocket.conf: select group {group_name!r} "
+                f".github/config/shared.conf: select group {group_name!r} "
                 "timeout must be 10 seconds"
             )
 
 for group_name, expected_filter in PORTABLE_REGION_GROUP_FILTERS.items():
     if shadowrocket_regex(shadowrocket_group(shadowrocket_text, group_name)) != expected_filter:
-        fail(f"shadowrocket.conf: {group_name} filter is not synchronized")
+        fail(f".github/config/shared.conf: {group_name} filter is not synchronized")
 
 shadow_china_pattern = re.compile(
     shadowrocket_regex(shadowrocket_group(shadowrocket_text, "中国节点"))
@@ -764,20 +764,20 @@ shadow_auto_pattern = re.compile(
 )
 for proxy_name in RETURN_TO_CHINA_SAMPLES:
     if not shadow_china_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: China filter rejected return node: {proxy_name}")
+        fail(f".github/config/shared.conf: China filter rejected return node: {proxy_name}")
     if shadow_auto_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: automatic selection accepted return node: {proxy_name}")
+        fail(f".github/config/shared.conf: automatic selection accepted return node: {proxy_name}")
 for proxy_name in FOREIGN_SAMPLES:
     if shadow_china_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: China filter accepted foreign node: {proxy_name}")
+        fail(f".github/config/shared.conf: China filter accepted foreign node: {proxy_name}")
     if not shadow_auto_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: automatic selection rejected foreign node: {proxy_name}")
+        fail(f".github/config/shared.conf: automatic selection rejected foreign node: {proxy_name}")
 for proxy_name, expected_region in FOREIGN_CONTEXT_SAMPLES:
     if shadow_china_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: China filter accepted foreign-context node: {proxy_name}")
+        fail(f".github/config/shared.conf: China filter accepted foreign-context node: {proxy_name}")
     if not shadow_auto_pattern.search(proxy_name):
         fail(
-            "shadowrocket.conf: automatic selection rejected foreign-context "
+            ".github/config/shared.conf: automatic selection rejected foreign-context "
             f"node: {proxy_name}"
         )
     if expected_region:
@@ -788,27 +788,27 @@ for proxy_name, expected_region in FOREIGN_CONTEXT_SAMPLES:
         )
         if not region_pattern.search(proxy_name):
             fail(
-                f"shadowrocket.conf: {expected_region} filter rejected "
+                f".github/config/shared.conf: {expected_region} filter rejected "
                 f"foreign-context node: {proxy_name}"
             )
 for proxy_name in NON_REGION_SAMPLES:
     if not shadow_auto_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: automatic selection rejected non-regional node: {proxy_name}")
+        fail(f".github/config/shared.conf: automatic selection rejected non-regional node: {proxy_name}")
 
 for region, proxy_name in REGIONAL_RETURN_SAMPLES.items():
     shadow_region_pattern = re.compile(
         shadowrocket_regex(shadowrocket_group(shadowrocket_text, f"{region}节点"))
     )
     if shadow_region_pattern.search(proxy_name):
-        fail(f"shadowrocket.conf: {region} filter accepted return node: {proxy_name}")
+        fail(f".github/config/shared.conf: {region} filter accepted return node: {proxy_name}")
 
 for key in ("dns-server", "fallback-dns-server", "proxy-dns-server"):
     for server in shadowrocket_setting(shadowrocket_text, key):
         if not server.startswith(("https://", "tls://", "quic://", "h3://")):
-            fail(f"shadowrocket.conf: {key} contains plaintext DNS: {server}")
+            fail(f".github/config/shared.conf: {key} contains plaintext DNS: {server}")
 for server in shadowrocket_setting(shadowrocket_text, "fallback-dns-server"):
     if "#proxy" not in server.lower():
-        fail(f"shadowrocket.conf: fallback DNS is not proxied: {server}")
+        fail(f".github/config/shared.conf: fallback DNS is not proxied: {server}")
 
 shadow_rules = shadowrocket_text.split("[Rule]", 1)[-1]
 advertising_rule = (
@@ -817,13 +817,13 @@ advertising_rule = (
 advertising_position = shadow_rules.find(advertising_rule)
 first_service_position = shadow_rules.find("DOMAIN-SUFFIX,chatgpt.com,AI")
 if advertising_position < 0 or first_service_position < 0:
-    fail("shadowrocket.conf: advertising or service routing rule is missing")
+    fail(".github/config/shared.conf: advertising or service routing rule is missing")
 if advertising_position > first_service_position:
-    fail("shadowrocket.conf: advertising rule must precede service rules")
+    fail(".github/config/shared.conf: advertising rule must precede service rules")
 
 for required_rule in SHADOWROCKET_REQUIRED_RULES:
     if required_rule not in shadow_rules:
-        fail(f"shadowrocket.conf: synchronized service rule is missing: {required_rule}")
+        fail(f".github/config/shared.conf: synchronized service rule is missing: {required_rule}")
 
 shadow_domestic_game_position = shadow_rules.find(
     "geo/geosite/category-games-cn.list,国内服务"
@@ -832,19 +832,19 @@ shadow_overseas_game_position = shadow_rules.find(
     "DOMAIN-SUFFIX,steampowered.com,游戏平台"
 )
 if not 0 <= shadow_domestic_game_position < shadow_overseas_game_position:
-    fail("shadowrocket.conf: domestic game rules must precede overseas game rules")
+    fail(".github/config/shared.conf: domestic game rules must precede overseas game rules")
 for obsolete_rule in (
     "rule/Shadowrocket/Steam/Steam.list,游戏平台",
     "rule/Shadowrocket/Game/Game.list,游戏平台",
 ):
     if obsolete_rule in shadow_rules:
-        fail(f"shadowrocket.conf: obsolete combined game rule remains: {obsolete_rule}")
+        fail(f".github/config/shared.conf: obsolete combined game rule remains: {obsolete_rule}")
 
 wechat_position = shadow_rules.find("rule/Shadowrocket/WeChat/WeChat.list,国内服务")
 alipay_position = shadow_rules.find("rule/Shadowrocket/AliPay/AliPay.list,国内服务")
 china_position = shadow_rules.find("rule/Shadowrocket/China/China_Domain.list,国内服务")
 if not (0 <= wechat_position < china_position and 0 <= alipay_position < china_position):
-    fail("shadowrocket.conf: WeChat and AliPay rules must precede the general China list")
+    fail(".github/config/shared.conf: WeChat and AliPay rules must precede the general China list")
 
 yaml_select_members = {}
 for block in group_blocks(yaml_text):
@@ -857,40 +857,40 @@ for group_name, expected_members in yaml_select_members.items():
     )
     if actual_members != expected_members:
         fail(
-            f"shadowrocket.conf: {group_name} members differ from the main config: "
+            f".github/config/shared.conf: {group_name} members differ from the main config: "
             f"{actual_members!r}"
         )
 
 if "policy-select-name=自动选择" not in shadowrocket_group(
     shadowrocket_text, "节点选择"
 ):
-    fail("shadowrocket.conf: 节点选择 must default to 自动选择")
+    fail(".github/config/shared.conf: 节点选择 must default to 自动选择")
 if "policy-select-name=香港-自动" not in shadowrocket_group(
     shadowrocket_text, "GitHub"
 ):
-    fail("shadowrocket.conf: GitHub must default to 香港-自动")
+    fail(".github/config/shared.conf: GitHub must default to 香港-自动")
 
 for group_name in ("国内服务", "越南服务"):
     if not re.match(
         r"select\s*,\s*DIRECT(?:\s*,|$)",
         shadowrocket_group(shadowrocket_text, group_name),
     ):
-        fail(f"shadowrocket.conf: {group_name} must default to DIRECT")
+        fail(f".github/config/shared.conf: {group_name} must default to DIRECT")
 
 if '{ name: "电报消息", type: "select", proxies: ["新加坡-自动",' not in js_text:
-    fail("防DNS泄露.js: Telegram does not default to 新加坡-自动")
+    fail(".github/config/shared.js: Telegram does not default to 新加坡-自动")
 
 if '{ name: "国内服务", type: "select", proxies: ["DIRECT", "中国-自动",' not in js_text:
-    fail("防DNS泄露.js: domestic dual-location policies are incomplete")
+    fail(".github/config/shared.js: domestic dual-location policies are incomplete")
 
 node_code = r'''
 const fs = require("fs");
 const vm = require("vm");
 const assert = require("assert/strict");
-const code = fs.readFileSync("防DNS泄露.js", "utf8");
+const code = fs.readFileSync(".github/config/shared.js", "utf8");
 const sandbox = { console };
 vm.createContext(sandbox);
-vm.runInContext(code, sandbox, { filename: "防DNS泄露.js" });
+vm.runInContext(code, sandbox, { filename: ".github/config/shared.js" });
 const enabled = vm.runInContext("main({ tun: { enable: true } })", sandbox);
 const disabled = vm.runInContext("main({ tun: { enable: false } })", sandbox);
 const plain = (value) => JSON.parse(JSON.stringify(value));
@@ -965,18 +965,18 @@ for group_name, expected in (("全部节点", GOOD_ALL_NODES_FILTER), ("自动�
 for group_name, (expected_url, expected_status) in SELECT_HEALTH_CHECKS.items():
     group = js_groups.get(group_name)
     if not group:
-        fail(f"防DNS泄露.js: select group is missing: {group_name}")
+        fail(f".github/config/shared.js: select group is missing: {group_name}")
     if group.get("type") != "select":
-        fail(f"防DNS泄露.js: {group_name} is not a select group")
+        fail(f".github/config/shared.js: {group_name} is not a select group")
     if group.get("url") != expected_url:
-        fail(f"防DNS泄露.js: {group_name} does not use {expected_url}")
+        fail(f".github/config/shared.js: {group_name} does not use {expected_url}")
     if str(group.get("expectedStatus")) != expected_status:
         fail(
-            f"防DNS泄露.js: {group_name} expected-status must be "
+            f".github/config/shared.js: {group_name} expected-status must be "
             f"{expected_status}"
         )
     if group.get("timeout") != 10000:
-        fail(f"防DNS泄露.js: {group_name} timeout is not 10000 ms")
+        fail(f".github/config/shared.js: {group_name} timeout is not 10000 ms")
     periodic_keys = {
         key: group.get(key)
         for key in ("interval", "lazy", "tolerance", "maxFailedTimes")
@@ -984,7 +984,7 @@ for group_name, (expected_url, expected_status) in SELECT_HEALTH_CHECKS.items():
     }
     if periodic_keys:
         fail(
-            f"防DNS泄露.js: select group {group_name} enables periodic "
+            f".github/config/shared.js: select group {group_name} enables periodic "
             f"health checks: {periodic_keys}"
         )
 
@@ -993,23 +993,23 @@ js_include_all = {
     for item in js_result.get("includeAllGroups", [])
 }
 if set(js_include_all) != EXPECTED_INCLUDE_ALL_GROUPS:
-    fail(f"防DNS泄露.js: include-all groups differ: {sorted(js_include_all)}")
+    fail(f".github/config/shared.js: include-all groups differ: {sorted(js_include_all)}")
 for group_name, fallback in js_include_all.items():
     if fallback != "REJECT":
-        fail(f"防DNS泄露.js: {group_name} does not fail closed")
+        fail(f".github/config/shared.js: {group_name} does not fail closed")
 
 provider_size_limits = js_result.get("providerSizeLimits", {})
 if not provider_size_limits or any(
     size != RULE_PROVIDER_SIZE_LIMIT for size in provider_size_limits.values()
 ):
-    fail(f"防DNS泄露.js: invalid provider size limits: {provider_size_limits!r}")
+    fail(f".github/config/shared.js: invalid provider size limits: {provider_size_limits!r}")
 
 expected_external_fallback = [
     "https://1.1.1.1/dns-query#节点选择",
     "https://8.8.8.8/dns-query#节点选择",
 ]
 if js_result.get("dnsFallback") != expected_external_fallback:
-    fail("防DNS泄露.js: external DNS fallback does not follow 节点选择")
+    fail(".github/config/shared.js: external DNS fallback does not follow 节点选择")
 
 dns_policies = js_result.get("dnsPolicies", {})
 for domain in (

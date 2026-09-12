@@ -1,12 +1,12 @@
 /**
- * 文件说明：Clash Party / Mihomo Party JavaScript 覆写版本。
- * 维护口径：本文件必须与 防DNS泄露.yaml 的关键配置保持同步，CI 会自动比对。
+ * 文件说明：国内版 / 国外版 JavaScript 覆写的内部共同源码，非独立导入入口。
+ * 维护口径：本文件必须与 .github/config/shared.yaml 的关键配置保持同步，CI 会自动比对。
  * 注释只解释结构，不改变实际覆写逻辑。
  */
 
 /**
- * 防DNS泄露.js
- * Converted from 防DNS泄露.yaml for Clash Party / Mihomo Party JavaScript override.
+ * Shared JavaScript source for generated regional overrides.
+ * Synchronized with .github/config/shared.yaml.
  * Entry point: main(config) must return the modified config.
  */
 
@@ -876,7 +876,7 @@ function main(config) {
   // 这些字段由客户端管理；替换整个 DNS/TUN 对象时也要保留显式设置。
   // 未设置的字段不补默认值，与 YAML 覆写保持一致。
   for (const [section, keys] of Object.entries({
-    tun: ["enable", "inet6-address"],
+    tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address"],
     dns: ["ipv6", "fake-ip-range6"],
   })) {
     for (const key of keys) {

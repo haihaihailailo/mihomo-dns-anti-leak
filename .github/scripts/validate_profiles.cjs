@@ -1,8 +1,46 @@
 // 被现有唯一离线验证入口 validate_health_checks.py 调用；只读、合成数据、无联网。
 const assert = require("node:assert/strict");
-const { read, parse, evaluate, normalize, renderProfiles } = require("./build_profiles.cjs");
+const { ROOT, read, parse, evaluate, normalize, renderProfiles } = require("./build_profiles.cjs");
+const fs = require("node:fs");
+const path = require("node:path");
+const { checkConsolidation } = require("./validate_consolidation.cjs");
+// 已退役的根目录入口不可重新出现；共同源码只供生成器使用。
+for (const file of ["防DNS泄露.yaml", "防DNS泄露.js", "Windows-国内网络覆写.yaml", "Windows-国内网络覆写.js"]) {
+  assert(!fs.existsSync(path.join(ROOT, file)), `旧入口应已移除：${file}`);
+}
 const clone = value => JSON.parse(JSON.stringify(value));
 const builtins = new Set(["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"]);
+const deviceTun = {
+  enable: true, device: "synthetic-tun", mtu: 1400, gso: false, "gso-max-size": 0,
+  "auto-redirect": false, "inet4-address": ["198.18.0.1/30"], "inet6-address": [],
+};
+// Sparkle 的末层合并：对象递归、普通数组替换。仅用于合成输入，不操作客户端。
+function mergeClient(base, controlled) {
+  const result = clone(base);
+  for (const [key, value] of Object.entries(controlled)) {
+    result[key] = value && typeof value === "object" && !Array.isArray(value)
+      ? mergeClient(result[key] || {}, value) : clone(value);
+  }
+  return result;
+}
+function checkDeviceBoundary(js, source) {
+  const input = { tun: clone(deviceTun), dns: { ipv6: false }, mode: "rule", ipv6: true, "mixed-port": 17890 };
+  const result = evaluate(js, input);
+  for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
+  for (const key of Object.keys(deviceTun)) assert(!Object.hasOwn(evaluate(js).tun, key), `设备字段不应凭空下发：${key}`);
+  assert.deepEqual(result.dns, { ...source.dns, ipv6: false }, "保留设备字段不得改变公共 DNS 策略");
+  assert.deepEqual(evaluate(js, result), result, "携带设备字段时重复覆写不幂等");
+  const controlled = { tun: { ...deviceTun, stack: "gvisor", "route-exclude-address": ["192.0.2.0/24"], "dns-hijack": ["any:53", "tcp://any:53"] } };
+  const merged = mergeClient(result, controlled);
+  for (const [key, value] of Object.entries(controlled.tun)) assert.deepEqual(merged.tun[key], value, `软件末层字段未保留：${key}`);
+  assert.deepEqual(merged.dns, result.dns);
+  assert.deepEqual(merged.rules, result.rules);
+  assert.deepEqual(merged["proxy-groups"], result["proxy-groups"]);
+  assert.equal(merged.tun["strict-route"], source.tun["strict-route"]);
+  // 回归之前的真实问题：后置数组不会自动追加仓库的 TCP 劫持项。
+  const incomplete = mergeClient(result, { tun: { "dns-hijack": ["any:53"] } });
+  assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));
+}
 const driverRules = [
   "DOMAIN-SUFFIX,download.nvidia.com,DIRECT", "DOMAIN-SUFFIX,download.nvidia.cn,DIRECT",
   "DOMAIN,ota.nvidia.com,DIRECT", "DOMAIN,gfwsl.geforce.cn,DIRECT",
@@ -56,11 +94,16 @@ function firstExit(groups, name) {
   return group["include-all"] ? group["empty-fallback"] : firstExit(groups, group.proxies[0]);
 }
 
-for (const { environment, stem, yaml, js, base } of renderProfiles()) {
+for (const { environment, stem, yaml, js, base, detailedConfig } of renderProfiles()) {
   assert.equal(read(`${stem}.yaml`), yaml, `${stem}.yaml 生成结果过期`);
   assert.equal(read(`${stem}.js`), js, `${stem}.js 生成结果过期`);
-  const config = parse(read(`${stem}.yaml`));
-  assert.deepEqual(normalize(config), normalize(evaluate(read(`${stem}.js`))), `${stem} 全配置不同步`);
+  const compact = parse(read(`${stem}.yaml`));
+  assert.deepEqual(normalize(compact), normalize(evaluate(read(`${stem}.js`))), `${stem} 全配置不同步`);
+  checkConsolidation(compact, detailedConfig, environment, "mihomo");
+  checkReferences(compact);
+  checkDeviceBoundary(js, compact);
+  // 原有环境语义测试继续覆盖详细中间配置；公开精简结果另作独立全对象比较。
+  const config = detailedConfig;
   checkReferences(config);
   checkDriverRouting(config, environment === "国外");
 
@@ -102,9 +145,14 @@ for (const { environment, stem, yaml, js, base } of renderProfiles()) {
   }
 
   if (environment === "国内") {
-    const old = parse(read("Windows-国内网络覆写.yaml"));
-    const expected = { ...base.dns, ...old.dns };
-    assert.deepEqual(config.dns, expected, "国内入口须内含旧国内 DNS 补充层");
+    const expected = {
+      ...base.dns,
+      "default-nameserver": ["https://223.5.5.5/dns-query"],
+      "proxy-server-nameserver": ["https://223.5.5.5/dns-query#DIRECT", "https://doh.pub/dns-query#DIRECT"],
+      "direct-nameserver": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "direct-nameserver-follow-policy": true,
+    };
+    assert.deepEqual(config.dns, expected, "国内入口须独立提供完整国内 DNS 策略");
     assert(config.dns.fallback.every(server => server.endsWith("#节点选择")));
     assert.equal(config.dns["fallback-filter"].geoip, true);
   } else {
@@ -153,24 +201,26 @@ for (const { environment, stem, yaml, js, base } of renderProfiles()) {
 }
 
 // 原生客户端另做解析与域名规则回归，不能把 Mihomo 能加载当作它们的实机通过。
-const main = parse(read("防DNS泄露.yaml"));
-const stash = parse(read("stash.stoverride"));
+const main = parse(read(".github/config/shared.yaml"));
+const stash = parse(read(".github/config/shared.stoverride"));
 checkReferences(main);
 checkDriverRouting(main);
+checkDeviceBoundary(read(".github/config/shared.js"), main);
 checkReferences(stash, { sparkle: false });
-const shadowRules = read("shadowrocket.conf").split("[Rule]")[1].split("\n")
+const shadowRules = read(".github/config/shared.conf").split("[Rule]")[1].split("\n")
   .map(line => line.trim()).filter(line => line && !line.startsWith("#"));
 for (const rule of driverRules) {
   assert.equal(stash.rules.filter(item => item === rule).length, 1);
   const [type, domain] = rule.split(",");
   assert.equal(stash.dns["nameserver-policy"][type === "DOMAIN-SUFFIX" ? `+.${domain}` : domain], "https://223.5.5.5/dns-query");
-  assert.equal(read("shadowrocket.conf").split("\n").filter(line => line.trim() === rule).length, 1);
+  assert.equal(read(".github/config/shared.conf").split("\n").filter(line => line.trim() === rule).length, 1);
   for (const rules of [stash.rules, shadowRules]) {
     const ads = rules.findIndex(item => item.startsWith("RULE-SET,") && item.endsWith(",广告过滤"));
     assert(ads >= 0 && rules.indexOf(rule) > ads && rules.indexOf(rule) < rules.indexOf("GEOIP,VN,越南服务,no-resolve"), "原生客户端驱动规则不得被国家 IP 规则抢先匹配");
   }
 }
-for (const file of ["防DNS泄露.js", "Windows-国内网络覆写.js", "防DNS泄露-国内版.js", "防DNS泄露-国外版.js"]) {
+for (const file of [".github/config/shared.js", "防DNS泄露-国内版.js", "防DNS泄露-国外版.js"]) {
   new (require("node:vm").Script)(read(file), { filename: file });
 }
-console.log("主配置 / Stash 引用、驱动精确直连、四个 JS 语法 OK");
+console.log("内部共同源码 / Stash 引用、驱动精确直连、三个 JS 语法、旧入口移除 OK");
+require("./validate_native_profiles.cjs");
