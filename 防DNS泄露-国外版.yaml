@@ -125,114 +125,6 @@ dns:
     rule-set:private:
       - https://1.1.1.1/dns-query#DIRECT
       - https://8.8.8.8/dns-query#DIRECT
-    rule-set:cn:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    rule-set:steam-cn:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    rule-set:category-games-cn:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    rule-set:wechat:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    rule-set:alipay:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    aliapp.org:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    .aliapp.org:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    yhglobal.com:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    .yhglobal.com:
-      - https://223.5.5.5/dns-query#国内服务
-      - https://doh.pub/dns-query#国内服务
-    download.nvidia.com:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    .download.nvidia.com:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    download.nvidia.cn:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    .download.nvidia.cn:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    ota.nvidia.com:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    gfwsl.geforce.cn:
-      - https://1.1.1.1/dns-query#DIRECT
-      - https://8.8.8.8/dns-query#DIRECT
-    rule-set:microsoft:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    windowsupdate.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    .windowsupdate.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    download.windowsupdate.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    .download.windowsupdate.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    .mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    delivery.mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    .delivery.mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    dl.delivery.mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    .dl.delivery.mp.microsoft.com:
-      - https://1.1.1.1/dns-query#微软/苹果服务
-      - https://8.8.8.8/dns-query#微软/苹果服务
-    rule-set:geolocation-!cn:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    rule-set:google:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    rule-set:youtube:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    rule-set:openai:
-      - https://1.1.1.1/dns-query#AI
-      - https://8.8.8.8/dns-query#AI
-    rule-set:anthropic:
-      - https://1.1.1.1/dns-query#AI
-      - https://8.8.8.8/dns-query#AI
-    rule-set:google-gemini:
-      - https://1.1.1.1/dns-query#AI
-      - https://8.8.8.8/dns-query#AI
-    rule-set:github-copilot:
-      - https://1.1.1.1/dns-query#AI
-      - https://8.8.8.8/dns-query#AI
-    rule-set:github:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    googleapis.cn:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    .googleapis.cn:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
     chatgpt.com:
       - https://1.1.1.1/dns-query#AI
       - https://8.8.8.8/dns-query#AI
@@ -281,6 +173,120 @@ dns:
     .intercomcdn.com:
       - https://1.1.1.1/dns-query#AI
       - https://8.8.8.8/dns-query#AI
+    jspoo.com:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    .jspoo.com:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    aliapp.org:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    .aliapp.org:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    yhglobal.com:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    .yhglobal.com:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    download.nvidia.com:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    .download.nvidia.com:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    download.nvidia.cn:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    .download.nvidia.cn:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    ota.nvidia.com:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    gfwsl.geforce.cn:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    windowsupdate.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    .windowsupdate.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    download.windowsupdate.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    .download.windowsupdate.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    .mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    delivery.mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    .delivery.mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    dl.delivery.mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    .dl.delivery.mp.microsoft.com:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    googleapis.cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .googleapis.cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:openai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:anthropic:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:google-gemini:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:github-copilot:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:steam-cn:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    rule-set:category-games-cn:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    rule-set:wechat:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    rule-set:alipay:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    rule-set:github:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:microsoft:
+      - https://1.1.1.1/dns-query#微软/苹果服务
+      - https://8.8.8.8/dns-query#微软/苹果服务
+    rule-set:google:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:youtube:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:cn:
+      - https://223.5.5.5/dns-query#国内服务
+      - https://doh.pub/dns-query#国内服务
+    rule-set:geolocation-!cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
 proxy-groups:
   - name: 节点选择
     type: select
@@ -873,6 +879,7 @@ rules:
   - RULE-SET,private,DIRECT
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
+  - DOMAIN-SUFFIX,jspoo.com,DIRECT
   - DOMAIN-SUFFIX,yhglobal.com,国内服务
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
@@ -1234,13 +1241,6 @@ rules:
   - PROCESS-NAME,GitHubDesktop.exe,节点选择
   - PROCESS-NAME,Cursor.exe,AI
   - PROCESS-NAME,Windsurf.exe,AI
-  - PROCESS-NAME,Code.exe,节点选择
-  - PROCESS-NAME,code.exe,节点选择
-  - PROCESS-NAME,Postman.exe,节点选择
-  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择
-  - PROCESS-NAME,idea64.exe,节点选择
-  - PROCESS-NAME,pycharm64.exe,节点选择
-  - PROCESS-NAME,webstorm64.exe,节点选择
   - PROCESS-NAME,EpicGamesLauncher.exe,游戏平台
   - PROCESS-NAME,EpicWebHelper.exe,游戏平台
   - PROCESS-NAME,Battle.net.exe,游戏平台
@@ -1248,8 +1248,8 @@ rules:
   - PROCESS-NAME,UbisoftConnect.exe,游戏平台
   - PROCESS-NAME,EA app.exe,游戏平台
   - PROCESS-NAME,EADesktop.exe,游戏平台
-  - PROCESS-NAME,ms-teams.exe,节点选择
-  - PROCESS-NAME,Teams.exe,节点选择
+  - PROCESS-NAME,ms-teams.exe,微软/苹果服务
+  - PROCESS-NAME,Teams.exe,微软/苹果服务
   - PROCESS-NAME,Zoom.exe,节点选择
   - PROCESS-NAME,slack.exe,节点选择
   - PROCESS-NAME,NVIDIA App.exe,节点选择
@@ -1282,6 +1282,13 @@ rules:
   - RULE-SET,anthropic,AI
   - RULE-SET,google-gemini,AI
   - RULE-SET,github-copilot,AI
+  - PROCESS-NAME,Code.exe,节点选择
+  - PROCESS-NAME,code.exe,节点选择
+  - PROCESS-NAME,Postman.exe,节点选择
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择
+  - PROCESS-NAME,idea64.exe,节点选择
+  - PROCESS-NAME,pycharm64.exe,节点选择
+  - PROCESS-NAME,webstorm64.exe,节点选择
   - DOMAIN,accounts.google.com,节点选择
   - DOMAIN-SUFFIX,accounts.google.com,节点选择
   - DOMAIN-SUFFIX,accounts.youtube.com,节点选择

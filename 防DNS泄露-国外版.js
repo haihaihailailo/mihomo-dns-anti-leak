@@ -179,11 +179,8 @@ const OVERRIDE = {
     "nameserver-policy": {
       // 根域名与子域名分开写，与 Sparkle YAML 覆写兼容。
       "rule-set:private": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:steam-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:category-games-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:wechat": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:alipay": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "jspoo.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".jspoo.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
@@ -194,7 +191,6 @@ const OVERRIDE = {
       ".download.nvidia.cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "ota.nvidia.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "gfwsl.geforce.cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:microsoft": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "download.windowsupdate.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
@@ -205,16 +201,23 @@ const OVERRIDE = {
       ".delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
-      "rule-set:geolocation-!cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
-      "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
-      "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:anthropic": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:google-gemini": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:github-copilot": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:steam-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "rule-set:category-games-cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "rule-set:wechat": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "rule-set:alipay": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      // Microsoft 集合包含普通 GitHub 域名；GitHub 须先匹配，Copilot 仍由前面的 AI 策略接管。
       "rule-set:github": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
-      "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
-      ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:microsoft": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      "rule-set:cn": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "rule-set:geolocation-!cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
     },
   },
   "proxy-groups": [],
@@ -315,6 +318,7 @@ DOMAIN-SUFFIX,lan,DIRECT
 RULE-SET,private,DIRECT
 GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
+DOMAIN-SUFFIX,jspoo.com,DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,download.nvidia.com,DIRECT
 DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
@@ -676,13 +680,6 @@ PROCESS-NAME,Spotify.exe,Spotify
 PROCESS-NAME,GitHubDesktop.exe,GitHub
 PROCESS-NAME,Cursor.exe,AI
 PROCESS-NAME,Windsurf.exe,AI
-PROCESS-NAME,Code.exe,节点选择
-PROCESS-NAME,code.exe,节点选择
-PROCESS-NAME,Postman.exe,节点选择
-PROCESS-NAME,JetBrains Toolbox.exe,节点选择
-PROCESS-NAME,idea64.exe,节点选择
-PROCESS-NAME,pycharm64.exe,节点选择
-PROCESS-NAME,webstorm64.exe,节点选择
 PROCESS-NAME,EpicGamesLauncher.exe,游戏平台
 PROCESS-NAME,EpicWebHelper.exe,游戏平台
 PROCESS-NAME,Battle.net.exe,游戏平台
@@ -690,8 +687,8 @@ PROCESS-NAME,RiotClientServices.exe,游戏平台
 PROCESS-NAME,UbisoftConnect.exe,游戏平台
 PROCESS-NAME,EA app.exe,游戏平台
 PROCESS-NAME,EADesktop.exe,游戏平台
-PROCESS-NAME,ms-teams.exe,节点选择
-PROCESS-NAME,Teams.exe,节点选择
+PROCESS-NAME,ms-teams.exe,微软服务
+PROCESS-NAME,Teams.exe,微软服务
 PROCESS-NAME,Zoom.exe,节点选择
 PROCESS-NAME,slack.exe,节点选择
 PROCESS-NAME,NVIDIA App.exe,节点选择
@@ -724,6 +721,13 @@ RULE-SET,openai,AI
 RULE-SET,anthropic,AI
 RULE-SET,google-gemini,AI
 RULE-SET,github-copilot,AI
+PROCESS-NAME,Code.exe,节点选择
+PROCESS-NAME,code.exe,节点选择
+PROCESS-NAME,Postman.exe,节点选择
+PROCESS-NAME,JetBrains Toolbox.exe,节点选择
+PROCESS-NAME,idea64.exe,节点选择
+PROCESS-NAME,pycharm64.exe,节点选择
+PROCESS-NAME,webstorm64.exe,节点选择
 DOMAIN,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务
@@ -935,150 +939,6 @@ const ENVIRONMENT = {
         "https://1.1.1.1/dns-query#DIRECT",
         "https://8.8.8.8/dns-query#DIRECT"
       ],
-      "rule-set:cn": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "rule-set:steam-cn": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "rule-set:category-games-cn": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "rule-set:wechat": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "rule-set:alipay": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "aliapp.org": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      ".aliapp.org": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "yhglobal.com": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      ".yhglobal.com": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
-      ],
-      "download.nvidia.com": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      ".download.nvidia.com": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      "download.nvidia.cn": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      ".download.nvidia.cn": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      "ota.nvidia.com": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      "gfwsl.geforce.cn": [
-        "https://1.1.1.1/dns-query#DIRECT",
-        "https://8.8.8.8/dns-query#DIRECT"
-      ],
-      "rule-set:microsoft": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "windowsupdate.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      ".windowsupdate.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "download.windowsupdate.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      ".download.windowsupdate.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      ".mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "delivery.mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      ".delivery.mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "dl.delivery.mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      ".dl.delivery.mp.microsoft.com": [
-        "https://1.1.1.1/dns-query#微软服务",
-        "https://8.8.8.8/dns-query#微软服务"
-      ],
-      "rule-set:geolocation-!cn": [
-        "https://1.1.1.1/dns-query#节点选择",
-        "https://8.8.8.8/dns-query#节点选择"
-      ],
-      "rule-set:google": [
-        "https://1.1.1.1/dns-query#谷歌服务",
-        "https://8.8.8.8/dns-query#谷歌服务"
-      ],
-      "rule-set:youtube": [
-        "https://1.1.1.1/dns-query#YouTube",
-        "https://8.8.8.8/dns-query#YouTube"
-      ],
-      "rule-set:openai": [
-        "https://1.1.1.1/dns-query#AI",
-        "https://8.8.8.8/dns-query#AI"
-      ],
-      "rule-set:anthropic": [
-        "https://1.1.1.1/dns-query#AI",
-        "https://8.8.8.8/dns-query#AI"
-      ],
-      "rule-set:google-gemini": [
-        "https://1.1.1.1/dns-query#AI",
-        "https://8.8.8.8/dns-query#AI"
-      ],
-      "rule-set:github-copilot": [
-        "https://1.1.1.1/dns-query#AI",
-        "https://8.8.8.8/dns-query#AI"
-      ],
-      "rule-set:github": [
-        "https://1.1.1.1/dns-query#GitHub",
-        "https://8.8.8.8/dns-query#GitHub"
-      ],
-      "googleapis.cn": [
-        "https://1.1.1.1/dns-query#谷歌服务",
-        "https://8.8.8.8/dns-query#谷歌服务"
-      ],
-      ".googleapis.cn": [
-        "https://1.1.1.1/dns-query#谷歌服务",
-        "https://8.8.8.8/dns-query#谷歌服务"
-      ],
       "chatgpt.com": [
         "https://1.1.1.1/dns-query#AI",
         "https://8.8.8.8/dns-query#AI"
@@ -1142,6 +1002,158 @@ const ENVIRONMENT = {
       ".intercomcdn.com": [
         "https://1.1.1.1/dns-query#AI",
         "https://8.8.8.8/dns-query#AI"
+      ],
+      "jspoo.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      ".jspoo.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "aliapp.org": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".aliapp.org": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "yhglobal.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".yhglobal.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "download.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      ".download.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "download.nvidia.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      ".download.nvidia.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "ota.nvidia.com": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "gfwsl.geforce.cn": [
+        "https://1.1.1.1/dns-query#DIRECT",
+        "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "download.windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".download.windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "dl.delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".dl.delivery.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "googleapis.cn": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".googleapis.cn": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "rule-set:openai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "rule-set:anthropic": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "rule-set:google-gemini": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "rule-set:github-copilot": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "rule-set:steam-cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:category-games-cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:wechat": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:alipay": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:github": [
+        "https://1.1.1.1/dns-query#GitHub",
+        "https://8.8.8.8/dns-query#GitHub"
+      ],
+      "rule-set:microsoft": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "rule-set:google": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "rule-set:youtube": [
+        "https://1.1.1.1/dns-query#YouTube",
+        "https://8.8.8.8/dns-query#YouTube"
+      ],
+      "rule-set:cn": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:geolocation-!cn": [
+        "https://1.1.1.1/dns-query#节点选择",
+        "https://8.8.8.8/dns-query#节点选择"
       ]
     }
   },

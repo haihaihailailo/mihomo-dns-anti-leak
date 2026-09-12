@@ -46,9 +46,13 @@ dns: #!replace
     - https://doh.pub/dns-query
   nameserver-policy: #!replace
     "geosite:private": https://223.5.5.5/dns-query
+    "+.jspoo.com": https://223.5.5.5/dns-query
+    "geosite:openai": https://1.1.1.1/dns-query
     "geosite:anthropic": https://1.1.1.1/dns-query
     "geosite:google-gemini": https://1.1.1.1/dns-query
     "geosite:github-copilot": https://1.1.1.1/dns-query
+    # GitHub 必须先于 Microsoft 与通用集合；Copilot 保持更高优先级。
+    "geosite:github": https://1.1.1.1/dns-query
     "geosite:cn": https://223.5.5.5/dns-query
     "+.alipaylog.com": https://223.5.5.5/dns-query
     "+.aliapp.org": https://223.5.5.5/dns-query
@@ -65,8 +69,6 @@ dns: #!replace
     "geosite:geolocation-!cn": https://1.1.1.1/dns-query
     "geosite:google": https://1.1.1.1/dns-query
     "geosite:youtube": https://1.1.1.1/dns-query
-    "geosite:openai": https://1.1.1.1/dns-query
-    "geosite:github": https://1.1.1.1/dns-query
     "+.googleapis.cn": https://1.1.1.1/dns-query
 
 sniffer: #!replace
@@ -553,6 +555,8 @@ rules: #!replace
   - RULE-SET,private,DIRECT
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
+  # 用户指定网站直连；第三方外链继续按各自规则分流。
+  - DOMAIN-SUFFIX,jspoo.com,DIRECT
   # 驱动下载精确直连，先于业务规则和国家 IP 兜底。
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT

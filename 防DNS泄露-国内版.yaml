@@ -126,19 +126,10 @@ dns:
     rule-set:private:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
-    rule-set:cn:
+    jspoo.com:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
-    rule-set:steam-cn:
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-    rule-set:category-games-cn:
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-    rule-set:wechat:
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
-    rule-set:alipay:
+    .jspoo.com:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
     aliapp.org:
@@ -171,9 +162,6 @@ dns:
     gfwsl.geforce.cn:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
-    rule-set:microsoft:
-      - https://223.5.5.5/dns-query
-      - https://doh.pub/dns-query
     windowsupdate.com:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
@@ -204,13 +192,10 @@ dns:
     .dl.delivery.mp.microsoft.com:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
-    rule-set:geolocation-!cn:
+    googleapis.cn:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
-    rule-set:google:
-      - https://1.1.1.1/dns-query#节点选择
-      - https://8.8.8.8/dns-query#节点选择
-    rule-set:youtube:
+    .googleapis.cn:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
     rule-set:openai:
@@ -225,13 +210,34 @@ dns:
     rule-set:github-copilot:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
+    rule-set:steam-cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:category-games-cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:wechat:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:alipay:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
     rule-set:github:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
-    googleapis.cn:
+    rule-set:microsoft:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:google:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
-    .googleapis.cn:
+    rule-set:youtube:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:geolocation-!cn:
       - https://1.1.1.1/dns-query#节点选择
       - https://8.8.8.8/dns-query#节点选择
 proxy-groups:
@@ -785,6 +791,7 @@ rules:
   - RULE-SET,private,DIRECT
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
+  - DOMAIN-SUFFIX,jspoo.com,DIRECT
   - DOMAIN-SUFFIX,yhglobal.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
@@ -1146,13 +1153,6 @@ rules:
   - PROCESS-NAME,GitHubDesktop.exe,节点选择
   - PROCESS-NAME,Cursor.exe,AI
   - PROCESS-NAME,Windsurf.exe,AI
-  - PROCESS-NAME,Code.exe,节点选择
-  - PROCESS-NAME,code.exe,节点选择
-  - PROCESS-NAME,Postman.exe,节点选择
-  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择
-  - PROCESS-NAME,idea64.exe,节点选择
-  - PROCESS-NAME,pycharm64.exe,节点选择
-  - PROCESS-NAME,webstorm64.exe,节点选择
   - PROCESS-NAME,EpicGamesLauncher.exe,游戏平台
   - PROCESS-NAME,EpicWebHelper.exe,游戏平台
   - PROCESS-NAME,Battle.net.exe,游戏平台
@@ -1160,8 +1160,8 @@ rules:
   - PROCESS-NAME,UbisoftConnect.exe,游戏平台
   - PROCESS-NAME,EA app.exe,游戏平台
   - PROCESS-NAME,EADesktop.exe,游戏平台
-  - PROCESS-NAME,ms-teams.exe,节点选择
-  - PROCESS-NAME,Teams.exe,节点选择
+  - PROCESS-NAME,ms-teams.exe,微软/苹果服务
+  - PROCESS-NAME,Teams.exe,微软/苹果服务
   - PROCESS-NAME,Zoom.exe,节点选择
   - PROCESS-NAME,slack.exe,节点选择
   - PROCESS-NAME,NVIDIA App.exe,节点选择
@@ -1194,6 +1194,13 @@ rules:
   - RULE-SET,anthropic,AI
   - RULE-SET,google-gemini,AI
   - RULE-SET,github-copilot,AI
+  - PROCESS-NAME,Code.exe,节点选择
+  - PROCESS-NAME,code.exe,节点选择
+  - PROCESS-NAME,Postman.exe,节点选择
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择
+  - PROCESS-NAME,idea64.exe,节点选择
+  - PROCESS-NAME,pycharm64.exe,节点选择
+  - PROCESS-NAME,webstorm64.exe,节点选择
   - DOMAIN,accounts.google.com,节点选择
   - DOMAIN-SUFFIX,accounts.google.com,节点选择
   - DOMAIN-SUFFIX,accounts.youtube.com,节点选择

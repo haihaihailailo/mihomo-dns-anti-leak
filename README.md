@@ -140,6 +140,7 @@
 - 配置无法可靠判断当前公网所在地，因此不硬编码自动切换；`profile.store-selected` 会记住手动选择，跨境后只需切换一次对应策略组。
 - 国外版的已知 AI 域名使用 AI 组解析，不保证仅按进程识别的请求、未知第三方域名或绕过 VPN 的应用也使用同一 DNS 出口；不能将其视为整个系统零泄露保证。
 - 系统更新、局域网、NTP、推送等既有直连规则保持不变。
+- 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo / Stash 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
 - Steam 中国 CDN 与中国大陆游戏域名在国内版直接 DIRECT、国外版走国内服务；海外游戏域名进入独立的 `游戏平台`，两者按原规则顺序隔离。
 - NVIDIA 驱动下载的 `download.nvidia.com` / `download.nvidia.cn`（含子域名）以及 `ota.nvidia.com` / `gfwsl.geforce.cn` 精确直连，优先于 NVIDIA 进程代理规则；其他 NVIDIA 服务不改变。国内版使用国内 DoH 获取 CDN 地址，国外版使用境外直连 DoH。网络下载成功不代表驱动安装或 NVIDIA App 自身故障也已解决。
 - `midea` 相关域名固定直连，避免客户/工作相关系统误走代理。
@@ -162,6 +163,15 @@
 - 广告缓存使用独立路径，避免旧 MRS 与新 classical 文件混用。切换后若业务异常，先查看是否命中 `广告过滤`，可临时将该组改为 DIRECT 对照；不需要关闭 TLS 证书校验或清空全部客户端数据。
 - 微信 / 支付宝的 classical provider 用于 DNS 策略时，Mihomo 只取其中域名规则，相关提示不表示 ASN 也参与 DNS 匹配。`no-resolve` 避免仅为匹配 IP/ASN 而触发解析，不禁止业务请求本身的正常 DNS 查询。
 - 新增来源由 `validate_rule_sources.cjs` 检查格式、缓存隔离、AI 优先级和 DNS 同步，并纳入唯一离线验证入口。离线测试不能保证远程源永远可用；上游文件会继续变化，实机仍须核对命中日志。手机 ChatGPT 的 SSL 提示、支付或导航体验不能仅凭更换规则集宣告修复。
+
+### 首条匹配与优先级
+
+- Mihomo 的 DNS 策略有顺序语义：私有域名优先，其次是已有明确域名例外、AI 等专属服务，最后才是通用服务及国内/国外大集合。不能只比对键值而忽略顺序；国外版 AI 的 `#AI` 解析策略必须早于 `geolocation-!cn` 等重叠规则。[Mihomo DNS](https://wiki.metacubex.one/config/dns/)
+- VS Code、Postman 和 JetBrains 等通用开发工具的进程兜底位于 AI 域名规则之后：Copilot/OpenAI 请求可进入 AI，普通开发流量仍是节点选择。Teams 两个进程统一进入微软/苹果服务。
+- 微信、支付宝整应用选路仍在 AI 域名规则之前：国内版 DIRECT，国外版国内服务。未进入 VPN 的应用不受这些规则控制；这次没有改动手机分应用名单。
+- Stash 将 OpenAI 与其他 AI 的 geosite DNS 策略一起放在通用 geosite 之前；它使用自己的 DNS 机制，不能把 Mihomo 的 `#策略组` 语法套用到 Stash。
+
+- 普通 GitHub 的 DNS 策略先于 Microsoft 和通用集合，避免 GitHub 网页、API、Raw、头像、静态资源和 Pages 被微软集合提前匹配；Copilot 的 AI 策略仍更优先。Mihomo 两地版的 GitHub DNS 跟随节点选择；Stash 按自身 geosite 顺序使用对应 DNS。[Stash DNS 匹配说明](https://stash.wiki/en/features/dns-server)
 
 ### TUN / IPv6 / 订阅故障先分层判断
 
@@ -193,6 +203,10 @@
 - CI 会自动校验主 YAML 解析、主 JS 语法、主 YAML/JS 全配置同步、规则引用完整性、Stash 覆写解析、Shadowrocket 关键策略语义和 mihomo 加载测试。
 - CI 会检查 `unified-delay`、`profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。
 - CI 每天自动运行一次，用于尽早发现 Mihomo 最新版本、远程规则集或下载链路变化导致的问题。
+- `validate_priority.cjs` 额外比较 YAML/JS 的 DNS 键顺序，并用重叠域名、开发工具、微信/支付宝和 Teams 的合成请求检查首条匹配；负向控制确保恢复旧遮挡时检查会失败。
+- `mihomo -t` 只检查配置解析，不保证 HTTP 规则能下载或初始化。CI 另用 `check_remote_rules.cjs` 下载三个客户端配置中去重后的公开 URL，检查状态码、体积、文本格式并保存哈希快照；403、HTML 错误页、空正文和超时均判失败。不访问机场订阅，不关闭证书校验。
+- CI 随后通过唯一测试入口调用隔离内核回归：只用回环 DNS 和合成答案验证优先级，再让 Mihomo 初始化主配置及 Stash 的公开快照，包括 MRS 完整解码。后者只证明这些文件能被 Mihomo 解析，**不是 Stash / Shadowrocket 实机通过**。Shadowrocket 的 `+.domain` 匹配仍须在真实客户端核对。
+- 本地默认入口保持离线；已有 Mihomo 时可设置 `MIHOMO_TEST_BIN` 为其绝对路径后重跑该入口，启用回环测试。先显式运行 `node .github/scripts/check_remote_rules.cjs --output-dir <不存在的新目录>`，再将 `MIHOMO_RULE_CACHE` 指向其绝对路径，才能同时检查公开快照初始化。测试不改系统代理、TUN 开关或客户端配置；生成目录保留供审计，按需自行管理。
 - Dependabot 会每周检查 GitHub Actions 依赖更新。
 
 ### 分组精简当前状态

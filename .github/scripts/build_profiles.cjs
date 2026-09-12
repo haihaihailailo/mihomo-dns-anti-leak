@@ -46,6 +46,7 @@ function environmentSettings(base, environment) {
   ]);
   const externalKeys = {
     "rule-set:private": "DIRECT",
+    "jspoo.com": "DIRECT", ".jspoo.com": "DIRECT",
     "rule-set:geolocation-!cn": "节点选择",
     "rule-set:google": "谷歌服务", "googleapis.cn": "谷歌服务", ".googleapis.cn": "谷歌服务",
     "rule-set:youtube": "YouTube", "rule-set:github": "GitHub", "rule-set:openai": "AI",
@@ -64,12 +65,19 @@ function environmentSettings(base, environment) {
   }
   // 主规则已明确归入 AI 的域名也使用 AI 出口解析，避免只覆盖 openai 规则集。
   // 未识别的第三方域名、仅凭进程命中的流量，不能据此保证 DNS 与业务出口相同。
+  const aiDomains = {};
   for (const rule of base.rules) {
     const [type, domain, policy] = rule.split(",");
     if (policy !== "AI" || !["DOMAIN", "DOMAIN-SUFFIX"].includes(type)) continue;
-    policies[domain] = via(GLOBAL_DNS, "AI");
-    if (type === "DOMAIN-SUFFIX") policies[`.${domain}`] = via(GLOBAL_DNS, "AI");
+    aiDomains[domain] = via(GLOBAL_DNS, "AI");
+    if (type === "DOMAIN-SUFFIX") aiDomains[`.${domain}`] = via(GLOBAL_DNS, "AI");
   }
+  // Mihomo 按插入顺序匹配；显式 AI 域名不可放在通用 rule-set 后面。
+  const orderedPolicies = Object.fromEntries([
+    ...Object.entries(policies).filter(([key]) => key === "rule-set:private"),
+    ...Object.entries(aiDomains),
+    ...Object.entries(policies).filter(([key]) => key !== "rule-set:private"),
+  ]);
   return {
     dns: {
       "default-nameserver": GLOBAL_DNS,
@@ -80,7 +88,7 @@ function environmentSettings(base, environment) {
       "fallback-filter": { geoip: false, ipcidr: [], domain: [], geosite: [] },
       "direct-nameserver": via(GLOBAL_DNS, "DIRECT"),
       "direct-nameserver-follow-policy": true,
-      "nameserver-policy": policies,
+      "nameserver-policy": orderedPolicies,
     },
     // 其他普通业务组原本跟随节点选择；AI 保持原有美国自动首选。
     defaults: { "节点选择": "DIRECT", "GitHub": "DIRECT", "电报消息": "DIRECT" },

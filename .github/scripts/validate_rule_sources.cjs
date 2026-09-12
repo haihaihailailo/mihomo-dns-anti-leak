@@ -20,10 +20,13 @@ function parsePayload(text, behavior, format) {
     assert.equal(typeof rule, "string");
     if (behavior === "classical") {
       const parts = rule.split(",");
-      assert(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD", "DOMAIN-REGEX",
+      assert(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD", "DOMAIN-REGEX", "DOMAIN-WILDCARD", "URL-REGEX",
         "IP-CIDR", "IP-CIDR6", "IP-ASN", "GEOIP", "USER-AGENT", "PROCESS-NAME"].includes(parts[0]),
       "不支持的 classical 类型：" + parts[0]);
-      assert(parts[1] && !/\s/.test(parts[1]), "无效规则值");
+      assert(parts[1] && !/[\r\n]/.test(parts[1]), "无效规则值");
+      if (!["USER-AGENT", "PROCESS-NAME", "URL-REGEX", "DOMAIN-REGEX"].includes(parts[0])) {
+        assert(!/\s/.test(parts[1]), "域名/IP 规则不得含空白");
+      }
       assert(parts.length === 2 || (parts.length === 3 && parts[2] === "no-resolve"), "上游不得附带出口策略");
     } else {
       assert.equal(behavior, "domain");
@@ -110,5 +113,5 @@ function run() {
   }
   console.log("规则来源、格式/缓存隔离、AI 优先级与 DNS、纯广告模式、Shadowrocket DOMAIN-SET 契约 OK");
 }
-run();
-module.exports = { parsePayload };
+if (require.main === module) run();
+module.exports = { parsePayload, run };

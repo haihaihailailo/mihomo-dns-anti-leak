@@ -11,6 +11,9 @@ on:
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
+      - ".github/scripts/validate_priority.cjs"
+      - ".github/scripts/check_remote_rules.cjs"
+      - ".github/scripts/validate_mihomo_runtime.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
       - "stash-*版.stoverride"
@@ -31,6 +34,9 @@ on:
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
+      - ".github/scripts/validate_priority.cjs"
+      - ".github/scripts/check_remote_rules.cjs"
+      - ".github/scripts/validate_mihomo_runtime.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
       - "stash-*版.stoverride"
@@ -302,7 +308,7 @@ jobs:
           RUBY
 
   validate-mihomo:
-    name: Load config with Mihomo
+    name: Load config and initialize public rule snapshots
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: validate-sources
@@ -329,6 +335,19 @@ jobs:
           gzip -d mihomo.gz
           chmod +x mihomo
           ./mihomo -v
+
+      - name: Install pinned config validation dependency
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Download and validate public rule payloads
+        run: node .github/scripts/check_remote_rules.cjs --output-dir "$RUNNER_TEMP/rules-check"
+
+      - name: Check isolated DNS priority and initialize all rule snapshots
+        env:
+          MIHOMO_TEST_BIN: ${{ github.workspace }}/mihomo
+          MIHOMO_RULE_CACHE: ${{ runner.temp }}/rules-check
+          MIHOMO_TEST_OUTPUT: ${{ runner.temp }}
+        run: python3 .github/scripts/validate_health_checks.py
 
       - name: Test config load
         run: |

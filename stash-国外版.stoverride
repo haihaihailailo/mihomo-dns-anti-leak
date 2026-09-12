@@ -49,6 +49,9 @@ dns: #!replace
     geosite:private:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
+    geosite:openai:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
     geosite:anthropic:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
@@ -56,6 +59,9 @@ dns: #!replace
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     geosite:github-copilot:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:github:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     geosite:microsoft:
@@ -67,10 +73,7 @@ dns: #!replace
     geosite:youtube:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
-    geosite:openai:
-      - https://1.1.1.1/dns-query
-      - https://8.8.8.8/dns-query
-    geosite:github:
+    +.jspoo.com:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     geosite:cn: https://223.5.5.5/dns-query
@@ -593,6 +596,7 @@ rules: #!replace
   - RULE-SET,private,DIRECT
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
+  - DOMAIN-SUFFIX,jspoo.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT

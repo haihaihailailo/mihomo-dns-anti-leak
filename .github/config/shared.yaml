@@ -153,11 +153,8 @@ dns:
   nameserver-policy:
     # 根域名与子域名分开写，避免 Sparkle YAML 覆写把数组键的前导 + 当作合并指令。
     "rule-set:private": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:steam-cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:category-games-cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:wechat": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:alipay": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "jspoo.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    ".jspoo.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "aliapp.org": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     ".aliapp.org": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "yhglobal.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
@@ -169,7 +166,6 @@ dns:
     ".download.nvidia.cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "ota.nvidia.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "gfwsl.geforce.cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:microsoft": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     ".windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "download.windowsupdate.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
@@ -180,16 +176,23 @@ dns:
     ".delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     "dl.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
     ".dl.delivery.mp.microsoft.com": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
-    "rule-set:geolocation-!cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
-    "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
-    "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:anthropic": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:google-gemini": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
     "rule-set:github-copilot": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:steam-cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:category-games-cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:wechat": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:alipay": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    # Microsoft 集合包含普通 GitHub 域名；GitHub 须先匹配，Copilot 仍由前面的 AI 策略接管。
     "rule-set:github": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
-    "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
-    ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:microsoft": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:google": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:youtube": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
+    "rule-set:cn": [https://223.5.5.5/dns-query, https://doh.pub/dns-query]
+    "rule-set:geolocation-!cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"]
 
 
 # --- 8. 策略组 proxy-groups ---
@@ -768,6 +771,8 @@ rules:
   - "RULE-SET,private,DIRECT"
   - "GEOIP,LAN,DIRECT,no-resolve"
   - "RULE-SET,reject,广告过滤"
+  # 用户指定网站直连；不扩展到导航页中的第三方外链。
+  - "DOMAIN-SUFFIX,jspoo.com,DIRECT"
   # 公司域名优先于开发工具整进程代理；仍跟随 国内服务 的手动选择。
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
   # 仅驱动下载/CDN 与更新检查直连，先于 NVIDIA 进程代理规则；不放行整个 nvidia.com。
@@ -1159,13 +1164,6 @@ rules:
   - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
   - PROCESS-NAME,Cursor.exe,AI # Cursor Editor
   - PROCESS-NAME,Windsurf.exe,AI # Windsurf Editor
-  - PROCESS-NAME,Code.exe,节点选择 # VS Code（通用开发工具，走节点选择）
-  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
-  - PROCESS-NAME,Postman.exe,节点选择 # Postman
-  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
-  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
-  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
-  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
   - PROCESS-NAME,EpicGamesLauncher.exe,游戏平台 # Epic Games Launcher
   - PROCESS-NAME,EpicWebHelper.exe,游戏平台 # Epic Games Web Helper
   - PROCESS-NAME,Battle.net.exe,游戏平台 # Battle.net
@@ -1173,8 +1171,8 @@ rules:
   - PROCESS-NAME,UbisoftConnect.exe,游戏平台 # Ubisoft Connect
   - PROCESS-NAME,EA app.exe,游戏平台 # EA App
   - PROCESS-NAME,EADesktop.exe,游戏平台 # EA Desktop
-  - PROCESS-NAME,ms-teams.exe,节点选择 # Microsoft Teams
-  - PROCESS-NAME,Teams.exe,节点选择 # Microsoft Teams Classic
+  - PROCESS-NAME,ms-teams.exe,微软服务 # Microsoft Teams
+  - PROCESS-NAME,Teams.exe,微软服务 # Microsoft Teams Classic
   - PROCESS-NAME,Zoom.exe,节点选择 # Zoom
   - PROCESS-NAME,slack.exe,节点选择 # Slack
   # --- 桌面端硬件 / 驱动更新 / 预防性 ---
@@ -1211,6 +1209,15 @@ rules:
   - "RULE-SET,anthropic,AI"
   - "RULE-SET,google-gemini,AI"
   - "RULE-SET,github-copilot,AI"
+
+  # 通用开发工具兜底在 AI 特例之后；不把整个编辑器都改成 AI。
+  - PROCESS-NAME,Code.exe,节点选择 # VS Code
+  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
+  - PROCESS-NAME,Postman.exe,节点选择 # Postman
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
+  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
+  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
+  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
 
   - "DOMAIN,accounts.google.com,谷歌服务"
   - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"

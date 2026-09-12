@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import os
 import re
 import subprocess
 import sys
@@ -1043,5 +1044,15 @@ subprocess.run(
     check=True,
     timeout=60,
 )
+
+subprocess.run(
+    ["node", str(Path(__file__).with_name("check_remote_rules.cjs")), "--self-test"],
+    check=True, timeout=15,
+)
+if os.environ.get("MIHOMO_TEST_BIN"):
+    subprocess.run(
+        ["node", str(Path(__file__).with_name("validate_mihomo_runtime.cjs"))],
+        check=True, timeout=60,
+    )
 
 print("health-check, routing topology and environment profiles OK")
