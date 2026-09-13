@@ -779,11 +779,21 @@ rules:
   - "DOMAIN-SUFFIX,tampermonkey.net,DIRECT"
   # 公司域名优先于开发工具整进程代理；仍跟随 国内服务 的手动选择。
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
-  # 仅驱动下载/CDN 与更新检查直连，先于 NVIDIA 进程代理规则；不放行整个 nvidia.com。
+  # 驱动下载域名直连例外；也覆盖浏览器下载，不放行整个 nvidia.com。
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT
   - DOMAIN,gfwsl.geforce.cn,DIRECT
+  # Windows NVIDIA / AMD 整应用直连，先于业务域名；保留局域网及广告规则优先级。
+  # 仅专属进程，不匹配通用 setup.exe；登录、商店和遥测也随进程直连。
+  - PROCESS-NAME,NVIDIA App.exe,DIRECT
+  - PROCESS-NAME,NVIDIA GeForce Experience.exe,DIRECT
+  - PROCESS-NAME,NvContainer.exe,DIRECT
+  - PROCESS-NAME,NVDisplay.Container.exe,DIRECT
+  - PROCESS-NAME,nvngx_update.exe,DIRECT
+  - PROCESS-NAME,AMDSoftware.exe,DIRECT
+  - PROCESS-NAME,AMDRSServ.exe,DIRECT
+  - PROCESS-NAME,AMDInstallManager.exe,DIRECT
   # --- AI ---
   - PROCESS-NAME,com.openai.chatgpt,AI # ChatGPT
   - PROCESS-NAME,com.google.android.apps.bard,AI # Gemini
@@ -1180,11 +1190,6 @@ rules:
   - PROCESS-NAME,Zoom.exe,节点选择 # Zoom
   - PROCESS-NAME,slack.exe,节点选择 # Slack
   # --- 桌面端硬件 / 驱动更新 / 预防性 ---
-  - PROCESS-NAME,NVIDIA App.exe,节点选择 # NVIDIA App
-  - PROCESS-NAME,NVIDIA GeForce Experience.exe,节点选择 # GeForce Experience
-  - PROCESS-NAME,NvContainer.exe,节点选择 # NVIDIA Container / 更新检查
-  - PROCESS-NAME,AMDSoftware.exe,节点选择 # AMD Software
-  - PROCESS-NAME,AMDRSServ.exe,节点选择 # AMD Radeon Settings Service
   - PROCESS-NAME,Intel Driver & Support Assistant.exe,节点选择 # Intel 驱动支持助手
   
   - "PROCESS-NAME,aria2c,DIRECT"

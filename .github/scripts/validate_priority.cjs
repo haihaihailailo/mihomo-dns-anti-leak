@@ -7,6 +7,8 @@ const GITHUB_DOMAINS = ["github.com", "githubusercontent.com", "githubassets.com
 const GITHUB_HOSTS = ["github.com", "api.github.com", "raw.githubusercontent.com",
   "avatars.githubusercontent.com", "github.githubassets.com", "pages.github.io"];
 const EDITORS = ["Code.exe", "code.exe", "Postman.exe", "JetBrains Toolbox.exe", "idea64.exe", "pycharm64.exe", "webstorm64.exe"];
+const GPU_PROCESSES = ["NVIDIA App.exe", "NVIDIA GeForce Experience.exe", "NvContainer.exe",
+  "NVDisplay.Container.exe", "nvngx_update.exe", "AMDSoftware.exe", "AMDRSServ.exe", "AMDInstallManager.exe"];
 const FIXTURES = {
   private: ["router.test"], reject: ["ads.example.test", "ads.tampermonkey.net"],
   openai: ["chatgpt.com", "openai.com"], anthropic: ["claude.ai"],
@@ -153,6 +155,28 @@ function tampermonkeyRegression(config, foreign = false, prefix = "rule-set:") {
     assert.throws(() => checkTampermonkey(badDns, foreign, prefix), /DNS/);
   }
 }
+function checkGpuProcesses(config) {
+  const ads = config.rules.indexOf("RULE-SET,reject,广告过滤");
+  const ai = config.rules.indexOf("PROCESS-NAME,com.openai.chatgpt,AI");
+  assert(ads >= 0 && ai > ads);
+  for (const process of GPU_PROCESSES) {
+    const rules = config.rules.filter(rule => rule.startsWith("PROCESS-NAME," + process + ","));
+    assert.deepEqual(rules, ["PROCESS-NAME," + process + ",DIRECT"], "GPU 进程必须唯一且直连：" + process);
+    const index = config.rules.indexOf(rules[0]);
+    assert(index > ads && index < ai, "GPU 进程必须先于业务规则");
+    for (const host of ["download.gfe.nvidia.com", "gfwsl.geforce.com", "drivers.amd.com", "accounts.google.com", "api.openai.com"]) {
+      assert.equal(firstRoute(config, host, process), "DIRECT", process + " 的请求被域名规则截走");
+    }
+    assert.equal(firstRoute(config, "ads.example.test", process), "广告过滤");
+    assert.equal(firstRoute(config, "router.test", process), "DIRECT");
+  }
+  assert(!config.rules.includes("PROCESS-NAME,setup.exe,DIRECT"), "通用安装程序不得整体绕过分流");
+  const without = structuredClone(config);
+  without.rules = without.rules.filter(rule => !GPU_PROCESSES.some(process => rule.startsWith("PROCESS-NAME," + process + ",")));
+  for (const process of ["chrome.exe", "setup.exe", "Intel Driver & Support Assistant.exe"]) {
+    assert.equal(firstRoute(config, "api.openai.com", process), firstRoute(without, "api.openai.com", process), "不可影响其他软件的原有策略");
+  }
+}
 function run() {
   for (const stem of [".github/config/shared", "防DNS泄露-国内版", "防DNS泄露-国外版"]) {
     const config = parse(read(stem + ".yaml"));
@@ -161,6 +185,10 @@ function run() {
     checkOrder(config);
     checkGithub(config);
     tampermonkeyRegression(config, stem.includes("国外"));
+    checkGpuProcesses(config);
+    const badGpu = structuredClone(config);
+    badGpu.rules = badGpu.rules.map(rule => rule === "PROCESS-NAME,NVIDIA App.exe,DIRECT" ? "PROCESS-NAME,NVIDIA App.exe,节点选择" : rule);
+    assert.throws(() => checkGpuProcesses(badGpu), /GPU 进程/);
     if (stem.startsWith(".github/")) continue;
     const domestic = stem.includes("国内");
     checkRoutes(config, domestic);
@@ -193,7 +221,7 @@ function run() {
     checkDirectSite(parseShadow(read(file)));
     tampermonkeyRegression(parseShadow(read(file)));
   }
-  console.log("DNS 有序同步、AI/GitHub/微软集合重叠、进程首匹配、整应用优先级、Tampermonkey 直连/DNS及负向控制 OK");
+  console.log("DNS 有序同步、AI/GitHub/微软集合重叠、GPU 整进程直连、整应用优先级、Tampermonkey 直连/DNS及负向控制 OK");
 }
 if (require.main === module) run();
 module.exports = { run };

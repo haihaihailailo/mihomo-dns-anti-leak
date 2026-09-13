@@ -143,7 +143,8 @@
 - 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo / Stash 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
 - Tampermonkey 的 `tampermonkey.net` 根域名及子域名（包括 `accounts.tampermonkey.net`）在六套入口中直连，位置在既有网站例外之后、业务规则之前；Mihomo / Stash 的专用 DNS 随国内/国外环境使用对应解析器，避免被通用国外集合改走代理。仅调整这个域名后缀，不放行整个浏览器进程，也不改变 Google、Microsoft 等第三方登录和云同步服务的分流。保留扩展同步与 TLS 验证；端点可达不代表整个 OAuth 流程已通过。[Tampermonkey 同步说明](https://www.tampermonkey.net/faq.php?locale=en&q=Q105)
 - Steam 中国 CDN 与中国大陆游戏域名在国内版直接 DIRECT、国外版走国内服务；海外游戏域名进入独立的 `游戏平台`，两者按原规则顺序隔离。
-- NVIDIA 驱动下载的 `download.nvidia.com` / `download.nvidia.cn`（含子域名）以及 `ota.nvidia.com` / `gfwsl.geforce.cn` 精确直连，优先于 NVIDIA 进程代理规则；其他 NVIDIA 服务不改变。国内版使用国内 DoH 获取 CDN 地址，国外版使用境外直连 DoH。网络下载成功不代表驱动安装或 NVIDIA App 自身故障也已解决。
+- Windows 的 NVIDIA App / GeForce Experience 与 AMD Software 在两地 Mihomo YAML/JS 中按进程 DIRECT，位于广告之后、业务域名之前；包含 `NVIDIA App.exe`、`NVIDIA GeForce Experience.exe`、`NvContainer.exe`、`NVDisplay.Container.exe`、`nvngx_update.exe`、`AMDSoftware.exe`、`AMDRSServ.exe`、`AMDInstallManager.exe`。登录、商店、遥测也会直连；依赖代理的功能可能受影响。客户端须能识别进程，转到外部浏览器或其他进程的请求仍按自身规则分流；不添加通用 `setup.exe`，不改变 Intel 助手，也不将 Windows 进程规则写进苹果入口。
+- 原有 `download.nvidia.com` / `download.nvidia.cn`（含子域名）及 `ota.nvidia.com` / `gfwsl.geforce.cn` 域名直连继续保留，供浏览器等其他程序下载使用；这些域名在国内版使用国内 DoH，国外版使用境外直连 DoH。其他 DNS 策略不因进程规则而改变。进程命中 DIRECT 或短时端点可达，不等于实际驱动下载、安装或 TUN 下的长连接已通过。
 - `midea` 相关域名固定直连，避免客户/工作相关系统误走代理。
 - 如修改策略组名称，必须同步修改 `rules`、`nameserver-policy`、JS 覆写版本和 Stash 覆写版本。
 

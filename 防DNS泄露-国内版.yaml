@@ -804,6 +804,14 @@ rules:
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT
   - DOMAIN,gfwsl.geforce.cn,DIRECT
+  - PROCESS-NAME,NVIDIA App.exe,DIRECT
+  - PROCESS-NAME,NVIDIA GeForce Experience.exe,DIRECT
+  - PROCESS-NAME,NvContainer.exe,DIRECT
+  - PROCESS-NAME,NVDisplay.Container.exe,DIRECT
+  - PROCESS-NAME,nvngx_update.exe,DIRECT
+  - PROCESS-NAME,AMDSoftware.exe,DIRECT
+  - PROCESS-NAME,AMDRSServ.exe,DIRECT
+  - PROCESS-NAME,AMDInstallManager.exe,DIRECT
   - PROCESS-NAME,com.openai.chatgpt,AI
   - PROCESS-NAME,com.google.android.apps.bard,AI
   - PROCESS-NAME,com.anthropic.claude,AI
@@ -1171,11 +1179,6 @@ rules:
   - PROCESS-NAME,Teams.exe,微软/苹果服务
   - PROCESS-NAME,Zoom.exe,节点选择
   - PROCESS-NAME,slack.exe,节点选择
-  - PROCESS-NAME,NVIDIA App.exe,节点选择
-  - PROCESS-NAME,NVIDIA GeForce Experience.exe,节点选择
-  - PROCESS-NAME,NvContainer.exe,节点选择
-  - PROCESS-NAME,AMDSoftware.exe,节点选择
-  - PROCESS-NAME,AMDRSServ.exe,节点选择
   - PROCESS-NAME,Intel Driver & Support Assistant.exe,节点选择
   - PROCESS-NAME,aria2c,DIRECT
   - PROCESS-NAME,aria2c.exe,DIRECT

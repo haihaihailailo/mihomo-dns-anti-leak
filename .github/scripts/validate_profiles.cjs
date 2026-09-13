@@ -60,8 +60,8 @@ function checkDriverRouting(config, foreign = false) {
         : ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"], `驱动 DNS 环境/直连策略错误：${key}`);
     }
   }
-  assert(!rules.includes("DOMAIN-SUFFIX,nvidia.com,DIRECT"), "不得把全部 NVIDIA 服务强制直连");
-  assert(rules.includes("PROCESS-NAME,NVIDIA App.exe,节点选择"), "保留其他 NVIDIA App 连接的原策略");
+  assert(!rules.includes("DOMAIN-SUFFIX,nvidia.com,DIRECT"), "进程直连不能扩大为所有程序访问 NVIDIA 均直连");
+  assert(rules.includes("PROCESS-NAME,NVIDIA App.exe,DIRECT"), "NVIDIA App 须按用户要求整进程直连");
 }
 
 function checkReferences(config, { sparkle = true } = {}) {
