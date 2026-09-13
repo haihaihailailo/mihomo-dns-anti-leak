@@ -333,11 +333,13 @@ jobs:
         mihomo: ["v1.19.27", "latest"]
     steps:
       - name: Check out repository
+        id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Download and verify selected Mihomo
+        id: core
         env:
           GITHUB_TOKEN: ${{ github.token }}
           MIHOMO_RELEASE: ${{ matrix.mihomo }}
@@ -375,14 +377,19 @@ jobs:
             *) echo "Downloaded core reports an unexpected version" >&2; exit 1 ;;
           esac
           printf '%s\n' "$version_output"
+          # 仅在摘要及实际版本验证成功后导出；诊断步骤不再次执行内核。
+          printf 'version=%s\nasset_sha256=%s\n' "$resolved_tag" "${digest#sha256:}" >> "$GITHUB_OUTPUT"
 
       - name: Install pinned config validation dependency
+        id: dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Download and validate public rule payloads
+        id: rules
         run: node .github/scripts/check_remote_rules.cjs --output-dir "$RUNNER_TEMP/rules-check"
 
       - name: Check isolated DNS priority and initialize all rule snapshots
+        id: runtime
         env:
           MIHOMO_TEST_BIN: ${{ github.workspace }}/mihomo
           MIHOMO_RULE_CACHE: ${{ runner.temp }}/rules-check
@@ -390,7 +397,81 @@ jobs:
         run: python3 .github/scripts/validate_health_checks.py
 
       - name: Test config load
+        id: load
         run: |
           ./mihomo -t -f ".github/config/shared.yaml"
           ./mihomo -t -f "防DNS泄露-国内版.yaml"
           ./mihomo -t -f "防DNS泄露-国外版.yaml"
+
+      - name: Collect public rule diagnostics
+        id: diagnostics
+        if: ${{ !cancelled() }}
+        env:
+          CORE_REQUESTED: ${{ matrix.mihomo }}
+          CORE_VERSION: ${{ steps.core.outputs.version }}
+          CORE_ASSET_SHA256: ${{ steps.core.outputs.asset_sha256 }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          CORE_OUTCOME: ${{ steps.core.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          RULES_OUTCOME: ${{ steps.rules.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime.outcome }}
+          LOAD_OUTCOME: ${{ steps.load.outcome }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const { createHash } = require('node:crypto');
+          const { execFileSync } = require('node:child_process');
+          const root = process.env.GITHUB_WORKSPACE;
+          const temp = process.env.RUNNER_TEMP;
+          const output = path.join(temp, 'config-diagnostics');
+          fs.mkdirSync(output); // 独立目录，不预建规则下载器的输出目录。
+          const hash = data => createHash('sha256').update(data).digest('hex');
+          const readRegular = file => {
+            try {
+              if (!fs.lstatSync(path.dirname(file)).isDirectory() || !fs.lstatSync(file).isFile())
+                throw Error('Diagnostic input must be a regular file');
+              return fs.readFileSync(file);
+            } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+          };
+          const steps = Object.fromEntries(['checkout', 'core', 'dependencies', 'rules', 'runtime', 'load']
+            .map(name => [name, process.env[name.toUpperCase() + '_OUTCOME'] || 'unavailable']));
+          const configs = ['国内', '国外'].flatMap(region => [
+            `防DNS泄露-${region}版.yaml`, `防DNS泄露-${region}版.js`,
+            `stash-${region}版.stoverride`, `shadowrocket-${region}版.conf`,
+          ]).map(file => {
+            const data = steps.checkout === 'success' ? readRegular(path.join(root, file)) : null;
+            return { file, sha256: data === null ? null : hash(data) };
+          });
+          // 只复制明确允许的报告；不上传规则正文、cache.db、订阅或客户端配置。
+          const file = 'rules-check/manifest.json';
+          const data = readRegular(path.join(temp, file));
+          const reports = [{ file, status: data === null ? 'missing' : 'present',
+            sha256: data === null ? null : hash(data) }];
+          if (data !== null) fs.writeFileSync(path.join(output, 'manifest.json'), data, { flag: 'wx' });
+          const verified = steps.core === 'success';
+          const metadata = {
+            schemaVersion: 1,
+            checkoutSha: steps.checkout === 'success'
+              ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : null,
+            runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            job: process.env.GITHUB_JOB,
+            core: { requested: process.env.CORE_REQUESTED,
+              verifiedVersion: verified ? process.env.CORE_VERSION || null : null,
+              verifiedAssetSha256: verified ? process.env.CORE_ASSET_SHA256 || null : null },
+            steps, configs, reports,
+          };
+          fs.writeFileSync(path.join(output, 'metadata.json'), JSON.stringify(metadata, null, 2) + '\n', { flag: 'wx' });
+          NODE
+
+      - name: Upload public rule diagnostics
+        if: ${{ !cancelled() && steps.diagnostics.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostics-${{ github.job }}-${{ matrix.mihomo }}-attempt-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/config-diagnostics/metadata.json
+            ${{ runner.temp }}/config-diagnostics/manifest.json
+          retention-days: 14
+          if-no-files-found: error
+          include-hidden-files: false

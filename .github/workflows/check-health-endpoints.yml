@@ -21,14 +21,80 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out repository
+        id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Install pinned config validation dependency
+        id: dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Validate locally and probe public endpoints
+        id: probe
         env:
           MIHOMO_ENDPOINT_OUTPUT: ${{ runner.temp }}/health-endpoints
         run: python3 .github/scripts/validate_health_checks.py
+
+      - name: Collect public endpoint diagnostics
+        id: diagnostics
+        if: ${{ !cancelled() }}
+        env:
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+          DEPENDENCIES_OUTCOME: ${{ steps.dependencies.outcome }}
+          PROBE_OUTCOME: ${{ steps.probe.outcome }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const { createHash } = require('node:crypto');
+          const { execFileSync } = require('node:child_process');
+          const root = process.env.GITHUB_WORKSPACE;
+          const temp = process.env.RUNNER_TEMP;
+          const output = path.join(temp, 'endpoint-diagnostics');
+          fs.mkdirSync(output); // 不预建端点检测器的输出目录。
+          const hash = data => createHash('sha256').update(data).digest('hex');
+          const readRegular = file => {
+            try {
+              if (!fs.lstatSync(path.dirname(file)).isDirectory() || !fs.lstatSync(file).isFile())
+                throw Error('Diagnostic input must be a regular file');
+              return fs.readFileSync(file);
+            } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+          };
+          const steps = Object.fromEntries(['checkout', 'dependencies', 'probe']
+            .map(name => [name, process.env[name.toUpperCase() + '_OUTCOME'] || 'unavailable']));
+          const configs = ['防DNS泄露-国内版.yaml', '防DNS泄露-国外版.yaml'].map(file => {
+            const data = steps.checkout === 'success' ? readRegular(path.join(root, file)) : null;
+            return { file, sha256: data === null ? null : hash(data) };
+          });
+          // 明确文件白名单；保留原 Actions summary，不收集任意异常日志。
+          const reports = ['report.json', 'report.md'].map(name => {
+            const file = 'health-endpoints/' + name;
+            const data = readRegular(path.join(temp, file));
+            if (data !== null) fs.writeFileSync(path.join(output, name), data, { flag: 'wx' });
+            return { file, status: data === null ? 'missing' : 'present',
+              sha256: data === null ? null : hash(data) };
+          });
+          const metadata = {
+            schemaVersion: 1,
+            checkoutSha: steps.checkout === 'success'
+              ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : null,
+            runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            job: process.env.GITHUB_JOB, core: { applicable: false },
+            steps, configs, reports,
+          };
+          fs.writeFileSync(path.join(output, 'metadata.json'), JSON.stringify(metadata, null, 2) + '\n', { flag: 'wx' });
+          NODE
+
+      - name: Upload public endpoint diagnostics
+        if: ${{ !cancelled() && steps.diagnostics.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostics-${{ github.job }}-attempt-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/endpoint-diagnostics/metadata.json
+            ${{ runner.temp }}/endpoint-diagnostics/report.json
+            ${{ runner.temp }}/endpoint-diagnostics/report.md
+          retention-days: 14
+          if-no-files-found: error
+          include-hidden-files: false
