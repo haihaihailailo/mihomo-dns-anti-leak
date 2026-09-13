@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const { ROOT, read, parse, evaluate, normalize, renderProfiles } = require("./build_profiles.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 const { checkConsolidation } = require("./validate_consolidation.cjs");
 const { checkMihomoTuning } = require("./validate_mihomo_tuning.cjs");
 // 已退役的根目录入口不可重新出现；共同源码只供生成器使用。
@@ -15,6 +16,78 @@ const deviceTun = {
   enable: true, device: "synthetic-tun", mtu: 1400, gso: false, "gso-max-size": 0,
   "auto-redirect": false, "inet4-address": ["198.18.0.1/30"], "inet6-address": [],
 };
+// 客户端自有的应用/用户筛选；仅用合成值，不代表任何设备的实际名单。
+const tunSelectors = {
+  "include-package": ["org.example.second", "org.example.first"],
+  "exclude-package": ["org.example.excluded.second", "org.example.excluded.first"],
+  "include-android-user": [10, 0],
+  "include-uid": [10102, 10101],
+  "exclude-uid": [10202, 10201],
+  "include-uid-range": ["10100:10199", "10000:10099"],
+  "exclude-uid-range": ["10300:10399", "10200:10299"],
+};
+function assertTunSelectors(result, expected) {
+  for (const key of Object.keys(tunSelectors)) {
+    assert.equal(Object.hasOwn(result.tun, key), Object.hasOwn(expected, key), `TUN 筛选字段存在性变化：${key}`);
+    if (Object.hasOwn(expected, key)) assert.deepEqual(clone(result.tun[key]), expected[key], `TUN 筛选值/顺序变化：${key}`);
+  }
+}
+function checkTunSelectors(js, source, label) {
+  // evaluate 会克隆输入/输出，无法检出引用泄漏；同一 VM 内直接调用真实入口。
+  const sandbox = vm.createContext({});
+  vm.runInContext(js, sandbox, { timeout: 5000 });
+  const run = input => {
+    sandbox.input = input;
+    return vm.runInContext("main(input)", sandbox, { timeout: 5000 });
+  };
+  const baseline = clone(run({}));
+  assert.deepEqual(normalize(baseline), normalize(source));
+  function check(input) {
+    const previous = input.tun || {};
+    const expected = clone(previous);
+    const result = run(input);
+    assert.equal(result, input, "main(config) 应保留原地覆写接口");
+    assertTunSelectors(result, expected);
+    for (const key of Object.keys(expected)) assert.notEqual(result.tun[key], previous[key], `筛选数组未深拷贝：${key}`);
+    const stripped = clone(result);
+    for (const key of Object.keys(tunSelectors)) delete stripped.tun[key];
+    assert.deepEqual(stripped, baseline, "保留筛选字段不得改变其余配置");
+    const snapshot = clone(result);
+    assert.deepEqual(clone(run(result)), snapshot, "携带筛选字段重复覆写不幂等");
+    for (const key of Object.keys(expected)) result.tun[key].reverse().push(expected[key][0] ?? 0);
+    assert.deepEqual(clone(previous), expected, "修改输出污染了调用前的名单引用");
+    assert.deepEqual(clone(run({})), baseline, "输出污染了共享常量或后续无名单调用");
+    assertTunSelectors(run({ tun: clone(expected) }), expected);
+  }
+  check({});
+  check({ tun: {} });
+  check({ tun: Object.create(tunSelectors) }); // 继承属性不是客户端显式设置。
+  for (const [key, value] of Object.entries(tunSelectors)) {
+    check({ tun: { [key]: clone(value) } });
+    check({ tun: { [key]: [] } });
+    const missing = clone(tunSelectors);
+    delete missing[key];
+    check({ tun: missing });
+  }
+  check({ tun: clone(tunSelectors) });
+  // 合成两层：前置名单交给 JS 保留；末层普通数组替换，空数组清空，省略则保留。
+  const pre = run({ tun: { ...clone(deviceTun), ...clone(tunSelectors) } });
+  for (const [key, value] of Object.entries(tunSelectors)) {
+    for (const replacement of [[value[1]], []]) {
+      const merged = mergeClient(pre, { tun: { [key]: replacement } });
+      assertTunSelectors(merged, { ...tunSelectors, [key]: replacement });
+      const restored = clone(merged);
+      restored.tun[key] = clone(pre.tun[key]);
+      assert.deepEqual(restored, clone(pre), "软件末层替换不得波及其他字段");
+    }
+    const lost = clone(pre);
+    delete lost.tun[key];
+    assert.throws(() => assertTunSelectors(lost, tunSelectors), { code: "ERR_ASSERTION" }, `负向控制未检出丢失：${key}`);
+  }
+  assert.deepEqual(mergeClient(pre, { tun: {} }), clone(pre), "软件末层省略名单应保留前置名单");
+  for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(clone(pre.tun[key]), value);
+  console.log(`${label}: 7 个 TUN 筛选字段独立/空值/缺省/深拷贝/幂等/前后层合并、7 个丢失负向控制 OK`);
+}
 // Sparkle 的末层合并：对象递归、普通数组替换。仅用于合成输入，不操作客户端。
 function mergeClient(base, controlled) {
   const result = clone(base);
@@ -104,6 +177,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
   checkMihomoTuning(compact, consolidatedConfig);
   checkReferences(compact);
   checkDeviceBoundary(js, compact);
+  checkTunSelectors(js, compact, stem);
   // 原有环境语义测试继续覆盖详细中间配置；公开精简结果另作独立全对象比较。
   const config = detailedConfig;
   checkReferences(config);
@@ -208,6 +282,7 @@ const stash = parse(read(".github/config/shared.stoverride"));
 checkReferences(main);
 checkDriverRouting(main);
 checkDeviceBoundary(read(".github/config/shared.js"), main);
+checkTunSelectors(read(".github/config/shared.js"), main, "shared.js");
 checkReferences(stash, { sparkle: false });
 const shadowRules = read(".github/config/shared.conf").split("[Rule]")[1].split("\n")
   .map(line => line.trim()).filter(line => line && !line.startsWith("#"));

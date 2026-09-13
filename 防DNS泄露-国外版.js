@@ -898,7 +898,8 @@ function main(config) {
   // 这些字段由客户端管理；替换整个 DNS/TUN 对象时也要保留显式设置。
   // 未设置的字段不补默认值，与 YAML 覆写保持一致。
   for (const [section, keys] of Object.entries({
-    tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address"],
+    tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
+      "include-package", "exclude-package", "include-android-user", "include-uid", "exclude-uid", "include-uid-range", "exclude-uid-range"],
     dns: ["ipv6", "fake-ip-range6"],
   })) {
     for (const key of keys) {
