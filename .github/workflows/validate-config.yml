@@ -8,6 +8,8 @@ on:
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"
+      - ".github/dependabot.yml"
+      - ".github/scripts/validate_compatibility.cjs"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
@@ -35,6 +37,8 @@ on:
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"
+      - ".github/dependabot.yml"
+      - ".github/scripts/validate_compatibility.cjs"
       - ".github/scripts/build_profiles.cjs"
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
@@ -318,35 +322,59 @@ jobs:
           RUBY
 
   validate-mihomo:
-    name: Load config and initialize public rule snapshots
+    name: Load config and initialize public rule snapshots (${{ matrix.mihomo }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: validate-sources
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        mihomo: ["v1.19.27", "latest"]
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Download latest Mihomo
+      - name: Download and verify selected Mihomo
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          MIHOMO_RELEASE: ${{ matrix.mihomo }}
         run: |
           set -euo pipefail
+          case "$MIHOMO_RELEASE" in
+            latest) release_path="latest" ;;
+            v1.19.27) release_path="tags/v1.19.27" ;;
+            *) echo "Unsupported Mihomo test version" >&2; exit 1 ;;
+          esac
           release_json="$(curl --retry 3 --retry-delay 2 --retry-connrefused -fsSL \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)"
-          url="$(echo "$release_json" | jq -r '.assets[] | select(.name | test("^mihomo-linux-amd64-v1-v.*\\.gz$")) | .browser_download_url' | head -n 1)"
-          if [ -z "$url" ]; then
-            echo "No linux amd64 v1 Mihomo asset found" >&2
+            "https://api.github.com/repos/MetaCubeX/mihomo/releases/$release_path")"
+          resolved_tag="$(echo "$release_json" | jq -er 'select(.draft == false and .prerelease == false) | .tag_name')"
+          [[ "$resolved_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          if [ "$MIHOMO_RELEASE" != "latest" ] && [ "$resolved_tag" != "$MIHOMO_RELEASE" ]; then
+            echo "Release tag does not match requested version" >&2
             exit 1
           fi
+          asset_name="mihomo-linux-amd64-v1-$resolved_tag.gz"
+          asset="$(echo "$release_json" | jq -ce --arg name "$asset_name" '.assets | map(select(.name == $name)) | if length == 1 then .[0] else error("Expected one core asset") end')"
+          url="$(echo "$asset" | jq -er '.browser_download_url')"
+          digest="$(echo "$asset" | jq -er '.digest')"
+          [ "$url" = "https://github.com/MetaCubeX/mihomo/releases/download/$resolved_tag/$asset_name" ]
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
           curl --retry 3 --retry-delay 2 --retry-connrefused -fsSL "$url" -o mihomo.gz
+          printf '%s  mihomo.gz\n' "${digest#sha256:}" | sha256sum --check -
           gzip -d mihomo.gz
           chmod +x mihomo
-          ./mihomo -v
+          version_output="$(./mihomo -v)"
+          case "$version_output" in
+            "Mihomo Meta $resolved_tag "*) ;;
+            *) echo "Downloaded core reports an unexpected version" >&2; exit 1 ;;
+          esac
+          printf '%s\n' "$version_output"
 
       - name: Install pinned config validation dependency
         run: npm ci --ignore-scripts --no-audit --no-fund
