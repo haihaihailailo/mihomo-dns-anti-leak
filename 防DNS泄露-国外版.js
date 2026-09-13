@@ -290,6 +290,7 @@ OVERRIDE["rule-providers"] = {
   tiktok: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs", path: "./ruleset/metacubex/tiktok.mrs" },
   spotify: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs", path: "./ruleset/metacubex/spotify.mrs" },
   apple: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs", path: "./ruleset/metacubex/apple.mrs" },
+  bilibili: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs", path: "./ruleset/metacubex/bilibili.mrs" },
   biliintl: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs", path: "./ruleset/metacubex/biliintl.mrs" },
 twitter: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs", path: "./ruleset/metacubex/twitter.mrs" },
   facebook: { ...META_DOMAIN_PROVIDER, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs", path: "./ruleset/metacubex/facebook.mrs" },
@@ -380,6 +381,10 @@ PROCESS-NAME,com.google.android.apps.photos,谷歌服务
 PROCESS-NAME,com.google.android.calendar,谷歌服务
 PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务
 PROCESS-NAME,com.google.earth,谷歌服务
+PROCESS-NAME,com.microsoft.office.outlook,微软服务
+PROCESS-NAME,com.microsoft.skydrive,微软服务
+PROCESS-NAME,com.microsoft.teams,微软服务
+PROCESS-NAME,com.apple.android.music,苹果服务
 PROCESS-NAME,com.microsoft.appmanager,微软服务
 PROCESS-NAME,com.microsoft.deviceintegrationservice,微软服务
 PROCESS-NAME,com.microsoftsdk.crossdeviceservicebroker,微软服务
@@ -450,7 +455,7 @@ PROCESS-NAME,com.netease.uuremote,国内服务
 PROCESS-NAME,com.lptiyu.tanke,国内服务
 PROCESS-NAME,com.deepseek.chat,国内服务
 PROCESS-NAME,com.larus.nova,国内服务
-PROCESS-NAME,com.tencent.tmgp.cf,国内服务
+PROCESS-NAME,com.tencent.tmgp.cf,游戏平台
 PROCESS-NAME,com.x7890.shortcutcreator,国内服务
 PROCESS-NAME,com.tryfun.intelligent,国内服务
 PROCESS-NAME,com.ktls.fileinfo,国内服务
@@ -540,7 +545,7 @@ PROCESS-NAME,com.oplus.cota,国内服务
 PROCESS-NAME,com.oplus.apprecover,国内服务
 PROCESS-NAME,com.oplus.pay,国内服务
 PROCESS-NAME,com.oplus.safecenter,国内服务
-PROCESS-NAME,com.oplus.games,国内服务
+PROCESS-NAME,com.oplus.games,游戏平台
 PROCESS-NAME,com.oplus.ocar,国内服务
 PROCESS-NAME,com.oplus.linker,国内服务
 PROCESS-NAME,com.oplus.cast,国内服务
@@ -583,9 +588,9 @@ PROCESS-NAME,com.miui.securitycenter,国内服务
 PROCESS-NAME,com.miui.securitymanager,国内服务
 PROCESS-NAME,com.miui.packageinstaller,国内服务
 PROCESS-NAME,com.miui.hybrid,国内服务
-PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,国内服务
-PROCESS-NAME,com.xiaomi.migameservice,国内服务
-PROCESS-NAME,com.xiaomi.minigame,国内服务
+PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,游戏平台
+PROCESS-NAME,com.xiaomi.migameservice,游戏平台
+PROCESS-NAME,com.xiaomi.minigame,游戏平台
 PROCESS-NAME,com.miui.yellowpage,国内服务
 PROCESS-NAME,com.miui.bugreport,国内服务
 PROCESS-NAME,com.miui.personalassistant,国内服务
@@ -606,7 +611,12 @@ PROCESS-NAME,com.netflix.mediaclient,Netflix
 PROCESS-NAME,com.spotify.music,Spotify
 PROCESS-NAME,com.zhiliaoapp.musically,TikTok
 PROCESS-NAME,tv.twitch.android.app,节点选择
-PROCESS-NAME,tv.danmaku.bili,国内服务
+PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台
+PROCESS-NAME,com.bilibili.app.blue,哔哩哔哩港澳台
+PROCESS-NAME,com.bilibili.app.in,哔哩哔哩港澳台
+PROCESS-NAME,com.bilibili.comic,哔哩哔哩港澳台
+PROCESS-NAME,com.bilibili.comic.intl,哔哩哔哩港澳台
+PROCESS-NAME,tv.danmaku.bilibilihd,哔哩哔哩港澳台
 PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台
 PROCESS-NAME,com.github.android,GitHub
 PROCESS-NAME,zed.rainxch.githubstore,GitHub
@@ -691,6 +701,9 @@ PROCESS-NAME,Spotify.exe,Spotify
 PROCESS-NAME,GitHubDesktop.exe,GitHub
 PROCESS-NAME,Cursor.exe,AI
 PROCESS-NAME,Windsurf.exe,AI
+PROCESS-NAME,com.valvesoftware.android.steam.community,游戏平台
+PROCESS-NAME,steam.exe,游戏平台
+PROCESS-NAME,steamwebhelper.exe,游戏平台
 PROCESS-NAME,EpicGamesLauncher.exe,游戏平台
 PROCESS-NAME,EpicWebHelper.exe,游戏平台
 PROCESS-NAME,Battle.net.exe,游戏平台
@@ -715,6 +728,19 @@ PROCESS-NAME,utorrent,DIRECT
 PROCESS-NAME,uTorrent.exe,DIRECT
 PROCESS-NAME,Thunder,DIRECT
 PROCESS-NAME,Xunlei,DIRECT
+DOMAIN-SUFFIX,perplexity.ai,AI
+DOMAIN-SUFFIX,perplexity.com,AI
+DOMAIN-SUFFIX,pplx.ai,AI
+DOMAIN,ppl-ai-file-upload.s3.amazonaws.com,AI
+DOMAIN,pplx-res.cloudinary.com,AI
+DOMAIN-SUFFIX,cursor-cdn.com,AI
+DOMAIN-SUFFIX,cursor.com,AI
+DOMAIN-SUFFIX,cursor.sh,AI
+DOMAIN-SUFFIX,cursorapi.com,AI
+DOMAIN-SUFFIX,codeium.com,AI
+DOMAIN-SUFFIX,codeiumdata.com,AI
+DOMAIN-SUFFIX,windsurf.build,AI
+DOMAIN-SUFFIX,windsurf.com,AI
 DOMAIN-SUFFIX,chatgpt.com,AI
 DOMAIN-SUFFIX,openai.com,AI
 DOMAIN-SUFFIX,oaistatic.com,AI
@@ -727,13 +753,23 @@ RULE-SET,openai,AI
 RULE-SET,anthropic,AI
 RULE-SET,google-gemini,AI
 RULE-SET,github-copilot,AI
-PROCESS-NAME,Code.exe,节点选择
-PROCESS-NAME,code.exe,节点选择
-PROCESS-NAME,Postman.exe,节点选择
-PROCESS-NAME,JetBrains Toolbox.exe,节点选择
-PROCESS-NAME,idea64.exe,节点选择
-PROCESS-NAME,pycharm64.exe,节点选择
-PROCESS-NAME,webstorm64.exe,节点选择
+RULE-SET,bilibili,哔哩哔哩港澳台
+RULE-SET,biliintl,哔哩哔哩港澳台
+RULE-SET,steam-cn,游戏平台
+RULE-SET,category-games-cn,游戏平台
+DOMAIN-SUFFIX,steampowered.com,游戏平台
+DOMAIN-SUFFIX,steamcommunity.com,游戏平台
+DOMAIN-SUFFIX,steamstatic.com,游戏平台
+DOMAIN-SUFFIX,steamcontent.com,游戏平台
+DOMAIN-SUFFIX,epicgames.com,游戏平台
+DOMAIN-SUFFIX,epicgamescdn.com,游戏平台
+DOMAIN-SUFFIX,battle.net,游戏平台
+DOMAIN-SUFFIX,blizzard.com,游戏平台
+DOMAIN-SUFFIX,riotgames.com,游戏平台
+DOMAIN-SUFFIX,ubisoft.com,游戏平台
+DOMAIN-SUFFIX,ea.com,游戏平台
+RULE-SET,steam,游戏平台
+RULE-SET,category-games-global,游戏平台
 DOMAIN,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.google.com,谷歌服务
 DOMAIN-SUFFIX,accounts.youtube.com,谷歌服务
@@ -806,26 +842,10 @@ DOMAIN-SUFFIX,whatsapp.com,Meta / X
 DOMAIN-SUFFIX,whatsapp.net,Meta / X
 RULE-SET,twitter,Meta / X
 RULE-SET,facebook,Meta / X
-RULE-SET,steam-cn,国内服务
-RULE-SET,category-games-cn,国内服务
-DOMAIN-SUFFIX,steampowered.com,游戏平台
-DOMAIN-SUFFIX,steamcommunity.com,游戏平台
-DOMAIN-SUFFIX,steamstatic.com,游戏平台
-DOMAIN-SUFFIX,steamcontent.com,游戏平台
-DOMAIN-SUFFIX,epicgames.com,游戏平台
-DOMAIN-SUFFIX,epicgamescdn.com,游戏平台
-DOMAIN-SUFFIX,battle.net,游戏平台
-DOMAIN-SUFFIX,blizzard.com,游戏平台
-DOMAIN-SUFFIX,riotgames.com,游戏平台
-DOMAIN-SUFFIX,ubisoft.com,游戏平台
-DOMAIN-SUFFIX,ea.com,游戏平台
-RULE-SET,steam,游戏平台
-RULE-SET,category-games-global,游戏平台
 RULE-SET,netflix,Netflix
 RULE-SET,tiktok,TikTok
 RULE-SET,spotify,Spotify
 RULE-SET,apple,苹果服务
-RULE-SET,biliintl,哔哩哔哩港澳台
 DOMAIN-KEYWORD,midea,DIRECT
 DOMAIN-SUFFIX,zalo.me,越南服务
 DOMAIN-SUFFIX,zaloapp.com,越南服务
@@ -872,6 +892,13 @@ DOMAIN-KEYWORD,coolapk,国内服务
 DOMAIN-SUFFIX,aliapp.org,国内服务
 RULE-SET,wechat,国内服务,no-resolve
 RULE-SET,alipay,国内服务
+PROCESS-NAME,Code.exe,节点选择
+PROCESS-NAME,code.exe,节点选择
+PROCESS-NAME,Postman.exe,节点选择
+PROCESS-NAME,JetBrains Toolbox.exe,节点选择
+PROCESS-NAME,idea64.exe,节点选择
+PROCESS-NAME,pycharm64.exe,节点选择
+PROCESS-NAME,webstorm64.exe,节点选择
 RULE-SET,cn,国内服务
 GEOIP,CN,国内服务,no-resolve
 RULE-SET,geolocation-!cn,漏网之鱼
@@ -945,6 +972,102 @@ const ENVIRONMENT = {
       "rule-set:private": [
         "https://1.1.1.1/dns-query#DIRECT",
         "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "perplexity.ai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".perplexity.ai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "perplexity.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".perplexity.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "pplx.ai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".pplx.ai": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "ppl-ai-file-upload.s3.amazonaws.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "pplx-res.cloudinary.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "cursor-cdn.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".cursor-cdn.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "cursor.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".cursor.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "cursor.sh": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".cursor.sh": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "cursorapi.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".cursorapi.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "codeium.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".codeium.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "codeiumdata.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".codeiumdata.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "windsurf.build": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".windsurf.build": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      "windsurf.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
+      ],
+      ".windsurf.com": [
+        "https://1.1.1.1/dns-query#AI",
+        "https://8.8.8.8/dns-query#AI"
       ],
       "chatgpt.com": [
         "https://1.1.1.1/dns-query#AI",
@@ -1114,6 +1237,782 @@ const ENVIRONMENT = {
         "https://1.1.1.1/dns-query#谷歌服务",
         "https://8.8.8.8/dns-query#谷歌服务"
       ],
+      "steampowered.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".steampowered.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "steamcommunity.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".steamcommunity.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "steamstatic.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".steamstatic.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "steamcontent.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".steamcontent.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "epicgames.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".epicgames.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "epicgamescdn.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".epicgamescdn.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "battle.net": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".battle.net": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "blizzard.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".blizzard.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "riotgames.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".riotgames.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "ubisoft.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".ubisoft.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "ea.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      ".ea.com": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
+      ],
+      "accounts.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".accounts.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "accounts.youtube.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".accounts.youtube.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "play.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "dl.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "dl-ssl.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "android.apis.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "android.clients.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "android.googleapis.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "gstatic.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".gstatic.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "googleusercontent.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".googleusercontent.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "gvt1.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".gvt1.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "gvt2.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".gvt2.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "gvt3.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".gvt3.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "ggpht.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".ggpht.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "xn--ngstr-lra8j.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      ".xn--ngstr-lra8j.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "mtalk.google.com": [
+        "https://1.1.1.1/dns-query#谷歌服务",
+        "https://8.8.8.8/dns-query#谷歌服务"
+      ],
+      "github.io": [
+        "https://1.1.1.1/dns-query#GitHub",
+        "https://8.8.8.8/dns-query#GitHub"
+      ],
+      ".github.io": [
+        "https://1.1.1.1/dns-query#GitHub",
+        "https://8.8.8.8/dns-query#GitHub"
+      ],
+      "v2rayse.com": [
+        "https://1.1.1.1/dns-query#GitHub",
+        "https://8.8.8.8/dns-query#GitHub"
+      ],
+      "displaycatalog.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".displaycatalog.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "prod.do.dsp.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".prod.do.dsp.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "do.dsp.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".do.dsp.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "update.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".update.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "wns.windows.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".wns.windows.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "windows.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".windows.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "msedge.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".msedge.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "microsoftonline.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".microsoftonline.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "msauth.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".msauth.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "live.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".live.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "storecatalogrevocation.storequality.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".storecatalogrevocation.storequality.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "img-prod-cms-rt-microsoft-com.akamaized.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".img-prod-cms-rt-microsoft-com.akamaized.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "img-s-msn-com.akamaized.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".img-s-msn-com.akamaized.net": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "manage.devcenter.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".manage.devcenter.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "share.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".share.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "pipe.aria.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".pipe.aria.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "api.cdp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      ".api.cdp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "storeedgefd.dsx.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "livetileedge.dsx.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "licensing.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "tsfe.trafficshaping.dsp.mp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "adl.windows.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "ctldl.windowsupdate.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "definitionupdates.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "msedge.api.cdp.microsoft.com": [
+        "https://1.1.1.1/dns-query#微软服务",
+        "https://8.8.8.8/dns-query#微软服务"
+      ],
+      "x.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".x.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "twitter.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".twitter.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "t.co": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".t.co": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "twimg.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".twimg.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "facebook.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".facebook.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "facebook.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".facebook.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "fbcdn.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".fbcdn.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "messenger.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".messenger.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "instagram.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".instagram.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "cdninstagram.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".cdninstagram.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "threads.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".threads.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "whatsapp.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".whatsapp.com": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "whatsapp.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      ".whatsapp.net": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "zalo.me": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".zalo.me": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "zaloapp.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".zaloapp.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "grab.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".grab.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "gojek.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".gojek.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "nhaccuatui.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".nhaccuatui.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vnexpress.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vnexpress.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "zalopay.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".zalopay.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "shopeefood.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".shopeefood.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "techcombank.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".techcombank.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "com.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".com.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "net.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".net.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "org.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".org.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "edu.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".edu.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "gov.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".gov.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "biz.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".biz.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "info.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".info.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "name.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".name.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "pro.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".pro.vn": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "baomoi.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".baomoi.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "thegioididong.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".thegioididong.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "dienmayxanh.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".dienmayxanh.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "bachhoaxanh.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".bachhoaxanh.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "gearvn.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".gearvn.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "nguyenkim.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".nguyenkim.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "hoanghamobile.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".hoanghamobile.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "ahamove.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".ahamove.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "fpt.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".fpt.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "ghnexpress.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".ghnexpress.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vietnamairlines.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vietnamairlines.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vietjetair.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vietjetair.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "bambooairways.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".bambooairways.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vexere.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vexere.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "traveloka.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".traveloka.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "chotot.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".chotot.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "muaban.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".muaban.net": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "vietnamworks.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
+      ".vietnamworks.com": [
+        "https://1.1.1.1/dns-query#越南服务",
+        "https://8.8.8.8/dns-query#越南服务"
+      ],
       "rule-set:openai": [
         "https://1.1.1.1/dns-query#AI",
         "https://8.8.8.8/dns-query#AI"
@@ -1130,21 +2029,29 @@ const ENVIRONMENT = {
         "https://1.1.1.1/dns-query#AI",
         "https://8.8.8.8/dns-query#AI"
       ],
+      "rule-set:bilibili": [
+        "https://1.1.1.1/dns-query#哔哩哔哩港澳台",
+        "https://8.8.8.8/dns-query#哔哩哔哩港澳台"
+      ],
+      "rule-set:biliintl": [
+        "https://1.1.1.1/dns-query#哔哩哔哩港澳台",
+        "https://8.8.8.8/dns-query#哔哩哔哩港澳台"
+      ],
       "rule-set:steam-cn": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
       ],
       "rule-set:category-games-cn": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
       ],
-      "rule-set:wechat": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
+      "rule-set:steam": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
       ],
-      "rule-set:alipay": [
-        "https://223.5.5.5/dns-query#国内服务",
-        "https://doh.pub/dns-query#国内服务"
+      "rule-set:category-games-global": [
+        "https://1.1.1.1/dns-query#游戏平台",
+        "https://8.8.8.8/dns-query#游戏平台"
       ],
       "rule-set:github": [
         "https://1.1.1.1/dns-query#GitHub",
@@ -1154,6 +2061,18 @@ const ENVIRONMENT = {
         "https://1.1.1.1/dns-query#微软服务",
         "https://8.8.8.8/dns-query#微软服务"
       ],
+      "rule-set:apple": [
+        "https://1.1.1.1/dns-query#苹果服务",
+        "https://8.8.8.8/dns-query#苹果服务"
+      ],
+      "rule-set:wechat": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "rule-set:alipay": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
       "rule-set:google": [
         "https://1.1.1.1/dns-query#谷歌服务",
         "https://8.8.8.8/dns-query#谷歌服务"
@@ -1161,6 +2080,30 @@ const ENVIRONMENT = {
       "rule-set:youtube": [
         "https://1.1.1.1/dns-query#YouTube",
         "https://8.8.8.8/dns-query#YouTube"
+      ],
+      "rule-set:telegram": [
+        "https://1.1.1.1/dns-query#电报消息",
+        "https://8.8.8.8/dns-query#电报消息"
+      ],
+      "rule-set:twitter": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "rule-set:facebook": [
+        "https://1.1.1.1/dns-query#Meta / X",
+        "https://8.8.8.8/dns-query#Meta / X"
+      ],
+      "rule-set:netflix": [
+        "https://1.1.1.1/dns-query#Netflix",
+        "https://8.8.8.8/dns-query#Netflix"
+      ],
+      "rule-set:tiktok": [
+        "https://1.1.1.1/dns-query#TikTok",
+        "https://8.8.8.8/dns-query#TikTok"
+      ],
+      "rule-set:spotify": [
+        "https://1.1.1.1/dns-query#Spotify",
+        "https://8.8.8.8/dns-query#Spotify"
       ],
       "rule-set:cn": [
         "https://223.5.5.5/dns-query#国内服务",

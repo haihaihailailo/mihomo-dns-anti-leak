@@ -29,12 +29,48 @@ const CN_DNS = ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"];
 const GLOBAL_DNS = ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"];
 const via = (servers, policy) => servers.map(server => `${server}#${policy}`);
 
+// 业务域名和解析连接使用同一策略入口；启动/节点 DNS 和明确直连例外不变。
+// 只生成公开配置数据，客户端无需执行此函数；DNS 无法按远端 App 包名推断。
+function serviceDnsPolicies(base, policies, foreign) {
+  const owners = new Set(["哔哩哔哩港澳台", "游戏平台", "越南服务", "微软服务", "苹果服务",
+    "GitHub", "YouTube", "Netflix", "谷歌服务", "电报消息", "Meta / X", "TikTok", "Spotify"]);
+  const result = clone(policies);
+  for (const rule of base.rules) {
+    const [type, value, owner] = rule.split(",");
+    if (!owners.has(owner)) continue;
+    const local = !foreign && (["哔哩哔哩港澳台", "越南服务", "微软服务", "苹果服务"].includes(owner)
+      || ["steam-cn", "category-games-cn"].includes(value));
+    const servers = via(local ? CN_DNS : GLOBAL_DNS, owner);
+    if (type === "DOMAIN" || type === "DOMAIN-SUFFIX") {
+      result[value] = servers;
+      if (type === "DOMAIN-SUFFIX") result["." + value] = [...servers];
+    } else if (type === "RULE-SET" && base["rule-providers"][value]?.behavior === "domain") {
+      result["rule-set:" + value] = servers;
+    }
+  }
+  // 专属 AI/B站/游戏早于企业大集合；GitHub 仍先于 Microsoft，地域兜底最后。
+  const preferred = ["private", "openai", "anthropic", "google-gemini", "github-copilot",
+    "bilibili", "biliintl", "steam-cn", "category-games-cn", "steam", "category-games-global",
+    "github", "microsoft", "apple"];
+  const ordered = { "rule-set:private": result["rule-set:private"] };
+  for (const [key, value] of Object.entries(result)) if (!key.startsWith("rule-set:")) ordered[key] = value;
+  for (const name of preferred) if (Object.hasOwn(result, "rule-set:" + name)) {
+    ordered["rule-set:" + name] = result["rule-set:" + name];
+  }
+  for (const [key, value] of Object.entries(result)) {
+    if (!Object.hasOwn(ordered, key) && !["rule-set:cn", "rule-set:geolocation-!cn"].includes(key)) ordered[key] = value;
+  }
+  for (const key of ["rule-set:cn", "rule-set:geolocation-!cn"]) ordered[key] = result[key];
+  return ordered;
+}
+
 function environmentSettings(base, environment) {
   if (environment === "国内") return {
     dns: {
       "default-nameserver": [CN_DNS[0]],
       "proxy-server-nameserver": via(CN_DNS, "DIRECT"),
       "direct-nameserver": CN_DNS,
+      "nameserver-policy": serviceDnsPolicies(base, base.dns["nameserver-policy"], false),
       "direct-nameserver-follow-policy": true,
     },
     defaults: {},
@@ -90,7 +126,7 @@ function environmentSettings(base, environment) {
       "fallback-filter": { geoip: false, ipcidr: [], domain: [], geosite: [] },
       "direct-nameserver": via(GLOBAL_DNS, "DIRECT"),
       "direct-nameserver-follow-policy": true,
-      "nameserver-policy": orderedPolicies,
+      "nameserver-policy": serviceDnsPolicies(base, orderedPolicies, true),
     },
     // 其他普通业务组原本跟随节点选择；AI 保持原有美国自动首选。
     defaults: { "节点选择": "DIRECT", "GitHub": "DIRECT", "电报消息": "DIRECT" },

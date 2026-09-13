@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | 普通国外服务 | 合并到节点选择，默认自动选择 | 合并到节点选择，默认 DIRECT，可手动切代理 |
 | AI | 独立 AI 组，默认美国-AI-自动；已知 AI 域名 DNS 跟随 AI | 同左；只在所选地区的 AI 候选节点内自动测速 |
-| 国内流量 | 保留规则，直接 DIRECT；不设国内服务和中国组 | 国内服务默认 DIRECT；有回国需求和可用节点再手动切中国组 |
+| 其余国内流量 | 已有独立业务组优先；其余国内规则 DIRECT，不设国内服务和中国组 | 已有独立业务组优先；其余国内服务默认 DIRECT，按需回国 |
 | 越南服务 / 微软/苹果服务 | 独立分组，默认 DIRECT | 同左 |
 | 启动 / 节点 / 直连 DNS | 国内 DoH | Cloudflare / Google DoH |
 | 已知国内域名 DNS | 国内 DoH | 国内 DoH 跟随国内服务；切回国时也经所选出口查询 |
@@ -71,7 +71,7 @@
 - TUN 参数：主配置提供 DNS 劫持和局域网绕过参数，但不写入 `tun.enable`；是否启用 TUN / VPN 由客户端软件决定。启用后，国内应用由包名和域名规则精确分流。
 - Stash 适配：提供两地 `.stoverride`，保留 DNS、Sniffer、策略组、规则集和分流规则。
 - Sniffer 稳定性：对局域网、路由器、NTP、Apple Push、QQ/微信本地登录等域名配置 `skip-domain`，避免被嗅探误改写目标。
-- 规则分流：覆盖大量国内 App 包名、中国域名库、微信/支付宝专属规则，补充常用越南支付、银行、电商、出行 App 包名，并覆盖 AI、Google、YouTube、GitHub、微软、Telegram、Netflix、TikTok、Spotify、Apple、哔哩哔哩等常见场景。中国版哔哩哔哩流量在国内入口直接 DIRECT，国外入口走国内服务；国际版保留在 `哔哩哔哩港澳台`。
+- 规则分流：覆盖大量国内 App 包名、中国域名库、微信/支付宝专属规则，补充常用越南支付、银行、电商、出行 App 包名，并覆盖 AI、Google、YouTube、GitHub、微软、Telegram、Netflix、TikTok、Spotify、Apple、哔哩哔哩等常见场景。哔哩哔哩国内版/国际版域名及已知 App 包名统一进入 `哔哩哔哩港澳台`，不再随国内大集合直接分流。
 - 两地使用：国内版的国内规则直接 DIRECT；国外版的国内服务默认 DIRECT，按需回国。越南服务两地均默认 DIRECT，可手动切换越南节点；选择会由 `profile.store-selected` 保留。
 - 分组测速：Mihomo / JS 与 Shadowrocket 的手动业务组使用对应服务的小型 HTTPS 端点，地区手动组与自动组使用对应地区端点；中国组使用百度 200。Mihomo 的 `select` 组不设置 `interval`，只提供按需测速，不改变手动选路逻辑；含 `REJECT` 的广告组不测速。
 - Stash 测速边界：自动组继续使用各自的地区端点；手动 `select` 组保留 `interval: -1`。Stash 对同一代理在多个组间共享测速结果，若要真正使用不同测试参数需要复制代理，因此本覆写不写入无效的“每组独立 URL”。
@@ -82,6 +82,19 @@
 - 回国节点隔离：`回国`、`港广`、`港沪`、`港深`、`沪港`、`深港`、`广中` 从全局 `自动选择` 和所有非中国地区组排除；国外版可进入中国组，两地仍可在 `全部节点` 中手动选择。
 - 空组保护：Mihomo 的所有订阅筛选组使用 `empty-fallback: REJECT`，筛选不到节点时不会静默直连。
 - 订阅提示过滤：`全部节点` 与全局 `自动选择` 除中文提示外，还排除以 `Traffic:`、`Expire:`、`Expiry:`、`Expiration:` 开头的流量/到期占位节点；不因线路带“实验性”字样而禁用节点。
+
+### 同一业务统一归组（2026-09-14）
+
+- `哔哩哔哩港澳台` 是整个 B站业务的手动出口入口，不是只识别国际版，也不会识别番剧后自动切地区。默认仍为 DIRECT；需要时手动切香港/台湾等对应节点。手机须先让 B站进入 VPN 白名单，修改组才有效。
+- 域名使用 [MetaCubeX bilibili 全量集合](https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.list) 加原 biliintl 补充：主站、账号、直播、短链、图片、视频 CDN、B站游戏和国际版归同一组。共享 CDN 只匹配专属主机名，不放行整个 Akamai/AWS/Cloudinary 根域名。新增 bilibili 使用 MRS（Mihomo/Stash）或 DOMAIN-SET（Shadowrocket），每份 Mihomo/Stash 有 28 个规则集。
+- Mihomo 覆盖 7 个已知包名：`tv.danmaku.bili`、`tv.danmaku.bilibilihd`、`com.bilibili.app.blue`、`com.bilibili.app.in`、`com.bilibili.comic`、`com.bilibili.comic.intl`、`com.bstar.intl`。补充来源为 [BiliBili 维护规则](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Clash/BiliBili/BiliBili.yaml)；不使用可能误匹配其他应用的包名前缀通配。
+- 游戏平台统一已有游戏规则与包名，新增 Steam Android / steam.exe / steamwebhelper.exe 整应用归组；不再保留国内游戏 CDN 的固定直连出口。已收录的穿越火线、OPLUS/小米游戏服务同步进入游戏平台。
+- 微软/苹果服务同步补充 Outlook、OneDrive、Teams、Apple Music 的 Android 包名；Copilot 独立归 AI，GitHub 仍归节点选择。Edge/Chrome 等浏览器不整体绑定某家厂商分组，访问什么服务就按服务域名分流。
+- 已有 Perplexity、Cursor、Windsurf 的 App/进程属于 AI；同步补齐其已知域名，避免网页和 App 出口不同。域名依据 MetaCubeX 的 [Perplexity](https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/perplexity.list)、[Cursor](https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cursor.list)、[Windsurf](https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/windsurf.list) 列表，仅保留必要的专属共享 CDN 主机。
+- Mihomo 生成器同步业务 DNS：已识别域名和域名规则集的 DoH 连接使用同名业务组；AI 仍使用独立的国际 DoH。B站/越南/微软苹果在国内版用国内 DoH、国外版用国际 DoH，查询路径跟随其分组；游戏国内集合在国内版用国内 DoH，其余游戏集合用国际 DoH。节点启动 DNS 保持 DIRECT，原有网站/驱动例外不变。Stash 仅按原生规则补专属 DNS 分类，不注入 Mihomo 的 `#组名`。
+- 局域网、广告规则仍优先；用户明确保留的 NVIDIA/AMD 整进程、驱动下载和特定网站直连不被取消。规则模式、TUN/IPv6、手机白名单和所有组默认选择/测速参数都不因此次归组变化而调整。
+- “统一”覆盖目前维护源和已知应用标识，不保证未来新增域名、未知第三方 SDK 或白名单外应用。整应用规则仍优先于后续域名分类：一个已归组 App 内嵌别家内容时，命中 App 规则的连接跟随这个 App；DNS 仍按域名归组，跨业务场景下可能与 App 出口不同，不保证所有请求的两者完全一致。外部浏览器请求按自己的规则处理。
+- `validate_service_ownership.cjs` 经唯一入口检查六套配置的首条匹配、B站与游戏/微软集合重叠、通用工具兜底、业务 DNS 和负向控制；离线模型不等同于设备实测。
 
 ## 使用方法
 
@@ -145,7 +158,7 @@
 - 系统更新、局域网、NTP、推送等既有直连规则保持不变。
 - 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo / Stash 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
 - Tampermonkey 的 `tampermonkey.net` 根域名及子域名（包括 `accounts.tampermonkey.net`）在六套入口中直连，位置在既有网站例外之后、业务规则之前；Mihomo / Stash 的专用 DNS 随国内/国外环境使用对应解析器，避免被通用国外集合改走代理。仅调整这个域名后缀，不放行整个浏览器进程，也不改变 Google、Microsoft 等第三方登录和云同步服务的分流。保留扩展同步与 TLS 验证；端点可达不代表整个 OAuth 流程已通过。[Tampermonkey 同步说明](https://www.tampermonkey.net/faq.php?locale=en&q=Q105)
-- Steam 中国 CDN 与中国大陆游戏域名在国内版直接 DIRECT、国外版走国内服务；海外游戏域名进入独立的 `游戏平台`，两者按原规则顺序隔离。
+- Steam 中国 CDN、中国大陆及海外游戏域名统一进入 `游戏平台`，Steam 包名/进程也进入该组；是否直连由组内选择决定。该组仍默认跟随节点选择，因此国内版默认可能代理游戏下载、消耗订阅流量；需要直连下载时手动选 DIRECT。B站专属游戏域名先归入 `哔哩哔哩港澳台`，不被游戏大集合截走。
 - Windows 的 NVIDIA App / GeForce Experience 与 AMD Software 在两地 Mihomo YAML/JS 中按进程 DIRECT，位于广告之后、业务域名之前；包含 `NVIDIA App.exe`、`NVIDIA GeForce Experience.exe`、`NvContainer.exe`、`NVDisplay.Container.exe`、`nvngx_update.exe`、`AMDSoftware.exe`、`AMDRSServ.exe`、`AMDInstallManager.exe`。登录、商店、遥测也会直连；依赖代理的功能可能受影响。客户端须能识别进程，转到外部浏览器或其他进程的请求仍按自身规则分流；不添加通用 `setup.exe`，不改变 Intel 助手，也不将 Windows 进程规则写进苹果入口。
 - 原有 `download.nvidia.com` / `download.nvidia.cn`（含子域名）及 `ota.nvidia.com` / `gfwsl.geforce.cn` 域名直连继续保留，供浏览器等其他程序下载使用；这些域名在国内版使用国内 DoH，国外版使用境外直连 DoH。其他 DNS 策略不因进程规则而改变。进程命中 DIRECT 或短时端点可达，不等于实际驱动下载、安装或 TUN 下的长连接已通过。
 - `midea` 相关域名固定直连，避免客户/工作相关系统误走代理。
@@ -172,7 +185,7 @@
 ### 首条匹配与优先级
 
 - Mihomo 的 DNS 策略有顺序语义：私有域名优先，其次是已有明确域名例外、AI 等专属服务，最后才是通用服务及国内/国外大集合。不能只比对键值而忽略顺序；两地版 AI 的 `#AI` 解析策略必须早于 `geolocation-!cn` 等重叠规则。[Mihomo DNS](https://wiki.metacubex.one/config/dns/)
-- VS Code、Postman 和 JetBrains 等通用开发工具的进程兜底位于 AI 域名规则之后：Copilot/OpenAI 请求可进入 AI，普通开发流量仍是节点选择。Teams 两个进程统一进入微软/苹果服务。
+- VS Code、Postman 和 JetBrains 等通用开发工具的进程兜底位于所有专属业务域名规则之后：AI、B站、游戏、微软/苹果、越南等已知服务各归其组，未识别开发流量仍是节点选择。Teams 两个进程统一进入微软/苹果服务。
 - 微信、支付宝整应用选路仍在 AI 域名规则之前：国内版 DIRECT，国外版国内服务。未进入 VPN 的应用不受这些规则控制；这次没有改动手机分应用名单。
 - Stash 将 OpenAI 与其他 AI 的 geosite DNS 策略一起放在通用 geosite 之前；它使用自己的 DNS 机制，不能把 Mihomo 的 `#策略组` 语法套用到 Stash。
 

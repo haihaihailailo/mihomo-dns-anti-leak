@@ -709,7 +709,11 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"
     path: "./ruleset/metacubex/apple.mrs"
-  # Bilibili 国际/港澳台规则集。
+  # Bilibili 全量域名与国际版补充均交给同一手选组。
+  bilibili:
+    <<: *meta_domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs"
+    path: "./ruleset/metacubex/bilibili.mrs"
   biliintl:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs"
@@ -736,12 +740,12 @@ rule-providers:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs"
     path: "./ruleset/metacubex/steam.mrs"
-  # Steam 中国 CDN / 蒸汽平台域名先走国内服务，避免下载流量绕远。
+  # Steam 中国 CDN / 蒸汽平台同样交给游戏平台，出口由组内手选。
   steam-cn:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam@cn.mrs"
     path: "./ruleset/metacubex/steam-cn.mrs"
-  # 游戏规则拆分中国大陆与海外，国内游戏默认跟随国内服务。
+  # 保留中国大陆/海外来源划分，两者统一交给游戏平台。
   category-games-cn:
     <<: *meta_domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-cn.mrs"
@@ -846,6 +850,10 @@ rules:
   - PROCESS-NAME,com.google.android.calendar,谷歌服务 # Google Calendar
   - PROCESS-NAME,com.google.android.projection.gearhead,谷歌服务 # Android Auto
   - PROCESS-NAME,com.google.earth,谷歌服务 # Google Earth
+  - PROCESS-NAME,com.microsoft.office.outlook,微软服务
+  - PROCESS-NAME,com.microsoft.skydrive,微软服务
+  - PROCESS-NAME,com.microsoft.teams,微软服务
+  - PROCESS-NAME,com.apple.android.music,苹果服务
   - PROCESS-NAME,com.microsoft.appmanager,微软服务 # 连接至 Windows
   - PROCESS-NAME,com.microsoft.deviceintegrationservice,微软服务 # Microsoft Device Integration Service
   - PROCESS-NAME,com.microsoftsdk.crossdeviceservicebroker,微软服务 # Microsoft Cross Device Service Broker
@@ -919,7 +927,7 @@ rules:
   - PROCESS-NAME,com.lptiyu.tanke,国内服务 # 步道乐跑
   - PROCESS-NAME,com.deepseek.chat,国内服务 # DeepSeek
   - PROCESS-NAME,com.larus.nova,国内服务 # 豆包
-  - PROCESS-NAME,com.tencent.tmgp.cf,国内服务 # 穿越火线-枪战王者
+  - PROCESS-NAME,com.tencent.tmgp.cf,游戏平台 # 穿越火线-枪战王者
   - PROCESS-NAME,com.x7890.shortcutcreator,国内服务 # 创建快捷方式
   - PROCESS-NAME,com.tryfun.intelligent,国内服务 # 春风元力
   - PROCESS-NAME,com.ktls.fileinfo,国内服务 # 存储空间清理
@@ -1009,7 +1017,7 @@ rules:
   - PROCESS-NAME,com.oplus.apprecover,国内服务 # OPLUS 应用找回
   - PROCESS-NAME,com.oplus.pay,国内服务 # OPLUS 钱包/支付
   - PROCESS-NAME,com.oplus.safecenter,国内服务 # OPLUS 安全中心
-  - PROCESS-NAME,com.oplus.games,国内服务 # OPLUS 游戏助手
+  - PROCESS-NAME,com.oplus.games,游戏平台 # OPLUS 游戏助手
   - PROCESS-NAME,com.oplus.ocar,国内服务 # OPLUS Car+
   - PROCESS-NAME,com.oplus.linker,国内服务 # OPLUS 设备互联
   - PROCESS-NAME,com.oplus.cast,国内服务 # OPLUS 投屏
@@ -1052,9 +1060,9 @@ rules:
   - PROCESS-NAME,com.miui.securitymanager,国内服务 # MIUI 安全管理
   - PROCESS-NAME,com.miui.packageinstaller,国内服务 # MIUI 包管理
   - PROCESS-NAME,com.miui.hybrid,国内服务 # MIUI 快应用框架
-  - PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,国内服务 # 小米游戏服务
-  - PROCESS-NAME,com.xiaomi.migameservice,国内服务 # 小米游戏AI服务
-  - PROCESS-NAME,com.xiaomi.minigame,国内服务 # 小米小游戏服务
+  - PROCESS-NAME,com.xiaomi.gamecenter.sdk.service,游戏平台 # 小米游戏服务
+  - PROCESS-NAME,com.xiaomi.migameservice,游戏平台 # 小米游戏AI服务
+  - PROCESS-NAME,com.xiaomi.minigame,游戏平台 # 小米小游戏服务
   - PROCESS-NAME,com.miui.yellowpage,国内服务 # MIUI 生活黄页
   - PROCESS-NAME,com.miui.bugreport,国内服务 # MIUI 用户反馈
   - PROCESS-NAME,com.miui.personalassistant,国内服务 # MIUI 智能助理
@@ -1077,7 +1085,12 @@ rules:
   - PROCESS-NAME,com.spotify.music,Spotify # Spotify
   - PROCESS-NAME,com.zhiliaoapp.musically,TikTok # TikTok 国际版
   - PROCESS-NAME,tv.twitch.android.app,节点选择 # Twitch
-  - PROCESS-NAME,tv.danmaku.bili,国内服务 # 哔哩哔哩中国版
+  - PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台 # 哔哩哔哩中国版
+  - PROCESS-NAME,com.bilibili.app.blue,哔哩哔哩港澳台
+  - PROCESS-NAME,com.bilibili.app.in,哔哩哔哩港澳台
+  - PROCESS-NAME,com.bilibili.comic,哔哩哔哩港澳台
+  - PROCESS-NAME,com.bilibili.comic.intl,哔哩哔哩港澳台
+  - PROCESS-NAME,tv.danmaku.bilibilihd,哔哩哔哩港澳台
   - PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台 # BiliBili 国际版 / 东南亚版
 
   # --- GitHub / 浏览器 / 游戏平台 ---
@@ -1178,6 +1191,9 @@ rules:
   - PROCESS-NAME,GitHubDesktop.exe,GitHub # GitHub Desktop
   - PROCESS-NAME,Cursor.exe,AI # Cursor Editor
   - PROCESS-NAME,Windsurf.exe,AI # Windsurf Editor
+  - PROCESS-NAME,com.valvesoftware.android.steam.community,游戏平台
+  - PROCESS-NAME,steam.exe,游戏平台
+  - PROCESS-NAME,steamwebhelper.exe,游戏平台
   - PROCESS-NAME,EpicGamesLauncher.exe,游戏平台 # Epic Games Launcher
   - PROCESS-NAME,EpicWebHelper.exe,游戏平台 # Epic Games Web Helper
   - PROCESS-NAME,Battle.net.exe,游戏平台 # Battle.net
@@ -1206,6 +1222,19 @@ rules:
   - "PROCESS-NAME,Xunlei,DIRECT"
   # - "AND,((NETWORK,UDP),(DST-PORT,443)),REJECT" # 可选：全局禁用 QUIC/HTTP3；默认注释，避免影响视频和部分 App 性能
 
+  - DOMAIN-SUFFIX,perplexity.ai,AI
+  - DOMAIN-SUFFIX,perplexity.com,AI
+  - DOMAIN-SUFFIX,pplx.ai,AI
+  - DOMAIN,ppl-ai-file-upload.s3.amazonaws.com,AI
+  - DOMAIN,pplx-res.cloudinary.com,AI
+  - DOMAIN-SUFFIX,cursor-cdn.com,AI
+  - DOMAIN-SUFFIX,cursor.com,AI
+  - DOMAIN-SUFFIX,cursor.sh,AI
+  - DOMAIN-SUFFIX,cursorapi.com,AI
+  - DOMAIN-SUFFIX,codeium.com,AI
+  - DOMAIN-SUFFIX,codeiumdata.com,AI
+  - DOMAIN-SUFFIX,windsurf.build,AI
+  - DOMAIN-SUFFIX,windsurf.com,AI
   - "DOMAIN-SUFFIX,chatgpt.com,AI"
   - "DOMAIN-SUFFIX,openai.com,AI"
   - "DOMAIN-SUFFIX,oaistatic.com,AI"
@@ -1218,15 +1247,25 @@ rules:
   - "RULE-SET,anthropic,AI"
   - "RULE-SET,google-gemini,AI"
   - "RULE-SET,github-copilot,AI"
+  # 专属业务先于通用 Google / Microsoft / 国内集合；B站游戏域名仍归 B站。
+  - RULE-SET,bilibili,哔哩哔哩港澳台
+  - "RULE-SET,biliintl,哔哩哔哩港澳台"
+  - "RULE-SET,steam-cn,游戏平台"
+  - "RULE-SET,category-games-cn,游戏平台"
+  - "DOMAIN-SUFFIX,steampowered.com,游戏平台"
+  - "DOMAIN-SUFFIX,steamcommunity.com,游戏平台"
+  - "DOMAIN-SUFFIX,steamstatic.com,游戏平台"
+  - "DOMAIN-SUFFIX,steamcontent.com,游戏平台"
+  - "DOMAIN-SUFFIX,epicgames.com,游戏平台"
+  - "DOMAIN-SUFFIX,epicgamescdn.com,游戏平台"
+  - "DOMAIN-SUFFIX,battle.net,游戏平台"
+  - "DOMAIN-SUFFIX,blizzard.com,游戏平台"
+  - "DOMAIN-SUFFIX,riotgames.com,游戏平台"
+  - "DOMAIN-SUFFIX,ubisoft.com,游戏平台"
+  - "DOMAIN-SUFFIX,ea.com,游戏平台"
+  - "RULE-SET,steam,游戏平台"
+  - "RULE-SET,category-games-global,游戏平台"
 
-  # 通用开发工具兜底在 AI 特例之后；不把整个编辑器都改成 AI。
-  - PROCESS-NAME,Code.exe,节点选择 # VS Code
-  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
-  - PROCESS-NAME,Postman.exe,节点选择 # Postman
-  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
-  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
-  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
-  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
 
   - "DOMAIN,accounts.google.com,谷歌服务"
   - "DOMAIN-SUFFIX,accounts.google.com,谷歌服务"
@@ -1305,27 +1344,10 @@ rules:
   - "RULE-SET,twitter,Meta / X"
   - "RULE-SET,facebook,Meta / X"
 
-  # 国内游戏与 Steam 中国 CDN 优先跟随“国内服务”，其余游戏平台再进入海外组。
-  - "RULE-SET,steam-cn,国内服务"
-  - "RULE-SET,category-games-cn,国内服务"
-  - "DOMAIN-SUFFIX,steampowered.com,游戏平台"
-  - "DOMAIN-SUFFIX,steamcommunity.com,游戏平台"
-  - "DOMAIN-SUFFIX,steamstatic.com,游戏平台"
-  - "DOMAIN-SUFFIX,steamcontent.com,游戏平台"
-  - "DOMAIN-SUFFIX,epicgames.com,游戏平台"
-  - "DOMAIN-SUFFIX,epicgamescdn.com,游戏平台"
-  - "DOMAIN-SUFFIX,battle.net,游戏平台"
-  - "DOMAIN-SUFFIX,blizzard.com,游戏平台"
-  - "DOMAIN-SUFFIX,riotgames.com,游戏平台"
-  - "DOMAIN-SUFFIX,ubisoft.com,游戏平台"
-  - "DOMAIN-SUFFIX,ea.com,游戏平台"
-  - "RULE-SET,steam,游戏平台"
-  - "RULE-SET,category-games-global,游戏平台"
   - "RULE-SET,netflix,Netflix"
   - "RULE-SET,tiktok,TikTok"
   - "RULE-SET,spotify,Spotify"
   - "RULE-SET,apple,苹果服务"
-  - "RULE-SET,biliintl,哔哩哔哩港澳台"
 
 
   - "DOMAIN-KEYWORD,midea,DIRECT"  # 美的=客户，永远直连，置于越南/CN块之前
@@ -1377,6 +1399,14 @@ rules:
 
   - "RULE-SET,wechat,国内服务,no-resolve"
   - "RULE-SET,alipay,国内服务"
+  # 通用开发工具只兜底未命中专属服务的请求，不能遮挡 B站/游戏/微软/AI。
+  - PROCESS-NAME,Code.exe,节点选择 # VS Code
+  - PROCESS-NAME,code.exe,节点选择 # VS Code CLI / 兼容写法
+  - PROCESS-NAME,Postman.exe,节点选择 # Postman
+  - PROCESS-NAME,JetBrains Toolbox.exe,节点选择 # JetBrains Toolbox
+  - PROCESS-NAME,idea64.exe,节点选择 # IntelliJ IDEA
+  - PROCESS-NAME,pycharm64.exe,节点选择 # PyCharm
+  - PROCESS-NAME,webstorm64.exe,节点选择 # WebStorm
   - "RULE-SET,cn,国内服务"
   - "GEOIP,CN,国内服务,no-resolve"
   - "RULE-SET,geolocation-!cn,漏网之鱼"

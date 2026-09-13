@@ -248,20 +248,20 @@ RULE_PROVIDER_SIZE_LIMIT = 4194304
 SHADOWROCKET_REQUIRED_RULES = (
     "rule/Shadowrocket/Twitter/Twitter.list,Meta / X",
     "rule/Shadowrocket/Facebook/Facebook.list,Meta / X",
-    "geo/geosite/steam@cn.list,国内服务",
-    "geo/geosite/category-games-cn.list,国内服务",
+    "geo/geosite/steam@cn.list,游戏平台",
+    "geo/geosite/category-games-cn.list,游戏平台",
     "geo/geosite/steam.list,游戏平台",
     "geo/geosite/category-games-!cn.list,游戏平台",
     "rule/Shadowrocket/WeChat/WeChat.list,国内服务",
     "rule/Shadowrocket/AliPay/AliPay.list,国内服务",
 )
 GAME_PROVIDER_ROUTES = {
-    "steam-cn": ("steam@cn.mrs", "国内服务"),
-    "category-games-cn": ("category-games-cn.mrs", "国内服务"),
+    "steam-cn": ("steam@cn.mrs", "游戏平台"),
+    "category-games-cn": ("category-games-cn.mrs", "游戏平台"),
     "steam": ("steam.mrs", "游戏平台"),
     "category-games-global": ("category-games-!cn.mrs", "游戏平台"),
 }
-FORBIDDEN_STEAM_PROCESS_RULES = (
+REQUIRED_STEAM_PROCESS_RULES = (
     "PROCESS-NAME,com.valvesoftware.android.steam.community,游戏平台",
     "PROCESS-NAME,steam.exe,游戏平台",
     "PROCESS-NAME,steamwebhelper.exe,游戏平台",
@@ -651,7 +651,7 @@ for filename, text in (
             fail(f"{filename}: game provider source is missing: {source_name}")
         if f"RULE-SET,{provider},{policy}" not in text:
             fail(f"{filename}: game provider {provider} is not routed to {policy}")
-    domestic_game_position = text.find("RULE-SET,category-games-cn,国内服务")
+    domestic_game_position = text.find("RULE-SET,category-games-cn,游戏平台")
     overseas_game_position = text.find("DOMAIN-SUFFIX,steampowered.com,游戏平台")
     if not 0 <= domestic_game_position < overseas_game_position:
         fail(f"{filename}: domestic game rules must precede overseas game rules")
@@ -659,13 +659,13 @@ for filename, text in (
         fail(f"{filename}: combined China/global game provider is still active")
 
 for filename, text in ((".github/config/shared.yaml", yaml_text), (".github/config/shared.js", js_text)):
-    for process_rule in FORBIDDEN_STEAM_PROCESS_RULES:
-        if process_rule in text:
-            fail(f"{filename}: Steam process rule bypasses CN/global domain split")
+    for process_rule in REQUIRED_STEAM_PROCESS_RULES:
+        if process_rule not in text:
+            fail(f"{filename}: Steam process must follow 游戏平台")
 
 for filename, text in ((".github/config/shared.yaml", yaml_text), (".github/config/shared.js", js_text)):
-    if "PROCESS-NAME,tv.danmaku.bili,国内服务" not in text:
-        fail(f"{filename}: mainland Bilibili app must use 国内服务")
+    if "PROCESS-NAME,tv.danmaku.bili,哔哩哔哩港澳台" not in text:
+        fail(f"{filename}: mainland Bilibili app must follow its service group")
     if "PROCESS-NAME,com.bstar.intl,哔哩哔哩港澳台" not in text:
         fail(f"{filename}: international Bilibili app routing is missing")
 
@@ -827,7 +827,7 @@ for required_rule in SHADOWROCKET_REQUIRED_RULES:
         fail(f".github/config/shared.conf: synchronized service rule is missing: {required_rule}")
 
 shadow_domestic_game_position = shadow_rules.find(
-    "geo/geosite/category-games-cn.list,国内服务"
+    "geo/geosite/category-games-cn.list,游戏平台"
 )
 shadow_overseas_game_position = shadow_rules.find(
     "DOMAIN-SUFFIX,steampowered.com,游戏平台"

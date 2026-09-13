@@ -9,6 +9,7 @@ const { spawn } = require("node:child_process");
 const YAML = require("yaml");
 const { read, parse } = require("./build_profiles.cjs");
 const { hash, validateBody } = require("./check_remote_rules.cjs");
+const { MEMBERS } = require("./validate_service_ownership.cjs");
 const binary = process.env.MIHOMO_TEST_BIN;
 assert(binary && path.isAbsolute(binary) && fs.existsSync(binary), "MIHOMO_TEST_BIN 须为已有内核的绝对路径");
 const directory = fs.mkdtempSync(path.join(process.env.MIHOMO_TEST_OUTPUT || os.tmpdir(), "mihomo-loopback-"));
@@ -201,6 +202,52 @@ async function tampermonkeyDnsCase(region, general, direct, mutation) {
     console.log(region + " Tampermonkey loopback DNS：" + (mutation ? "删除例外负向控制" : "根域名/子域名优先级") + " 6/6 OK");
   } finally { await stop(running); }
 }
+// 真实内核 + 合成重叠集合：所有 DNS 上游只在 loopback 返回文档保留 IP。
+// 验证业务 DNS 分组/顺序，不把它当作公网 DNS 出口或移动端进程识别实测。
+async function serviceDnsCase(region, ports, mutation) {
+  const original = parse(read("防DNS泄露-" + region + "版.yaml"));
+  let entries = Object.entries(original.dns["nameserver-policy"]);
+  if (mutation) entries = [
+    ...entries.filter(([key]) => key === "rule-set:cn"),
+    ...entries.filter(([key]) => key !== "rule-set:cn"),
+  ];
+  const providers = Object.fromEntries(entries.filter(([key]) => key.startsWith("rule-set:"))
+    .map(([key], index) => {
+      const name = key.slice(9);
+      return [name, { type: "inline", behavior: "domain",
+        payload: (MEMBERS[name] || ["unused-" + index + ".example.test"]).map(host => "+." + host) }];
+    }));
+  const policies = Object.fromEntries(entries.map(([key, values]) => {
+    const owner = values[0].split("#")[1];
+    return [key, ["udp://127.0.0.1:" + (ports[owner] || ports.general)]];
+  }));
+  const reserve = socket(); const port = await bind(reserve);
+  await new Promise(resolve => reserve.close(resolve));
+  const running = start({ ...base(), "rule-providers": providers, dns: {
+    enable: true, listen: "127.0.0.1:" + port, ipv6: false, "enhanced-mode": "redir-host",
+    "use-hosts": false, "use-system-hosts": false, nameserver: ["udp://127.0.0.1:" + ports.general],
+    "nameserver-policy": policies,
+  } });
+  try {
+    let ready = false;
+    for (let i = 0; i < 12; i++) {
+      assert(children.has(running.child), "业务 DNS 内核提前退出：" + running.logs());
+      try { await query(port, "ready.example.test"); ready = true; break; } catch { await pause(100); }
+    }
+    assert(ready, "业务 DNS 内核未就绪：" + running.logs());
+    const cases = mutation ? [["www.bilibili.com", "198.51.100.10"], ["www.biligame.com", "198.51.100.10"]]
+      : [
+        ...["www.bilibili.com", "api.bilibili.com", "b23.tv", "i0.hdslb.com", "video.bilivideo.com", "www.biligame.com", "p.bstarstatic.com"]
+          .map(host => [host, "203.0.113.51"]),
+        ...["cdn.steamchina.com", "www.wegame.com", "www.xbox.com"].map(host => [host, "203.0.113.52"]),
+        ...["www.microsoft.com", "download.windowsupdate.com", "www.apple.com"].map(host => [host, "203.0.113.53"]),
+        ...["api.zalo.me", "api.zalopay.vn"].map(host => [host, "203.0.113.54"]),
+        ...["www.perplexity.ai", "api.cursor.sh", "api.codeium.com"].map(host => [host, "203.0.113.20"]),
+      ];
+    for (const [host, expected] of cases) assert.equal(await query(port, host), expected, region + " " + host);
+    console.log(region + " 业务分组 loopback DNS：" + (mutation ? "CN 抢先匹配负向控制" : "B站/游戏/微软苹果/越南/AI") + " " + cases.length + "/" + cases.length + " OK（合成规则集）");
+  } finally { await stop(running); }
+}
 function snapshotProviders(file, manifest) {
   const original = parse(read(file))["rule-providers"];
   const providers = {};
@@ -231,8 +278,12 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
       : key === "rule-set:microsoft" ? ["rule-set:github", policies["rule-set:github"]] : [key, value]);
   }
   const aiKeys = new Set(["rule-set:openai", "rule-set:anthropic", "rule-set:google-gemini", "rule-set:github-copilot"]);
+  // 本轮新增的 Pages 显式 DNS 与 GitHub 集合拥有相同出口；不能映射成通用上游。
+  const githubKeys = new Set(["rule-set:github", "github.io", ".github.io"]);
+  for (const key of githubKeys) assert.deepEqual(original.dns["nameserver-policy"][key],
+    original.dns["nameserver-policy"]["rule-set:github"], "GitHub 显式 DNS 出口不一致：" + key);
   const policies = Object.fromEntries(entries.map(([key, values]) => [key,
-    ["udp://127.0.0.1:" + (key === "rule-set:github" ? github
+    ["udp://127.0.0.1:" + (githubKeys.has(key) ? github
       : aiKeys.has(key) || values.every(value => value.endsWith("#AI")) ? ai : general)]]));
   const reserve = socket(); const port = await bind(reserve);
   await new Promise(resolve => reserve.close(resolve));
@@ -251,13 +302,15 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
     const githubHosts = ["github.com", "api.github.com", "raw.githubusercontent.com",
       "avatars.githubusercontent.com", "github.githubassets.com", "pages.github.io"];
     for (const host of githubHosts) {
-      assert.equal(await query(port, host), mutation ? "198.51.100.10" : "203.0.113.30", region + " " + host);
+      // 仅交换大集合不能遮挡前置 Pages 例外，其余五个域名必须暴露错误顺序。
+      const intercepted = mutation && !host.endsWith(".github.io");
+      assert.equal(await query(port, host), intercepted ? "198.51.100.10" : "203.0.113.30", region + " " + host);
     }
     assert.equal(await query(port, "api.githubcopilot.com"), "203.0.113.20", "Copilot 仍先匹配 AI");
     for (const host of ["teams.microsoft.com", "notgithub.com", "github.com.evil.test"]) {
       assert.equal(await query(port, host), "198.51.100.10", "普通微软/相似域名不可误入 GitHub");
     }
-    console.log(file + "：真实 27 集合/完整 DNS 顺序，GitHub " + (mutation ? "旧顺序负向控制" : "修复后") + " 10/10 OK");
+    console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，GitHub " + (mutation ? "微软前置负向控制/Pages例外保留" : "修复后") + " 10/10 OK");
   } finally { await stop(running); }
 }
 async function providerCase(file, manifest) {
@@ -282,7 +335,7 @@ async function providerCase(file, manifest) {
       await pause(100);
     }
     assert(ready, "provider 未全部初始化：" + running.logs());
-    console.log(file + "：27 个公开快照经 Mihomo 完整初始化 OK（不代表 Stash 实机通过）");
+    console.log(file + "：" + Object.keys(providers).length + " 个公开快照经 Mihomo 完整初始化 OK（不代表 Stash 实机通过）");
   } finally { await stop(running); }
 }
 (async () => {
@@ -299,6 +352,14 @@ async function providerCase(file, manifest) {
     for (const region of ["国内", "国外"]) {
       await tampermonkeyDnsCase(region, general, direct, false);
       await tampermonkeyDnsCase(region, general, direct, true);
+    }
+    const servicePorts = { general, AI: ai,
+      "哔哩哔哩港澳台": await upstream([203,0,113,51]), "游戏平台": await upstream([203,0,113,52]),
+      "微软/苹果服务": await upstream([203,0,113,53]), "越南服务": await upstream([203,0,113,54]),
+    };
+    for (const region of ["国内", "国外"]) {
+      await serviceDnsCase(region, servicePorts, false);
+      await serviceDnsCase(region, servicePorts, true);
     }
     if (cacheDirectory) {
       assert(path.isAbsolute(cacheDirectory), "MIHOMO_RULE_CACHE 须为绝对路径");

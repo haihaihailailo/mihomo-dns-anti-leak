@@ -44,7 +44,7 @@ function stashProfile(source, environment) {
   if (foreign) {
     const policies = {};
     // 专属 geosite 必须先于 cn；Stash 在多个 geosite 命中时采用配置中的第一个。
-    const serviceKeys = ["geosite:openai", "geosite:anthropic", "geosite:google-gemini", "geosite:github-copilot", "geosite:github", "geosite:microsoft", "geosite:google", "geosite:youtube"];
+    const serviceKeys = ["geosite:openai", "geosite:anthropic", "geosite:google-gemini", "geosite:github-copilot", "geosite:bilibili", "geosite:biliintl", "geosite:steam@cn", "geosite:category-games-cn", "geosite:steam", "geosite:category-games-!cn", "geosite:github", "geosite:apple", "geosite:microsoft", "geosite:google", "geosite:youtube"];
     const entries = Object.entries(base.dns["nameserver-policy"]);
     for (const key of ["geosite:private", ...serviceKeys]) {
       assert(Object.hasOwn(base.dns["nameserver-policy"], key), "缺少 Stash DNS 策略：" + key);

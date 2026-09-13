@@ -228,7 +228,9 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
       "direct-nameserver": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "direct-nameserver-follow-policy": true,
     };
-    assert.deepEqual(config.dns, expected, "国内入口须独立提供完整国内 DNS 策略");
+    // 业务 DNS 出口另由 validate_service_ownership.cjs 的独立样本验证；其余 DNS 必须不变。
+    assert.deepEqual({ ...config.dns, "nameserver-policy": base.dns["nameserver-policy"] }, expected,
+      "国内入口须独立提供完整国内 DNS 基线");
     assert(config.dns.fallback.every(server => server.endsWith("#节点选择")));
     assert.equal(config.dns["fallback-filter"].geoip, true);
   } else {
@@ -303,3 +305,4 @@ console.log("内部共同源码 / Stash 引用、驱动精确直连、三个 JS 
 require("./validate_native_profiles.cjs");
 require("./validate_rule_sources.cjs").run();
 require("./validate_priority.cjs").run();
+require("./validate_service_ownership.cjs").run();

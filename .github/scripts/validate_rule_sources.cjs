@@ -42,7 +42,7 @@ function checkProviders(config, client, foreign) {
   const url = (repo, ref, file) => raw
     ? "https://raw.githubusercontent.com/" + repo + "/" + ref + "/" + file
     : "https://cdn.jsdelivr.net/gh/" + repo + "@" + ref + "/" + file;
-  assert.equal(Object.keys(providers).length, 27, "规则集数量漂移，须审查来源清单");
+  assert.equal(Object.keys(providers).length, 28, "规则集数量漂移，须审查来源清单");
   assert.equal(providers.reject.url, url(ADS, "main", ADS_YAML));
   assert.equal(providers.reject.behavior, "classical");
   assert.equal(providers.reject.format, "yaml");

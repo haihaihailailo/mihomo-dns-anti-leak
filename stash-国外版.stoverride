@@ -61,7 +61,28 @@ dns: #!replace
     geosite:github-copilot:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
+    geosite:bilibili:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:biliintl:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:steam@cn:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:category-games-cn:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:steam:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:category-games-!cn:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
     geosite:github:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    geosite:apple:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     geosite:microsoft:
@@ -77,6 +98,45 @@ dns: #!replace
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     +.tampermonkey.net:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.perplexity.ai:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.perplexity.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.pplx.ai:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    ppl-ai-file-upload.s3.amazonaws.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    pplx-res.cloudinary.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.cursor-cdn.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.cursor.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.cursor.sh:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.cursorapi.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.codeium.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.codeiumdata.com:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.windsurf.build:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
+    +.windsurf.com:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
     geosite:cn: https://223.5.5.5/dns-query
@@ -524,6 +584,13 @@ rule-providers: #!replace
     interval: 86400
     url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple.mrs
     path: ./ruleset/metacubex/apple.mrs
+  bilibili:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/bilibili.mrs
+    path: ./ruleset/metacubex/bilibili.mrs
   biliintl:
     type: http
     behavior: domain
@@ -605,6 +672,19 @@ rules: #!replace
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT
   - DOMAIN,gfwsl.geforce.cn,DIRECT
+  - DOMAIN-SUFFIX,perplexity.ai,AI
+  - DOMAIN-SUFFIX,perplexity.com,AI
+  - DOMAIN-SUFFIX,pplx.ai,AI
+  - DOMAIN,ppl-ai-file-upload.s3.amazonaws.com,AI
+  - DOMAIN,pplx-res.cloudinary.com,AI
+  - DOMAIN-SUFFIX,cursor-cdn.com,AI
+  - DOMAIN-SUFFIX,cursor.com,AI
+  - DOMAIN-SUFFIX,cursor.sh,AI
+  - DOMAIN-SUFFIX,cursorapi.com,AI
+  - DOMAIN-SUFFIX,codeium.com,AI
+  - DOMAIN-SUFFIX,codeiumdata.com,AI
+  - DOMAIN-SUFFIX,windsurf.build,AI
+  - DOMAIN-SUFFIX,windsurf.com,AI
   - DOMAIN-SUFFIX,chatgpt.com,AI
   - DOMAIN-SUFFIX,openai.com,AI
   - DOMAIN-SUFFIX,oaistatic.com,AI
@@ -617,6 +697,23 @@ rules: #!replace
   - RULE-SET,anthropic,AI
   - RULE-SET,google-gemini,AI
   - RULE-SET,github-copilot,AI
+  - RULE-SET,bilibili,哔哩哔哩港澳台
+  - RULE-SET,biliintl,哔哩哔哩港澳台
+  - RULE-SET,steam-cn,游戏平台
+  - RULE-SET,category-games-cn,游戏平台
+  - DOMAIN-SUFFIX,steampowered.com,游戏平台
+  - DOMAIN-SUFFIX,steamcommunity.com,游戏平台
+  - DOMAIN-SUFFIX,steamstatic.com,游戏平台
+  - DOMAIN-SUFFIX,steamcontent.com,游戏平台
+  - DOMAIN-SUFFIX,epicgames.com,游戏平台
+  - DOMAIN-SUFFIX,epicgamescdn.com,游戏平台
+  - DOMAIN-SUFFIX,battle.net,游戏平台
+  - DOMAIN-SUFFIX,blizzard.com,游戏平台
+  - DOMAIN-SUFFIX,riotgames.com,游戏平台
+  - DOMAIN-SUFFIX,ubisoft.com,游戏平台
+  - DOMAIN-SUFFIX,ea.com,游戏平台
+  - RULE-SET,steam,游戏平台
+  - RULE-SET,category-games-global,游戏平台
   - RULE-SET,youtube,节点选择
   - RULE-SET,google,节点选择
   - DOMAIN-SUFFIX,github.io,节点选择
@@ -640,26 +737,10 @@ rules: #!replace
   - DOMAIN-SUFFIX,whatsapp.net,节点选择
   - RULE-SET,twitter,节点选择
   - RULE-SET,facebook,节点选择
-  - RULE-SET,steam-cn,国内服务
-  - RULE-SET,category-games-cn,国内服务
-  - DOMAIN-SUFFIX,steampowered.com,游戏平台
-  - DOMAIN-SUFFIX,steamcommunity.com,游戏平台
-  - DOMAIN-SUFFIX,steamstatic.com,游戏平台
-  - DOMAIN-SUFFIX,steamcontent.com,游戏平台
-  - DOMAIN-SUFFIX,epicgames.com,游戏平台
-  - DOMAIN-SUFFIX,epicgamescdn.com,游戏平台
-  - DOMAIN-SUFFIX,battle.net,游戏平台
-  - DOMAIN-SUFFIX,blizzard.com,游戏平台
-  - DOMAIN-SUFFIX,riotgames.com,游戏平台
-  - DOMAIN-SUFFIX,ubisoft.com,游戏平台
-  - DOMAIN-SUFFIX,ea.com,游戏平台
-  - RULE-SET,steam,游戏平台
-  - RULE-SET,category-games-global,游戏平台
   - RULE-SET,netflix,节点选择
   - RULE-SET,tiktok,节点选择
   - RULE-SET,spotify,节点选择
   - RULE-SET,apple,微软/苹果服务
-  - RULE-SET,biliintl,哔哩哔哩港澳台
   - DOMAIN-KEYWORD,midea,DIRECT
   - DOMAIN-SUFFIX,zalo.me,越南服务
   - DOMAIN-SUFFIX,zaloapp.com,越南服务
