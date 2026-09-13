@@ -8,19 +8,19 @@ const GITHUB_HOSTS = ["github.com", "api.github.com", "raw.githubusercontent.com
   "avatars.githubusercontent.com", "github.githubassets.com", "pages.github.io"];
 const EDITORS = ["Code.exe", "code.exe", "Postman.exe", "JetBrains Toolbox.exe", "idea64.exe", "pycharm64.exe", "webstorm64.exe"];
 const FIXTURES = {
-  private: ["router.test"], reject: ["ads.example.test"],
+  private: ["router.test"], reject: ["ads.example.test", "ads.tampermonkey.net"],
   openai: ["chatgpt.com", "openai.com"], anthropic: ["claude.ai"],
   "google-gemini": ["gemini.google.com"], "github-copilot": ["githubcopilot.com"],
   google: ["google.com"], github: [...GITHUB_DOMAINS, "githubcopilot.com"],
   microsoft: ["teams.microsoft.com", ...GITHUB_DOMAINS, "githubcopilot.com"],
-  "geolocation-!cn": ["chatgpt.com", "openai.com", "claude.ai", "githubcopilot.com", "google.com", ...GITHUB_DOMAINS],
+  "geolocation-!cn": ["chatgpt.com", "openai.com", "claude.ai", "githubcopilot.com", "google.com", "tampermonkey.net", ...GITHUB_DOMAINS],
 };
 const suffix = (host, domain) => host === domain || host.endsWith("." + domain);
 const member = (name, host) => (FIXTURES[name] || []).some(domain => suffix(host, domain));
 function firstRoute(config, host, processName) {
   for (const rule of config.rules) {
     const [type, value, target] = rule.split(",");
-    if (type === "MATCH") return value;
+    if (type === "MATCH" || type === "FINAL") return value;
     if ((type === "DOMAIN" && host === value) ||
         (type === "DOMAIN-SUFFIX" && suffix(host, value)) ||
         (type === "DOMAIN-KEYWORD" && host.includes(value)) ||
@@ -113,6 +113,46 @@ function checkDirectSite(config) {
     assert.equal(firstRoute(config, host, "Code.exe"), "DIRECT");
   }
 }
+function checkTampermonkey(config, foreign = false, prefix = "rule-set:") {
+  const rule = "DOMAIN-SUFFIX,tampermonkey.net,DIRECT";
+  assert.equal(config.rules.filter(item => item === rule).length, 1, "缺少或重复 Tampermonkey 直连");
+  const index = config.rules.indexOf(rule);
+  const siteIndex = config.rules.indexOf("DOMAIN-SUFFIX,jspoo.com,DIRECT");
+  assert.equal(index, siteIndex + 1, "Tampermonkey 应在既有网站例外后、业务规则前");
+  if (config.dns) {
+    const keys = prefix === "rule-set:" ? ["tampermonkey.net", ".tampermonkey.net"] : ["+.tampermonkey.net"];
+    for (const key of keys) assert(Object.hasOwn(config.dns["nameserver-policy"], key), "缺少明确的 Tampermonkey DNS 键：" + key);
+  }
+  for (const host of ["tampermonkey.net", "www.tampermonkey.net", "accounts.tampermonkey.net"]) {
+    assert.equal(firstRoute(config, host, "Code.exe"), "DIRECT", host + " 被进程或通用集合抢先匹配");
+    if (config.dns) {
+      const expected = foreign
+        ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"].map(url => prefix === "rule-set:" ? url + "#DIRECT" : url)
+        : prefix === "rule-set:" ? ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"] : "https://223.5.5.5/dns-query";
+      assert.deepEqual(firstDns(config, host, prefix), expected, host + " DNS 仍跟随通用代理集合");
+    }
+  }
+  const without = structuredClone(config);
+  without.rules = without.rules.filter(item => item !== rule);
+  for (const host of ["nottampermonkey.net", "tampermonkey.net.evil.test", "accounts.google.com", "login.microsoftonline.com"]) {
+    assert(!suffix(host, "tampermonkey.net"));
+    assert.equal(firstRoute(config, host, "Code.exe"), firstRoute(without, host, "Code.exe"), "不可改变第三方登录或相似域名分流");
+  }
+  if (prefix === "rule-set:" && config.dns) {
+    assert.equal(firstRoute(config, "ads.tampermonkey.net", "Code.exe"), "广告过滤", "既有广告优先级不得被绕过");
+  }
+}
+function tampermonkeyRegression(config, foreign = false, prefix = "rule-set:") {
+  checkTampermonkey(config, foreign, prefix);
+  const bad = structuredClone(config);
+  bad.rules = bad.rules.filter(item => item !== "DOMAIN-SUFFIX,tampermonkey.net,DIRECT");
+  assert.throws(() => checkTampermonkey(bad, foreign, prefix), /Tampermonkey/);
+  if (config.dns) {
+    const badDns = structuredClone(config);
+    for (const key of ["tampermonkey.net", ".tampermonkey.net", "+.tampermonkey.net"]) delete badDns.dns["nameserver-policy"][key];
+    assert.throws(() => checkTampermonkey(badDns, foreign, prefix), /DNS/);
+  }
+}
 function run() {
   for (const stem of [".github/config/shared", "防DNS泄露-国内版", "防DNS泄露-国外版"]) {
     const config = parse(read(stem + ".yaml"));
@@ -120,6 +160,7 @@ function run() {
       Object.keys(evaluate(read(stem + ".js")).dns["nameserver-policy"]), stem + " YAML/JS DNS 顺序不同步");
     checkOrder(config);
     checkGithub(config);
+    tampermonkeyRegression(config, stem.includes("国外"));
     if (stem.startsWith(".github/")) continue;
     const domestic = stem.includes("国内");
     checkRoutes(config, domestic);
@@ -144,13 +185,15 @@ function run() {
     checkOrder(config, "geosite:");
     checkGithub(config, "geosite:");
     checkDirectSite(config);
+    tampermonkeyRegression(config, stem.includes("国外"), "geosite:");
     assert.deepEqual(config.dns["nameserver-policy"]["+.jspoo.com"],
       stem.includes("国外") ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"] : "https://223.5.5.5/dns-query");
   }
   for (const file of [".github/config/shared.conf", "shadowrocket-国内版.conf", "shadowrocket-国外版.conf"]) {
     checkDirectSite(parseShadow(read(file)));
+    tampermonkeyRegression(parseShadow(read(file)));
   }
-  console.log("DNS 有序同步、AI/GitHub/微软集合重叠、进程首匹配、整应用优先级及负向控制 OK");
+  console.log("DNS 有序同步、AI/GitHub/微软集合重叠、进程首匹配、整应用优先级、Tampermonkey 直连/DNS及负向控制 OK");
 }
 if (require.main === module) run();
 module.exports = { run };

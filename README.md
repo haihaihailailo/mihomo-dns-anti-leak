@@ -141,6 +141,7 @@
 - 国外版的已知 AI 域名使用 AI 组解析，不保证仅按进程识别的请求、未知第三方域名或绕过 VPN 的应用也使用同一 DNS 出口；不能将其视为整个系统零泄露保证。
 - 系统更新、局域网、NTP、推送等既有直连规则保持不变。
 - 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo / Stash 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
+- Tampermonkey 的 `tampermonkey.net` 根域名及子域名（包括 `accounts.tampermonkey.net`）在六套入口中直连，位置在既有网站例外之后、业务规则之前；Mihomo / Stash 的专用 DNS 随国内/国外环境使用对应解析器，避免被通用国外集合改走代理。仅调整这个域名后缀，不放行整个浏览器进程，也不改变 Google、Microsoft 等第三方登录和云同步服务的分流。保留扩展同步与 TLS 验证；端点可达不代表整个 OAuth 流程已通过。[Tampermonkey 同步说明](https://www.tampermonkey.net/faq.php?locale=en&q=Q105)
 - Steam 中国 CDN 与中国大陆游戏域名在国内版直接 DIRECT、国外版走国内服务；海外游戏域名进入独立的 `游戏平台`，两者按原规则顺序隔离。
 - NVIDIA 驱动下载的 `download.nvidia.com` / `download.nvidia.cn`（含子域名）以及 `ota.nvidia.com` / `gfwsl.geforce.cn` 精确直连，优先于 NVIDIA 进程代理规则；其他 NVIDIA 服务不改变。国内版使用国内 DoH 获取 CDN 地址，国外版使用境外直连 DoH。网络下载成功不代表驱动安装或 NVIDIA App 自身故障也已解决。
 - `midea` 相关域名固定直连，避免客户/工作相关系统误走代理。

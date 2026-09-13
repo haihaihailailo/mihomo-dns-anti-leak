@@ -47,6 +47,7 @@ function environmentSettings(base, environment) {
   const externalKeys = {
     "rule-set:private": "DIRECT",
     "jspoo.com": "DIRECT", ".jspoo.com": "DIRECT",
+    "tampermonkey.net": "DIRECT", ".tampermonkey.net": "DIRECT",
     "rule-set:geolocation-!cn": "节点选择",
     "rule-set:google": "谷歌服务", "googleapis.cn": "谷歌服务", ".googleapis.cn": "谷歌服务",
     "rule-set:youtube": "YouTube", "rule-set:github": "GitHub", "rule-set:openai": "AI",

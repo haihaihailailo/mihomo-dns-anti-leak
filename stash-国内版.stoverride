@@ -47,6 +47,7 @@ dns: #!replace
   nameserver-policy: #!replace
     "geosite:private": https://223.5.5.5/dns-query
     "+.jspoo.com": https://223.5.5.5/dns-query
+    "+.tampermonkey.net": https://223.5.5.5/dns-query
     "geosite:openai": https://1.1.1.1/dns-query
     "geosite:anthropic": https://1.1.1.1/dns-query
     "geosite:google-gemini": https://1.1.1.1/dns-query
@@ -525,6 +526,7 @@ rules: #!replace
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
   - DOMAIN-SUFFIX,jspoo.com,DIRECT
+  - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT

@@ -123,6 +123,39 @@ async function dnsCase(general, ai, mutation) {
     console.log("Mihomo loopback DNS：" + (mutation ? "旧顺序负向控制" : "仓库修复后顺序") + " 4/4 OK");
   } finally { await stop(running); }
 }
+async function tampermonkeyDnsCase(region, general, direct, mutation) {
+  const config = parse(read("防DNS泄露-" + region + "版.yaml"));
+  const keys = new Set(["tampermonkey.net", ".tampermonkey.net"]);
+  const entries = Object.entries(config.dns["nameserver-policy"]).filter(([key]) =>
+    keys.has(key) || key === "rule-set:geolocation-!cn");
+  assert.equal(entries.length, 3, "缺少 Tampermonkey 根域名/子域名和通用 DNS 对照");
+  const policies = Object.fromEntries(entries.filter(([key]) => !mutation || !keys.has(key))
+    .map(([key]) => [key, ["udp://127.0.0.1:" + (keys.has(key) ? direct : general)]]));
+  const reserve = socket(); const port = await bind(reserve);
+  await new Promise(resolve => reserve.close(resolve));
+  const running = start({ ...base(), "rule-providers": {
+    "geolocation-!cn": { type: "inline", behavior: "domain", payload: ["+.tampermonkey.net"] },
+  }, dns: {
+    enable: true, listen: "127.0.0.1:" + port, ipv6: false, "enhanced-mode": "redir-host",
+    "use-hosts": false, "use-system-hosts": false, nameserver: ["udp://127.0.0.1:" + general],
+    "nameserver-policy": policies,
+  } });
+  try {
+    let ready = false;
+    for (let i = 0; i < 12; i++) {
+      assert(children.has(running.child), "内核提前退出：" + running.logs());
+      try { await query(port, "ready.example.test"); ready = true; break; } catch { await pause(100); }
+    }
+    assert(ready, "Tampermonkey DNS 内核未就绪：" + running.logs());
+    for (const host of ["tampermonkey.net", "accounts.tampermonkey.net", "www.tampermonkey.net"]) {
+      assert.equal(await query(port, host), mutation ? "198.51.100.10" : "203.0.113.40", region + " " + host);
+    }
+    for (const host of ["nottampermonkey.net", "tampermonkey.net.evil.test", "accounts.google.com"]) {
+      assert.equal(await query(port, host), "198.51.100.10", "不可扩大 DNS 匹配范围：" + host);
+    }
+    console.log(region + " Tampermonkey loopback DNS：" + (mutation ? "删除例外负向控制" : "根域名/子域名优先级") + " 6/6 OK");
+  } finally { await stop(running); }
+}
 function snapshotProviders(file, manifest) {
   const original = parse(read(file))["rule-providers"];
   const providers = {};
@@ -213,6 +246,11 @@ async function providerCase(file, manifest) {
     const ai = await upstream([203,0,113,20]);
     await dnsCase(general, ai, false);
     await dnsCase(general, ai, true);
+    const direct = await upstream([203,0,113,40]);
+    for (const region of ["国内", "国外"]) {
+      await tampermonkeyDnsCase(region, general, direct, false);
+      await tampermonkeyDnsCase(region, general, direct, true);
+    }
     if (cacheDirectory) {
       assert(path.isAbsolute(cacheDirectory), "MIHOMO_RULE_CACHE 须为绝对路径");
       const manifest = JSON.parse(fs.readFileSync(path.join(cacheDirectory, "manifest.json"), "utf8"));

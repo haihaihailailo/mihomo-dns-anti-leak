@@ -181,6 +181,8 @@ const OVERRIDE = {
       "rule-set:private": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "jspoo.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".jspoo.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "tampermonkey.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".tampermonkey.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
@@ -319,6 +321,7 @@ RULE-SET,private,DIRECT
 GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
 DOMAIN-SUFFIX,jspoo.com,DIRECT
+DOMAIN-SUFFIX,tampermonkey.net,DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,download.nvidia.com,DIRECT
 DOMAIN-SUFFIX,download.nvidia.cn,DIRECT

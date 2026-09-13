@@ -179,6 +179,12 @@ dns:
     .jspoo.com:
       - https://1.1.1.1/dns-query#DIRECT
       - https://8.8.8.8/dns-query#DIRECT
+    tampermonkey.net:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
+    .tampermonkey.net:
+      - https://1.1.1.1/dns-query#DIRECT
+      - https://8.8.8.8/dns-query#DIRECT
     aliapp.org:
       - https://223.5.5.5/dns-query#国内服务
       - https://doh.pub/dns-query#国内服务
@@ -880,6 +886,7 @@ rules:
   - GEOIP,LAN,DIRECT,no-resolve
   - RULE-SET,reject,广告过滤
   - DOMAIN-SUFFIX,jspoo.com,DIRECT
+  - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
   - DOMAIN-SUFFIX,yhglobal.com,国内服务
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
