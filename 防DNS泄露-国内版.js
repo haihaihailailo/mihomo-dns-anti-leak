@@ -745,10 +745,7 @@ DOMAIN-SUFFIX,chatgpt.com,AI
 DOMAIN-SUFFIX,openai.com,AI
 DOMAIN-SUFFIX,oaistatic.com,AI
 DOMAIN-SUFFIX,oaiusercontent.com,AI
-DOMAIN-SUFFIX,auth0.com,AI
-DOMAIN-SUFFIX,statsigapi.net,AI
-DOMAIN-SUFFIX,intercom.io,AI
-DOMAIN-SUFFIX,intercomcdn.com,AI
+DOMAIN,copilot.microsoft.com,AI
 RULE-SET,openai,AI
 RULE-SET,anthropic,AI
 RULE-SET,google-gemini,AI
@@ -1616,54 +1613,6 @@ const ENVIRONMENT = {
         "https://223.5.5.5/dns-query#越南服务",
         "https://doh.pub/dns-query#越南服务"
       ],
-      "vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      "com.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".com.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      "net.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".net.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      "org.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".org.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      "edu.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".edu.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      "gov.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
-      ".gov.vn": [
-        "https://223.5.5.5/dns-query#越南服务",
-        "https://doh.pub/dns-query#越南服务"
-      ],
       "biz.vn": [
         "https://223.5.5.5/dns-query#越南服务",
         "https://doh.pub/dns-query#越南服务"
@@ -1931,6 +1880,54 @@ const ENVIRONMENT = {
       "rule-set:spotify": [
         "https://1.1.1.1/dns-query#Spotify",
         "https://8.8.8.8/dns-query#Spotify"
+      ],
+      "vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      "com.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".com.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      "net.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".net.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      "org.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".org.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      "edu.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".edu.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      "gov.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
+      ],
+      ".gov.vn": [
+        "https://223.5.5.5/dns-query#越南服务",
+        "https://doh.pub/dns-query#越南服务"
       ],
       "rule-set:cn": [
         "https://223.5.5.5/dns-query",

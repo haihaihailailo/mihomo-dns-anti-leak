@@ -96,6 +96,15 @@
 - “统一”覆盖目前维护源和已知应用标识，不保证未来新增域名、未知第三方 SDK 或白名单外应用。整应用规则仍优先于后续域名分类：一个已归组 App 内嵌别家内容时，命中 App 规则的连接跟随这个 App；DNS 仍按域名归组，跨业务场景下可能与 App 出口不同，不保证所有请求的两者完全一致。外部浏览器请求按自己的规则处理。
 - `validate_service_ownership.cjs` 经唯一入口检查六套配置的首条匹配、B站与游戏/微软集合重叠、通用工具兜底、业务 DNS 和负向控制；离线模型不等同于设备实测。
 
+### AI 专属域名与共享服务边界（2026-09-14）
+
+- 六套入口不再将 `auth0.com`、`statsigapi.net`、`intercom.io`、`intercomcdn.com` 整根强制交给 AI。这些分别是多租户登录、统计和客服基础设施，不是 AI 专属域名；参考 [Auth0 租户域名](https://auth0.com/docs/get-started/auth0-overview/create-tenants)、[Statsig 域名](https://docs.statsig.com/infrastructure/statsig_domains)、[Intercom CSP](https://www.intercom.com/help/en/articles/3894-using-intercom-with-content-security-policy)。官方网络放行清单不是独占的分流归属清单。
+- 已命中整应用规则的 ChatGPT 等连接仍跟随 AI；浏览器访问共享基础设施时按剩余正常规则分流，不强制 DIRECT，也不声称能仅凭共享主机名判断来源网页。`auth0.openai.com` 等 AI 自有域名继续归 AI。已识别域名的 DNS 绑定保留，移除的共享后缀不再强制绑定 `#AI`。
+- 明确将 `copilot.microsoft.com` 网页入口归 AI，与已有 `com.microsoft.copilot` 包名一致；Mihomo 同步 `#AI` DNS，Stash 使用自身 DNS 策略。依据 [Microsoft Copilot 客户端说明](https://learn.microsoft.com/en-us/microsoft-365/copilot/microsoft-365-copilot-app-overview)，只补精确网页入口，不把整个 Bing、MSN、微软登录或更新服务挪到 AI；这不等于穷尽全部 Copilot 企业功能或共享依赖。
+- Shadowrocket 的 OpenAI / Claude / Gemini / GitHub Copilot 改用与 Mihomo、Stash 同源的 MetaCubeX 纯域名 `DOMAIN-SET`，取消旧 classical 集合中按共享根域、关键词及云厂商 ASN 归 AI 的规则。三端格式不同、上游会更新，不承诺文件逐字相同或所有第三方主机都已证明独占。
+- 回归包含共享根域负例、双 Copilot 入口和 DNS 正例；联网下载器检查实际 AI 文本规则，隔离 Mihomo 用真实 MRS/文本快照检查 DNS 选路。离线合成样本、公开快照及客户端实测是不同证据层，不能互相替代。
+- Mihomo 的 `.vn`、`.com.vn` 等地域 DNS 兜底后置于专属业务集合：Google / YouTube 越南域名继续跟随节点选择，普通越南业务继续跟随越南服务。只改变地域匹配顺序，不更换 DNS 服务器或越南服务默认值；两环境均有真实规则快照及恢复错误顺序的负向对照。
+
 ## 使用方法
 
 ### YAML 覆写
@@ -175,7 +184,7 @@
 | Mihomo / Stash 常用服务、中国域名与地域分类 | [MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)，保留原有 MRS | 上游定期汇总维护中的数据；大域名集继续使用优化格式，不因更换广告源一并改成 classical。[Stash 支持的格式](https://stash.wiki/en/rules/rule-set) |
 | 三类客户端广告过滤 | [秋风 AWAvenue Only.Ads](https://github.com/TG-Twilight/AWAvenue-Ads-Rule/blob/main/assets/README_Update.md) | 选纯广告版，不额外叠加其 Privacy / Unwelcome 分类。Mihomo、Stash 用 Clash Classical YAML，Shadowrocket 用 Surge RULE-SET，以保留相同的精确域名、后缀和关键词语义。覆盖较保守，不追求最大拦截量，也不保证零误杀。 |
 | 微信 / 支付宝 | [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script) 的专属规则 | Mihomo、Stash 微信改为 `WeChat_No_Resolve.yaml`，规则调用继续带 `no-resolve`；Shadowrocket 原微信源的 ASN 已带该标记。支付宝保留原源，`aliapp.org` 本地补充保留。 |
-| Claude / Gemini / GitHub Copilot | MetaCubeX 专属 domain/text 列表 | Mihomo、Stash 在 Google、GitHub、微软等通用规则之前归入现有 AI 组，并同步 DNS 策略；Shadowrocket 保留已有专属规则。不是新增策略组，也不保证覆盖所有 AI 产品。 |
+| OpenAI / Claude / Gemini / GitHub Copilot | MetaCubeX 同名域名集合 | Mihomo、Stash 的 OpenAI 保持 MRS，其余三组用 domain/text；Shadowrocket 四组均用同源 `.list` 的 DOMAIN-SET。在 Google、GitHub、微软等通用规则之前归 AI；Microsoft Copilot 网页另有精确补充。不是新增策略组，也不保证覆盖所有 AI 产品。 |
 | Shadowrocket 中国域名 | blackmatrix7 的 `China_Domain.list` | 按[上游调用说明](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/China/README.md)使用 `DOMAIN-SET`，不再将纯域名内容当 `RULE-SET`。不扩大为实验性 ChinaMax。 |
 
 - 广告缓存使用独立路径，避免旧 MRS 与新 classical 文件混用。切换后若业务异常，先查看是否命中 `广告过滤`，可临时将该组改为 DIRECT 对照；不需要关闭 TLS 证书校验或清空全部客户端数据。

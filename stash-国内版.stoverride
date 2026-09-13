@@ -61,6 +61,7 @@ dns: #!replace
     "+.codeiumdata.com": https://1.1.1.1/dns-query
     "+.windsurf.build": https://1.1.1.1/dns-query
     "+.windsurf.com": https://1.1.1.1/dns-query
+    "copilot.microsoft.com": https://1.1.1.1/dns-query
     "geosite:openai": https://1.1.1.1/dns-query
     "geosite:anthropic": https://1.1.1.1/dns-query
     "geosite:google-gemini": https://1.1.1.1/dns-query
@@ -575,10 +576,7 @@ rules: #!replace
   - DOMAIN-SUFFIX,openai.com,AI
   - DOMAIN-SUFFIX,oaistatic.com,AI
   - DOMAIN-SUFFIX,oaiusercontent.com,AI
-  - DOMAIN-SUFFIX,auth0.com,AI
-  - DOMAIN-SUFFIX,statsigapi.net,AI
-  - DOMAIN-SUFFIX,intercom.io,AI
-  - DOMAIN-SUFFIX,intercomcdn.com,AI
+  - DOMAIN,copilot.microsoft.com,AI
   - RULE-SET,openai,AI
   - RULE-SET,anthropic,AI
   - RULE-SET,google-gemini,AI

@@ -53,13 +53,16 @@ function serviceDnsPolicies(base, policies, foreign) {
     "bilibili", "biliintl", "steam-cn", "category-games-cn", "steam", "category-games-global",
     "github", "microsoft", "apple"];
   const ordered = { "rule-set:private": result["rule-set:private"] };
-  for (const [key, value] of Object.entries(result)) if (!key.startsWith("rule-set:")) ordered[key] = value;
+  // .vn 等地域兜底不是专属业务；不得抢在 Google/YouTube 的越南域名集合之前。
+  const regionalKeys = new Set(["vn", "com.vn", "net.vn", "org.vn", "edu.vn", "gov.vn"].flatMap(domain => [domain, "." + domain]));
+  for (const [key, value] of Object.entries(result)) if (!key.startsWith("rule-set:") && !regionalKeys.has(key)) ordered[key] = value;
   for (const name of preferred) if (Object.hasOwn(result, "rule-set:" + name)) {
     ordered["rule-set:" + name] = result["rule-set:" + name];
   }
   for (const [key, value] of Object.entries(result)) {
-    if (!Object.hasOwn(ordered, key) && !["rule-set:cn", "rule-set:geolocation-!cn"].includes(key)) ordered[key] = value;
+    if (!Object.hasOwn(ordered, key) && !regionalKeys.has(key) && !["rule-set:cn", "rule-set:geolocation-!cn"].includes(key)) ordered[key] = value;
   }
+  for (const [key, value] of Object.entries(result)) if (regionalKeys.has(key)) ordered[key] = value;
   for (const key of ["rule-set:cn", "rule-set:geolocation-!cn"]) ordered[key] = result[key];
   return ordered;
 }

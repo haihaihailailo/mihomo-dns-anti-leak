@@ -10,6 +10,7 @@ const YAML = require("yaml");
 const { read, parse } = require("./build_profiles.cjs");
 const { hash, validateBody } = require("./check_remote_rules.cjs");
 const { MEMBERS } = require("./validate_service_ownership.cjs");
+const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
 const binary = process.env.MIHOMO_TEST_BIN;
 assert(binary && path.isAbsolute(binary) && fs.existsSync(binary), "MIHOMO_TEST_BIN 须为已有内核的绝对路径");
 const directory = fs.mkdtempSync(path.join(process.env.MIHOMO_TEST_OUTPUT || os.tmpdir(), "mihomo-loopback-"));
@@ -204,14 +205,16 @@ async function tampermonkeyDnsCase(region, general, direct, mutation) {
 }
 // 真实内核 + 合成重叠集合：所有 DNS 上游只在 loopback 返回文档保留 IP。
 // 验证业务 DNS 分组/顺序，不把它当作公网 DNS 出口或移动端进程识别实测。
-async function serviceDnsCase(region, ports, mutation) {
+async function serviceDnsCase(region, ports, mutation, manifest) {
   const original = parse(read("防DNS泄露-" + region + "版.yaml"));
   let entries = Object.entries(original.dns["nameserver-policy"]);
+  const regional = key => /^\.?(vn|com\.vn|net\.vn|org\.vn|edu\.vn|gov\.vn)$/.test(key);
   if (mutation) entries = [
-    ...entries.filter(([key]) => key === "rule-set:cn"),
-    ...entries.filter(([key]) => key !== "rule-set:cn"),
+    ...entries.filter(([key]) => manifest ? regional(key) : key === "rule-set:cn"),
+    ...entries.filter(([key]) => manifest ? !regional(key) : key !== "rule-set:cn"),
   ];
-  const providers = Object.fromEntries(entries.filter(([key]) => key.startsWith("rule-set:"))
+  const providers = manifest ? snapshotProviders("防DNS泄露-" + region + "版.yaml", manifest)
+    : Object.fromEntries(entries.filter(([key]) => key.startsWith("rule-set:"))
     .map(([key], index) => {
       const name = key.slice(9);
       return [name, { type: "inline", behavior: "domain",
@@ -235,7 +238,10 @@ async function serviceDnsCase(region, ports, mutation) {
       try { await query(port, "ready.example.test"); ready = true; break; } catch { await pause(100); }
     }
     assert(ready, "业务 DNS 内核未就绪：" + running.logs());
-    const cases = mutation ? [["www.bilibili.com", "198.51.100.10"], ["www.biligame.com", "198.51.100.10"]]
+    const cases = manifest ? [
+      ...["www.google.com.vn", "www.youtube.vn"].map(host => [host, mutation ? "203.0.113.54" : "198.51.100.10"]),
+      ...["api.zalo.me", "api.zalopay.vn", "ordinary.example.vn"].map(host => [host, "203.0.113.54"]),
+    ] : mutation ? [["www.bilibili.com", "198.51.100.10"], ["www.biligame.com", "198.51.100.10"]]
       : [
         ...["www.bilibili.com", "api.bilibili.com", "b23.tv", "i0.hdslb.com", "video.bilivideo.com", "www.biligame.com", "p.bstarstatic.com"]
           .map(host => [host, "203.0.113.51"]),
@@ -245,7 +251,9 @@ async function serviceDnsCase(region, ports, mutation) {
         ...["www.perplexity.ai", "api.cursor.sh", "api.codeium.com"].map(host => [host, "203.0.113.20"]),
       ];
     for (const [host, expected] of cases) assert.equal(await query(port, host), expected, region + " " + host);
-    console.log(region + " 业务分组 loopback DNS：" + (mutation ? "CN 抢先匹配负向控制" : "B站/游戏/微软苹果/越南/AI") + " " + cases.length + "/" + cases.length + " OK（合成规则集）");
+    const label = manifest ? (mutation ? "越南地域前置负向控制" : "Google/YouTube 越南域名与地域兜底")
+      : mutation ? "CN 抢先匹配负向控制" : "B站/游戏/微软苹果/越南/AI";
+    console.log(region + " 业务分组 loopback DNS：" + label + " " + cases.length + "/" + cases.length + " OK（" + (manifest ? "真实规则快照" : "合成规则集") + "）");
   } finally { await stop(running); }
 }
 function snapshotProviders(file, manifest) {
@@ -307,10 +315,13 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
       assert.equal(await query(port, host), intercepted ? "198.51.100.10" : "203.0.113.30", region + " " + host);
     }
     assert.equal(await query(port, "api.githubcopilot.com"), "203.0.113.20", "Copilot 仍先匹配 AI");
+    assert.equal(await query(port, "copilot.microsoft.com"), "203.0.113.20", "Microsoft Copilot 显式 DNS 仍先匹配 AI");
+    assert.equal(await query(port, "auth0.openai.com"), "203.0.113.20", "OpenAI 自有登录域仍走 AI");
+    for (const host of SHARED_AI_HOSTS) assert.equal(await query(port, host), "198.51.100.10", "真实 AI 规则不得接管共享根域：" + host);
     for (const host of ["teams.microsoft.com", "notgithub.com", "github.com.evil.test"]) {
       assert.equal(await query(port, host), "198.51.100.10", "普通微软/相似域名不可误入 GitHub");
     }
-    console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，GitHub " + (mutation ? "微软前置负向控制/Pages例外保留" : "修复后") + " 10/10 OK");
+    console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，GitHub " + (mutation ? "微软前置负向控制/Pages例外保留" : "修复后") + "、双 Copilot/OpenAI 登录/共享根域 " + (12 + SHARED_AI_HOSTS.length) + "/" + (12 + SHARED_AI_HOSTS.length) + " OK");
   } finally { await stop(running); }
 }
 async function providerCase(file, manifest) {
@@ -371,6 +382,8 @@ async function providerCase(file, manifest) {
       for (const region of ["国内", "国外"]) {
         await githubDnsCase(region, manifest, general, github, ai, false);
         await githubDnsCase(region, manifest, general, github, ai, true);
+        await serviceDnsCase(region, servicePorts, false, manifest);
+        await serviceDnsCase(region, servicePorts, true, manifest);
       }
     } else console.log("未指定 MIHOMO_RULE_CACHE，跳过远程快照完整初始化");
   } finally {

@@ -5,7 +5,7 @@ const path = require("node:path");
 const { createHash } = require("node:crypto");
 const { read, parse } = require("./build_profiles.cjs");
 const { parseShadow } = require("./build_native_profiles.cjs");
-const { parsePayload } = require("./validate_rule_sources.cjs");
+const { parsePayload, AI_DOMAIN_SOURCES, checkAiDomainPayload } = require("./validate_rule_sources.cjs");
 const hash = body => createHash("sha256").update(body).digest("hex");
 const LIMIT = 4194304;
 function sources() {
@@ -35,7 +35,13 @@ function validateBody(body, source) {
     return null; // 只验证传输容器；完整解码由隔离 Mihomo 初始化检查完成。
   }
   const text = new TextDecoder("utf-8", { fatal: true }).decode(body);
-  return parsePayload(text, source.behavior, source.format).length;
+  const payload = parsePayload(text, source.behavior, source.format);
+  const aiName = source.url && AI_DOMAIN_SOURCES.find(name => source.url.endsWith("/geo/geosite/" + name + ".list"));
+  if (aiName) {
+    assert.equal(source.behavior, "domain", "AI 来源不得悄然改为 classical");
+    checkAiDomainPayload(payload, aiName);
+  }
+  return payload.length;
 }
 async function download(source, fetcher = fetch, timeout = 12000, limit = LIMIT) {
   const signal = AbortSignal.timeout(timeout);
@@ -77,8 +83,12 @@ async function selfTest() {
   } finally { clearTimeout(keepAlive); }
   assert.throws(() => validateBody(Buffer.from("payload: ["), { behavior: "classical", format: "yaml" }));
   assert.throws(() => validateBody(Buffer.from("<html>bad MRS</html>"), { format: "mrs" }));
+  const aiSource = { ...source, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.list" };
+  assert.equal(validateBody(Buffer.from("+.openai.com\n+.chatgpt.com\no33249.ingest.sentry.io"), aiSource), 3);
+  await assert.rejects(() => download(aiSource, async () => new Response("+.openai.com\n+.stripe.com")), /AI 上游误收共享服务/);
+  await assert.rejects(() => download(aiSource, async () => new Response("IP-ASN,20473,no-resolve")), /无效纯域名规则/);
   assert(sources().length > 0);
-  console.log("公开规则下载器：成功、403、HTML、空正文、超限、超时、格式错误合成检查 OK");
+  console.log("公开规则下载器：成功、403、HTML、空正文、超限、超时、格式错误及 AI 共享根域/ASN 回流负向控制 OK");
 }
 async function run(output) {
   assert(output, "用法：node check_remote_rules.cjs --output-dir <不存在的新目录>");

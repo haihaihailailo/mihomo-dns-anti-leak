@@ -3,6 +3,29 @@ const assert = require("node:assert/strict");
 const { parse, renderProfiles } = require("./build_profiles.cjs");
 const { renderNativeProfiles, parseShadow } = require("./build_native_profiles.cjs");
 const AI = ["anthropic", "google-gemini", "github-copilot"];
+const AI_DOMAIN_SOURCES = ["openai", ...AI];
+// 多租户基础设施不应整根归 AI；保留上游的服务专属主机，不当作浏览器来源识别。
+const SHARED_AI_HOSTS = ["auth0.com", "statsigapi.net", "intercom.io", "intercomcdn.com",
+  "stripe.com", "sentry.io", "algolia.net", "segment.io", "launchdarkly.com", "identrust.com",
+  "observeit.net", "amazonaws.com", "cloudinary.com", "akamaized.net", "azureedge.net",
+  "blob.core.windows.net", "livekit.cloud"].flatMap(domain => [domain, "unrelated." + domain])
+  .concat(["example-co.au.auth0.com", "api.intercom.io", "js.intercomcdn.com", "events.statsigapi.net"]);
+const AI_REQUIRED_HOSTS = {
+  openai: ["api.openai.com", "auth0.openai.com", "chatgpt.com"],
+  anthropic: ["claude.ai", "api.anthropic.com"],
+  "google-gemini": ["gemini.google.com", "generativelanguage.googleapis.com"],
+  "github-copilot": ["api.githubcopilot.com", "copilot-proxy.githubusercontent.com", "copilot-workspace.githubnext.com",
+    "copilotprodattachments.blob.core.windows.net", "copilot-telemetry-service.githubusercontent.com", "copilot-telemetry.githubusercontent.com"],
+};
+function checkAiDomainPayload(payload, name) {
+  const matchers = payload.map(rule => {
+    const escaped = rule.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]*");
+    return host => rule.startsWith("+.") ? host === rule.slice(2) || host.endsWith(rule.slice(1))
+      : rule.startsWith(".") ? host.endsWith(rule) : new RegExp("^" + escaped + "$").test(host);
+  });
+  for (const host of SHARED_AI_HOSTS) assert(!matchers.some(matches => matches(host)), "AI 上游误收共享服务：" + host);
+  if (name) for (const host of AI_REQUIRED_HOSTS[name]) assert(matchers.some(matches => matches(host)), name + " 上游缺少已确认专属域名：" + host);
+}
 const ADS = "TG-Twilight/AWAvenue-Ads-Rule";
 const ADS_YAML = "Filters/AWAvenue-Ads-Rule-Clash-Classical-Only.Ads.yaml";
 const ADS_LIST = "Filters/AWAvenue-Ads-Rule-Surge-RULE-SET-Only.Ads.list";
@@ -104,6 +127,9 @@ function run() {
       assert(rules.includes("DOMAIN-SET," + china + "," + domestic));
       assert(!rules.some(rule => rule.startsWith("RULE-SET," + china)), "纯域名集不能当 classical 调用");
       assert(!content.includes("/Advertising/Advertising.list"), "不得叠加旧全量广告集");
+      for (const name of AI_DOMAIN_SOURCES) assert(rules.includes("DOMAIN-SET,https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/" + name + ".list,AI"),
+        "Shadowrocket AI 必须使用同源纯域名集：" + name);
+      assert(!rules.some(rule => rule.startsWith("RULE-SET,") && rule.endsWith(",AI")), "AI 不应回退到含共享 ASN/根域的 classical 集合");
     }
   }
   assert.deepEqual(parsePayload("payload:\n  - DOMAIN,ads.example.test\n", "classical", "yaml"), ["DOMAIN,ads.example.test"]);
@@ -111,7 +137,13 @@ function run() {
   for (const text of ["<html>403</html>", ".example.test", "DOMAIN,example.test,DIRECT"]) {
     assert.throws(() => parsePayload(text, "classical", "text"));
   }
+  checkAiDomainPayload(["+.openai.com", "o33249.ingest.sentry.io", "ppl-ai-file-upload.s3.amazonaws.com"]);
+  for (const rule of ["+.auth0.com", "intercom.io", ".statsigapi.net", "*.sentry.io", "+.stripe.com"]) {
+    assert.throws(() => checkAiDomainPayload(["+.openai.com", rule]), /AI 上游误收共享服务/);
+  }
+  for (const name of AI_DOMAIN_SOURCES) assert.throws(() => checkAiDomainPayload(["unrelated.example.test"], name), /上游缺少已确认专属域名/);
+  assert.throws(() => checkAiDomainPayload(["copilot.microsoft.com"], "github-copilot"), /github-copilot 上游缺少/);
   console.log("规则来源、格式/缓存隔离、AI 优先级与 DNS、纯广告模式、Shadowrocket DOMAIN-SET 契约 OK");
 }
 if (require.main === module) run();
-module.exports = { parsePayload, run };
+module.exports = { parsePayload, run, AI_DOMAIN_SOURCES, SHARED_AI_HOSTS, checkAiDomainPayload };

@@ -742,10 +742,7 @@ DOMAIN-SUFFIX,chatgpt.com,AI
 DOMAIN-SUFFIX,openai.com,AI
 DOMAIN-SUFFIX,oaistatic.com,AI
 DOMAIN-SUFFIX,oaiusercontent.com,AI
-DOMAIN-SUFFIX,auth0.com,AI
-DOMAIN-SUFFIX,statsigapi.net,AI
-DOMAIN-SUFFIX,intercom.io,AI
-DOMAIN-SUFFIX,intercomcdn.com,AI
+DOMAIN,copilot.microsoft.com,AI
 RULE-SET,openai,AI
 RULE-SET,anthropic,AI
 RULE-SET,google-gemini,AI

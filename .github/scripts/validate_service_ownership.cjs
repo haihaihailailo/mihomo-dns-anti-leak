@@ -2,6 +2,7 @@
 const assert = require("node:assert/strict");
 const { read, parse, evaluate } = require("./build_profiles.cjs");
 const { parseShadow } = require("./build_native_profiles.cjs");
+const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
 const BILI = "哔哩哔哩港澳台";
 const SYSTEM = "微软/苹果服务";
 const BILI_PACKAGES = ["tv.danmaku.bili", "com.bstar.intl", "com.bilibili.app.blue",
@@ -26,7 +27,7 @@ const MEMBERS = {
   "category-games-global": ["xbox.com", "xboxlive.com", "battle.net"],
   openai: ["openai.com", "chatgpt.com"], anthropic: ["claude.ai"],
   "google-gemini": ["gemini.google.com"], "github-copilot": ["githubcopilot.com"],
-  google: ["google.com"], youtube: ["youtube.com"], github: ["github.com", "githubcopilot.com"],
+  google: ["google.com", "google.com.vn", "youtube.vn"], youtube: ["youtube.com", "youtube.vn"], github: ["github.com", "githubcopilot.com"],
   microsoft: ["microsoft.com", "windowsupdate.com", "office.com", "xbox.com", "xboxlive.com", "github.com", "githubcopilot.com"],
   apple: ["apple.com", "icloud.com"], telegram: ["telegram.org"],
   netflix: ["netflix.com"], spotify: ["spotify.com"], tiktok: ["tiktok.com"],
@@ -40,7 +41,6 @@ function providerName(value) {
   if (!value.startsWith("https://")) return value;
   const name = value.split("/").at(-1).replace(/\.list$/, "");
   return ({ "steam@cn": "steam-cn", "category-games-!cn": "category-games-global", BiliBiliIntl: "biliintl",
-    OpenAI: "openai", Claude: "anthropic", Gemini: "google-gemini", Copilot: "github-copilot",
     AWAvenue: "reject", China_Domain: "cn" })[name]
     || (value.includes("Only.Ads") ? "reject" : name.toLowerCase());
 }
@@ -71,9 +71,9 @@ function checkRoutes(config, client, domestic) {
   const samples = [[BILI_HOSTS, BILI],
     [["store.steampowered.com", "cdn.steamchina.com", "dl.steam.clngaa.com", "www.wegame.com", "www.xbox.com", "assets.xboxlive.com"], "游戏平台"],
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com", "p01.icloud.com"], SYSTEM],
-    [["chatgpt.com", "api.openai.com", "claude.ai", "gemini.google.com", "api.githubcopilot.com", ...EXTRA_AI_HOSTS], "AI"],
-    [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com"], "越南服务"],
-    [["github.com", "www.google.com", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
+    [["chatgpt.com", "api.openai.com", "auth0.openai.com", "claude.ai", "gemini.google.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"],
+    [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
+    [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     assert.equal(route(host), owner, host + " 未进入 " + owner);
     if (client === "mihomo") assert.equal(route(host, "Code.exe"), owner, "通用工具兜底遮挡 " + host);
@@ -83,13 +83,13 @@ function checkRoutes(config, client, domestic) {
   for (const host of ["notbilibili.com", "bilibili.com.evil.test", "shared.akamaized.net"]) {
     assert.notEqual(route(host), BILI, "不可扩大到相似域名或共享 CDN 根域名");
   }
-  for (const host of ["unrelated.s3.amazonaws.com", "unrelated.cloudinary.com"]) {
+  for (const host of [...SHARED_AI_HOSTS, "unrelated.s3.amazonaws.com", "unrelated.cloudinary.com", "copilot.microsoft.com.evil.test", "notcopilot.microsoft.com"]) {
     assert.notEqual(route(host), "AI", "AI 专属资源不可扩展到共享服务根域名");
   }
   if (client !== "mihomo") return;
   const packages = [...BILI_PACKAGES.map(name => [name, BILI]), ...[...STEAM_PROCESSES, ...GAME_PACKAGES].map(name => [name, "游戏平台"]),
     ...["com.microsoft.office.outlook", "com.microsoft.skydrive", "com.microsoft.teams", "com.apple.android.music", "Teams.exe"].map(name => [name, SYSTEM]),
-    ["com.zing.zalo", "越南服务"], ["com.openai.chatgpt", "AI"]];
+    ["com.zing.zalo", "越南服务"], ["com.openai.chatgpt", "AI"], ["com.microsoft.copilot", "AI"]];
   for (const [name, owner] of packages) {
     assert.deepEqual(config.rules.filter(rule => rule.startsWith("PROCESS-NAME," + name + ",")), ["PROCESS-NAME," + name + "," + owner]);
     assert.equal(route("new-service.example.test", name), owner, "包名/进程未统一：" + name);
@@ -103,9 +103,9 @@ function checkDns(config, domestic) {
   const samples = [[BILI_HOSTS, BILI],
     [["cdn.steamchina.com", "www.wegame.com", "assets.xboxlive.com", "store.steampowered.com"], "游戏平台"],
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com"], SYSTEM],
-    [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com"], "越南服务"],
-    [["github.com", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"],
-    [["api.openai.com", "api.githubcopilot.com", ...EXTRA_AI_HOSTS], "AI"]];
+    [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
+    [["github.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"],
+    [["api.openai.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     const servers = firstDns(config, host);
     assert(Array.isArray(servers) && servers.length === 2 && servers.every(server => server.endsWith("#" + owner)), host + " DNS 未跟随 " + owner);
@@ -121,9 +121,14 @@ function negativeControls(config, domestic) {
   mutate(c => { c.rules.unshift("PROCESS-NAME,Code.exe,节点选择"); });
   mutate(c => { c.rules.unshift("RULE-SET,category-games-cn,游戏平台"); });
   mutate(c => { c.rules.unshift("RULE-SET,microsoft," + SYSTEM); });
+  mutate(c => { c.rules = c.rules.filter(r => r !== "DOMAIN,copilot.microsoft.com,AI"); });
+  mutate(c => { c.rules.unshift("DOMAIN-SUFFIX,auth0.com,AI"); });
   const badDns = structuredClone(config);
   badDns.dns["nameserver-policy"]["rule-set:bilibili"] = ["https://223.5.5.5/dns-query"];
   assert.throws(() => checkDns(badDns, domestic));
+  const badRegionDns = structuredClone(config);
+  badRegionDns.dns["nameserver-policy"] = { ".vn": config.dns["nameserver-policy"][".vn"], ...config.dns["nameserver-policy"] };
+  assert.throws(() => checkDns(badRegionDns, domestic));
   const badApp = structuredClone(config);
   badApp.rules.unshift("DOMAIN,api.openai.com,AI");
   assert.throws(() => checkAppDnsBoundary(badApp));
@@ -166,8 +171,12 @@ function run() {
     for (const name of ["bilibili", "biliintl", "steam@cn", "category-games-cn", "steam", "category-games-!cn", "apple"]) {
       assert(keys.indexOf("geosite:" + name) >= 0 && keys.indexOf("geosite:" + name) < keys.indexOf("geosite:cn"));
     }
-    checkRoutes(parseShadow(read("shadowrocket-" + environment + "版.conf")), "shadowrocket", domestic);
+    const shadow = parseShadow(read("shadowrocket-" + environment + "版.conf"));
+    checkRoutes(shadow, "shadowrocket", domestic);
+    const badCopilot = structuredClone(shadow);
+    badCopilot.rules = badCopilot.rules.filter(rule => !rule.includes("/github-copilot.list,AI"));
+    assert.throws(() => checkRoutes(badCopilot, "shadowrocket", domestic));
   }
-  console.log("六套入口业务归属：B站全域名/7包名、Steam整应用/国内CDN、集合重叠、共享CDN边界、App与DNS交叉边界、例外及9类负向控制 OK");
+  console.log("六套入口业务归属：B站/游戏/微软苹果/AI、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及13类负向控制 OK");
 }
 module.exports = { run, MEMBERS };

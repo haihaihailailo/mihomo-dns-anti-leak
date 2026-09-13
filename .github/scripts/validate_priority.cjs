@@ -56,7 +56,12 @@ function checkOrder(config, prefix = "rule-set:") {
   }
   if (prefix === "rule-set:") {
     for (const [key, value] of Object.entries(config.dns["nameserver-policy"])) {
-      if (!key.startsWith(prefix)) assert(keys.indexOf(key) < keys.indexOf(prefix + "openai"), "明确域名例外须早于服务集合：" + key);
+      if (/^\.?(vn|com\.vn|net\.vn|org\.vn|edu\.vn|gov\.vn)$/.test(key)) {
+        for (const service of ["openai", "google", "youtube", "microsoft", "github"]) {
+          assert(keys.indexOf(key) > keys.indexOf(prefix + service), "地域兜底须晚于专属服务：" + key);
+        }
+        assert(keys.indexOf(key) < keys.indexOf(prefix + "cn"), "越南地域兜底仍须早于通用国内集合");
+      } else if (!key.startsWith(prefix)) assert(keys.indexOf(key) < keys.indexOf(prefix + "openai"), "明确域名例外须早于服务集合：" + key);
       if (key.startsWith(prefix) && AI.includes(key.slice(prefix.length)) && value.some(x => x.endsWith("#AI"))) {
         assert(value.every(x => x.endsWith("#AI")), "同一 AI 策略不得混合 DNS 出口");
       }
