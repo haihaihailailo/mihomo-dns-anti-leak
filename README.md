@@ -209,11 +209,16 @@
 - CI 会自动校验主 YAML 解析、主 JS 语法、主 YAML/JS 全配置同步、规则引用完整性、Stash 覆写解析、Shadowrocket 关键策略语义和 mihomo 加载测试。
 - CI 会检查 `unified-delay`、`profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。
 - CI 每天自动运行一次，用于尽早发现 Mihomo 最新版本、远程规则集或下载链路变化导致的问题。
+- 独立的 `Check public health-check endpoints` workflow 每天 04:50（UTC+8）检查两个 Mihomo 公开 YAML 的全部测速 URL（按 URL / 预期状态 / 超时去重，当前 14 个），也可手动运行。它不在 push / PR 上执行公网探测，不影响普通配置 CI；只检测主分支，发布后才会生效。GitHub 定时任务可能延迟，并非精确计时器。
+- 端点探测按 [Mihomo URLTest 实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.30/adapter/adapter.go) 使用 HEAD、不跟随重定向，严格核对配置的预期状态，保留 TLS 验证。每个 URL 最多尝试 3 次、间隔 1.5 秒、单次按配置超时（上限 10 秒）、并发上限 4；不会把 302 登录跳转或 403 算成功。中途恢复标记为 RECOVERED，连续失败使独立 workflow 失败，并在 Actions summary / 日志列出受影响的组。
+- 探测只访问代码白名单内的公开地址，不读取机场订阅、节点凭据或本机控制器，不自动替换测速 URL / 切节点。本地 JSON / Markdown 报告带配置 SHA-256；默认离线入口只跑合成回归。需要显式实测时，设置 `MIHOMO_ENDPOINT_OUTPUT` 为父目录已存在、目标目录不存在的新路径，再运行同一个 `python .github/scripts/validate_health_checks.py`；已有报告不会覆盖。
+- **公网探测只是执行机器的网络视角。** GitHub 机房可能被端点限流或地域限制；本地进程也可能经过当前代理/TUN。失败需结合客户端连接复核，成功不代表手机/电脑节点可用、AI 解锁、聊天流式响应正常或无 DNS 泄露。这项检查不复刻 Mihomo 的节点传输和 unified-delay 延迟测量。
 - `validate_priority.cjs` 额外比较 YAML/JS 的 DNS 键顺序，并用重叠域名、开发工具、微信/支付宝和 Teams 的合成请求检查首条匹配；负向控制确保恢复旧遮挡时检查会失败。
 - `mihomo -t` 只检查配置解析，不保证 HTTP 规则能下载或初始化。CI 另用 `check_remote_rules.cjs` 下载三个客户端配置中去重后的公开 URL，检查状态码、体积、文本格式并保存哈希快照；403、HTML 错误页、空正文和超时均判失败。不访问机场订阅，不关闭证书校验。
 - CI 随后通过唯一测试入口调用隔离内核回归：只用回环 DNS 和合成答案验证优先级，再让 Mihomo 初始化主配置及 Stash 的公开快照，包括 MRS 完整解码。后者只证明这些文件能被 Mihomo 解析，**不是 Stash / Shadowrocket 实机通过**。Shadowrocket 的 `+.domain` 匹配仍须在真实客户端核对。
 - 本地默认入口保持离线；已有 Mihomo 时可设置 `MIHOMO_TEST_BIN` 为其绝对路径后重跑该入口，启用回环测试。先显式运行 `node .github/scripts/check_remote_rules.cjs --output-dir <不存在的新目录>`，再将 `MIHOMO_RULE_CACHE` 指向其绝对路径，才能同时检查公开快照初始化。测试不改系统代理、TUN 开关或客户端配置；生成目录保留供审计，按需自行管理。
 - Dependabot 会每周检查 GitHub Actions 依赖更新。
+- 三个 workflow 的 checkout 同步固定到官方 [v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1) 的完整 SHA，并设置 `persist-credentials: false`；CI 保持 `contents: read`，不为检查留存 Git 推送凭据。
 
 ### 分组精简当前状态
 

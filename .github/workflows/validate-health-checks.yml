@@ -13,6 +13,8 @@ on:
       - ".github/scripts/validate_rule_sources.cjs"
       - ".github/scripts/validate_priority.cjs"
       - ".github/scripts/check_remote_rules.cjs"
+      - ".github/scripts/check_health_endpoints.cjs"
+      - ".github/workflows/check-health-endpoints.yml"
       - ".github/scripts/validate_mihomo_runtime.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
@@ -38,6 +40,8 @@ on:
       - ".github/scripts/validate_rule_sources.cjs"
       - ".github/scripts/validate_priority.cjs"
       - ".github/scripts/check_remote_rules.cjs"
+      - ".github/scripts/check_health_endpoints.cjs"
+      - ".github/workflows/check-health-endpoints.yml"
       - ".github/scripts/validate_mihomo_runtime.cjs"
       - ".github/config/shared.stoverride"
       - ".github/config/shared.conf"
@@ -63,7 +67,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pinned config validation dependency
         run: npm ci --ignore-scripts --no-audit --no-fund

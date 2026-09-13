@@ -1049,6 +1049,16 @@ subprocess.run(
     ["node", str(Path(__file__).with_name("check_remote_rules.cjs")), "--self-test"],
     check=True, timeout=15,
 )
+subprocess.run(
+    ["node", str(Path(__file__).with_name("check_health_endpoints.cjs")), "--self-test"],
+    check=True, timeout=15,
+)
+if os.environ.get("MIHOMO_ENDPOINT_OUTPUT"):
+    subprocess.run(
+        ["node", str(Path(__file__).with_name("check_health_endpoints.cjs")),
+         "--output-dir", os.environ["MIHOMO_ENDPOINT_OUTPUT"]],
+        check=True, timeout=190,
+    )
 if os.environ.get("MIHOMO_TEST_BIN"):
     subprocess.run(
         ["node", str(Path(__file__).with_name("validate_mihomo_runtime.cjs"))],

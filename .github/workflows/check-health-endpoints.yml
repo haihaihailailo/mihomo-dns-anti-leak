@@ -1,0 +1,34 @@
+name: Check public health-check endpoints
+
+on:
+  schedule:
+    # 每天 04:50（UTC+8）；与配置 CI 分离，公网波动不阻塞普通 push / PR。
+    - cron: "50 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: health-endpoints-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe configured public endpoints
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned config validation dependency
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Validate locally and probe public endpoints
+        env:
+          MIHOMO_ENDPOINT_OUTPUT: ${{ runner.temp }}/health-endpoints
+        run: python3 .github/scripts/validate_health_checks.py
