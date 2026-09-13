@@ -22,6 +22,8 @@ on:
       - ".github/scripts/validate_native_profiles.cjs"
       - ".github/scripts/consolidate_groups.cjs"
       - ".github/scripts/validate_consolidation.cjs"
+      - ".github/scripts/tune_mihomo.cjs"
+      - ".github/scripts/validate_mihomo_tuning.cjs"
       - ".github/scripts/validate_health_checks.py"
       - ".github/workflows/validate-health-checks.yml"
   pull_request:
@@ -45,6 +47,8 @@ on:
       - ".github/scripts/validate_native_profiles.cjs"
       - ".github/scripts/consolidate_groups.cjs"
       - ".github/scripts/validate_consolidation.cjs"
+      - ".github/scripts/tune_mihomo.cjs"
+      - ".github/scripts/validate_mihomo_tuning.cjs"
       - ".github/scripts/validate_health_checks.py"
       - ".github/workflows/validate-health-checks.yml"
   workflow_dispatch:

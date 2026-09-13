@@ -192,7 +192,7 @@ function run() {
     if (stem.startsWith(".github/")) continue;
     const domestic = stem.includes("国内");
     checkRoutes(config, domestic);
-    if (!domestic) for (const host of ["chatgpt.com", "claude.ai", "api.githubcopilot.com", "gemini.google.com"]) {
+    for (const host of ["chatgpt.com", "claude.ai", "api.githubcopilot.com", "gemini.google.com"]) {
       assert(firstDns(config, host)?.every(server => server.endsWith("#AI")), host + " 未选择 AI DNS");
     }
     // 负向控制：恢复旧遮挡必须被当前测试捕获。

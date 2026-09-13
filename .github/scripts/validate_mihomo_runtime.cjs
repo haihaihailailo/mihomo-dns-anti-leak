@@ -87,10 +87,55 @@ async function query(port, domain) {
     value.send(packet, port, "127.0.0.1");
   });
 }
-async function dnsCase(general, ai, mutation) {
+async function aiGroupsCase(region, empty) {
+  const config = parse(read("防DNS泄露-" + region + "版.yaml"));
+  const reserve = net.createServer();
+  await new Promise(resolve => reserve.listen(0, "127.0.0.1", resolve));
+  const port = reserve.address().port;
+  await new Promise(resolve => reserve.close(resolve));
+  const fixtures = ["美国 AI01", "美国 AI02", "日本 JP01", "新加坡 SG01", "香港 HK01",
+    "台湾 TW01", "越南 VN01", "香港港广01_回国", "美国01_回国"];
+  const candidates = empty ? [] : fixtures;
+  const groups = config["proxy-groups"].map(group => ({ ...group, interval: 0 }));
+  // 保留真实 URL 以检查内核读入结果；关闭全部周期探测，不请求公网测速地址。
+  const running = start({ ...base(), "external-controller": "127.0.0.1:" + port,
+    proxies: candidates.map(name => ({ name, type: "http", server: "127.0.0.1", port: 9 })),
+    "proxy-groups": groups });
+  try {
+    let result;
+    for (let i = 0; i < 20; i++) {
+      assert(children.has(running.child), "AI 分组内核提前退出：" + running.logs());
+      try {
+        const response = await fetch("http://127.0.0.1:" + port + "/proxies", { signal: AbortSignal.timeout(400) });
+        assert.equal(response.status, 200);
+        result = (await response.json()).proxies;
+        if (result.AI) break;
+      } catch { /* Only this owned loopback controller is retried. */ }
+      await pause(100);
+    }
+    assert(result?.AI, "AI 分组 API 未就绪：" + running.logs());
+    assert.equal(result.AI.now, "美国-AI-自动");
+    assert(!result["香港-AI-自动"], "内核不应出现香港 AI 组");
+    assert(!result.AI.all.some(name => name.startsWith("香港")), "AI 不应包含香港直接候选");
+    assert(result["香港节点"] && result["香港-自动"], "普通香港组须保留");
+    for (const country of ["美国", "日本", "新加坡"]) {
+      const group = result[country + "-AI-自动"];
+      assert(group, "缺少地区 AI 组：" + country);
+      assert.equal(group.type, "URLTest");
+      assert.equal(group.hidden, true);
+      assert.equal(group.testUrl, "https://auth.openai.com/favicon.ico");
+      assert.equal(String(group.expectedStatus), "200");
+      assert.equal(group.emptyFallback, "REJECT");
+      assert.deepEqual([...group.all].sort(), empty ? ["REJECT"] :
+        fixtures.filter(name => name.startsWith(country) && !name.includes("回国")).sort(), "内核实际地区筛选错误");
+    }
+    console.log(region + " Mihomo AI 分组：" + (empty ? "空节点 REJECT" : "实际地区/回国筛选") + "、隐藏/端点/默认值 OK（无公网探测）");
+  } finally { await stop(running); }
+}
+async function dnsCase(region, general, ai, mutation) {
   const reserve = socket(); const port = await bind(reserve);
   await new Promise(resolve => reserve.close(resolve));
-  const config = parse(read("防DNS泄露-国外版.yaml"));
+  const config = parse(read("防DNS泄露-" + region + "版.yaml"));
   const samples = {
     openai: ["+.chatgpt.com"], anthropic: ["+.claude.ai"],
     "github-copilot": ["+.githubcopilot.com"], "google-gemini": ["gemini.google.com"],
@@ -120,7 +165,7 @@ async function dnsCase(general, ai, mutation) {
     for (const host of ["chatgpt.com", "claude.ai", "api.githubcopilot.com", "gemini.google.com"]) {
       assert.equal(await query(port, host), mutation ? "198.51.100.10" : "203.0.113.20", host);
     }
-    console.log("Mihomo loopback DNS：" + (mutation ? "旧顺序负向控制" : "仓库修复后顺序") + " 4/4 OK");
+    console.log(region + " Mihomo loopback DNS：" + (mutation ? "旧顺序负向控制" : "仓库修复后顺序") + " 4/4 OK");
   } finally { await stop(running); }
 }
 async function tampermonkeyDnsCase(region, general, direct, mutation) {
@@ -244,8 +289,12 @@ async function providerCase(file, manifest) {
   try {
     const general = await upstream([198,51,100,10]);
     const ai = await upstream([203,0,113,20]);
-    await dnsCase(general, ai, false);
-    await dnsCase(general, ai, true);
+    for (const region of ["国内", "国外"]) {
+      await aiGroupsCase(region, false);
+      await aiGroupsCase(region, true);
+      await dnsCase(region, general, ai, false);
+      await dnsCase(region, general, ai, true);
+    }
     const direct = await upstream([203,0,113,40]);
     for (const region of ["国内", "国外"]) {
       await tampermonkeyDnsCase(region, general, direct, false);

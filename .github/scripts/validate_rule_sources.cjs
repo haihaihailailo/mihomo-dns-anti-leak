@@ -81,7 +81,7 @@ function checkProviders(config, client, foreign) {
     }
     const key = (raw ? "rule-set:" : "geosite:") + name;
     const actual = config.dns["nameserver-policy"][key];
-    const expected = raw ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"].map(server => server + (foreign ? "#AI" : "#节点选择"))
+    const expected = raw ? ["https://1.1.1.1/dns-query#AI", "https://8.8.8.8/dns-query#AI"]
       : foreign ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"] : "https://1.1.1.1/dns-query";
     assert.deepEqual(actual, expected, "AI 新增规则必须同步 DNS");
     if (!raw) {

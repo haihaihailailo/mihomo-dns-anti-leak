@@ -14,7 +14,7 @@
 | 项目 | 国内版 | 国外版 |
 | --- | --- | --- |
 | 普通国外服务 | 合并到节点选择，默认自动选择 | 合并到节点选择，默认 DIRECT，可手动切代理 |
-| AI | 保留独立 AI 组，默认美国-自动 | 同左；已知 AI 域名 DNS 也跟随 AI 组 |
+| AI | 独立 AI 组，默认美国-AI-自动；已知 AI 域名 DNS 跟随 AI | 同左；只在所选地区的 AI 候选节点内自动测速 |
 | 国内流量 | 保留规则，直接 DIRECT；不设国内服务和中国组 | 国内服务默认 DIRECT；有回国需求和可用节点再手动切中国组 |
 | 越南服务 / 微软/苹果服务 | 独立分组，默认 DIRECT | 同左 |
 | 启动 / 节点 / 直连 DNS | 国内 DoH | Cloudflare / Google DoH |
@@ -22,8 +22,8 @@
 | 默认 DNS 兜底 | 保留国内 GeoIP 判断与经节点选择的外部 DNS | 不使用 CN GeoIP 兜底；默认 DNS 跟随节点选择（首选 DIRECT） |
 | TUN / IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
 
-- GitHub、YouTube、Netflix、Google、Telegram、Meta / X、TikTok、Spotify 和漏网流量直接归入 `节点选择`，不再单独设组。GitHub 不再单独首选香港，Telegram 不再单独首选新加坡。`游戏平台` 保持独立，默认跟随节点选择。AI 仍默认美国自动；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
-- 国外版全局 `自动选择` 使用懒测速。保留组沿用原有测速参数；`微软/苹果服务` 合并两组候选并默认 DIRECT，Mihomo / Shadowrocket 沿用原微软测速端点。测速不能保证服务解锁或吞吐速度。
+- GitHub、YouTube、Netflix、Google、Telegram、Meta / X、TikTok、Spotify 和漏网流量直接归入 `节点选择`，不再单独设组。GitHub 不再单独首选香港，Telegram 不再单独首选新加坡。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
+- Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
 - 已知微软域名 DNS 在 Mihomo 国外版使用全球 DoH、跟随 `微软/苹果服务`；原 Google、YouTube、GitHub DNS 策略引用同步改为 `节点选择`。国内域名查询继续交给国内 DNS，这是显式分流，不代表所有 DNS 都经海外节点。
 - **不自动识别所在地，也不自动重置已保存选择。** 上表描述没有选择缓存时的默认值；`profile.store-selected` 会保留旧手选，切换版本后核对节点选择、AI、越南服务、微软/苹果服务，以及国外版的国内服务。尤其回到国内后，不要遗留 `节点选择 = DIRECT`。
 - 境外直连可达性取决于所在地网络，不保证所有国家/网络都能直连 Telegram 等服务；合并业务失败时在 `节点选择` 手动选择可用代理。
@@ -37,10 +37,10 @@
 | Stash | [stash-国内版.stoverride](stash-国内版.stoverride) | [stash-国外版.stoverride](stash-国外版.stoverride) |
 | Shadowrocket | [shadowrocket-国内版.conf](shadowrocket-国内版.conf) | [shadowrocket-国外版.conf](shadowrocket-国外版.conf) |
 
-- 六套入口使用同一精简结构：国内版 21 组，国外版 24 组。节点选择在国内首选自动选择、国外首选 DIRECT；AI 均首选美国自动；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。分组精简本身不改变规则匹配条件和相对顺序，韩国两个组均删除；规则源的后续调整见下文。
+- 六套入口保留同一业务分流骨架：Stash / Shadowrocket 国内版 21 组、国外版 24 组，AI 仍首选 `美国-自动`；Mihomo 另加 3 个隐藏地区 AI 组，总计 24 / 27 组，可见数量不变。节点选择在国内首选自动选择、国外首选 DIRECT；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。韩国两个组均删除。
 - Stash 国内版使用国内 DoH 启动/节点解析；国外版改用 Cloudflare / Google DoH，并调整微软等服务 DNS，专属 geosite 策略优先于通用 cn。两版保留 `follow-rule`、独立节点解析和 `#!replace`；国外版仅将全局自动组改为懒测速，其他测速参数不变。[Stash DNS](https://stash.wiki/en/features/dns-server)、[覆写合并语义](https://stash.wiki/en/configuration/override)。
 - Shadowrocket 国内版保留国内主 DNS 和经代理的备用 DNS，节点解析只使用国内 IP 型 DoH；国外版主、备用、节点 DNS 改为境外 DoH，不强制让备用 DNS 依赖默认代理。两版继续禁用系统 DNS 回退，保留现有 IPv6 和隧道旁路设置，不新增未验证的 Mihomo 字段。
-- **DNS 出口不能跨客户端等同。** Stash 使用自身的 `follow-rule`，Shadowrocket 保留自身 DNS 逻辑；不承诺像 Mihomo 国外版一样，将每个 AI / 回国域名 DNS 逐项绑定到同名业务组。AI 请求走 AI 组不等于所有相关 DNS 都走同一出口。
+- **DNS 出口不能跨客户端等同。** Stash 使用自身的 `follow-rule`，Shadowrocket 保留自身 DNS 逻辑；不承诺像 Mihomo 两地版 AI / 国外版回国策略一样，将已知域名 DNS 逐项绑定到同名业务组。AI 请求走 AI 组不等于所有相关 DNS 都走同一出口。
 - Stash 每次仅启用一个地区覆写；Shadowrocket 每次仅启用一个地区配置，并保留已导入的订阅节点。跨境后核对已保存的手动选择，尤其不能在国内遗留 `节点选择 = DIRECT`。
 - 两个旧通用入口 `stash.stoverride`、`shadowrocket.conf` 已移入内部生成来源；旧导入 URL 不会自动转向新文件，请手动更换。生成与静态回归通过不代表 iOS / macOS 实机通过，导入后仍需检查登录、长连接、规则命中和空地区组。
 
@@ -75,6 +75,9 @@
 - 两地使用：国内版的国内规则直接 DIRECT；国外版的国内服务默认 DIRECT，按需回国。越南服务两地均默认 DIRECT，可手动切换越南节点；选择会由 `profile.store-selected` 保留。
 - 分组测速：Mihomo / JS 与 Shadowrocket 的手动业务组使用对应服务的小型 HTTPS 端点，地区手动组与自动组使用对应地区端点；中国组使用百度 200。Mihomo 的 `select` 组不设置 `interval`，只提供按需测速，不改变手动选路逻辑；含 `REJECT` 的广告组不测速。
 - Stash 测速边界：自动组继续使用各自的地区端点；手动 `select` 组保留 `interval: -1`。Stash 对同一代理在多个组间共享测速结果，若要真正使用不同测试参数需要复制代理，因此本覆写不写入无效的“每组独立 URL”。
+- Mihomo 的 `美国-AI-自动`、`日本-AI-自动`、`新加坡-AI-自动` 直接筛选对应地区的叶节点，使用 `https://auth.openai.com/favicon.ico`、预期状态 200，与 AI 手动检测口径一致；不会套在普通地区自动组外面。三组均隐藏且不跨地区自动回退；AI 仍保留这三个地区手选和 DIRECT。隐藏需要客户端界面支持，并不代表候选列表中不可选。
+- AI 地区名仅按订阅名称归类，不证明实际出口地区或服务可用。香港不在目前的 [ChatGPT 官方支持地区名单](https://help.openai.com/en/articles/7947663-chatgpt-supported-countries)中，因此 Mihomo AI 不提供香港自动或手动直接候选，普通香港组仍供其他业务使用。手动选择 `节点选择` / `DIRECT` 时须自行核对出口。图标 200 不代表聊天/流式响应正常，更不能证明 Claude/Gemini 等全部 AI 服务解锁。空候选保持 `REJECT`。
+- 更新后请核对 `AI → 美国-AI-自动`；旧 `美国-自动` 等候选被替换为对应 AI 专用组，客户端的旧缓存不一定自动迁移。普通地区手动组继续可见，其他业务组不引用新增 AI 组。
 - 节点归类：保留香港、台湾、日本、新加坡、美国、越南手动及自动组；国外版另有中国组。使用常见代码和机场名，带英文字母边界避免误匹配；带明确境外地区信息或仅写 `CN2` 的线路不因此误入中国组。韩国只删除独立分组，订阅节点仍可进入全部节点和全局自动选择。
 - 回国节点隔离：`回国`、`港广`、`港沪`、`港深`、`沪港`、`深港`、`广中` 从全局 `自动选择` 和所有非中国地区组排除；国外版可进入中国组，两地仍可在 `全部节点` 中手动选择。
 - 空组保护：Mihomo 的所有订阅筛选组使用 `empty-fallback: REJECT`，筛选不到节点时不会静默直连。
@@ -138,7 +141,7 @@
 - 在中国使用：选择国内版，国内规则直接 DIRECT，不再提供国内服务/中国组开关；如需访问越南本地服务，可将 `越南服务` 切换为 `越南-自动`。
 - 在越南或其他境外地区使用：`国内服务` 可先保持 `DIRECT`；确实需要大陆出口且订阅提供可用回国节点时，再切换为 `中国-自动` 或 `中国节点`。中国组只有 `REJECT` 时表示没有匹配节点，不能靠配置获得回国能力。在越南时 `越南服务` 保持 `DIRECT`，其他地区按需选择可用越南节点。
 - 配置无法可靠判断当前公网所在地，因此不硬编码自动切换；`profile.store-selected` 会记住手动选择，跨境后只需切换一次对应策略组。
-- 国外版的已知 AI 域名使用 AI 组解析，不保证仅按进程识别的请求、未知第三方域名或绕过 VPN 的应用也使用同一 DNS 出口；不能将其视为整个系统零泄露保证。
+- Mihomo 两地版的已知 AI 域名使用 AI 组解析，节点域名解析仍使用独立直连 DNS。不保证仅按进程识别的请求、未知第三方域名或绕过 VPN 的应用也使用同一 DNS 出口；同名策略也不意味着 DNS 缓存与每条连接永远使用同一 IP，不能将其视为整个系统零泄露保证。
 - 系统更新、局域网、NTP、推送等既有直连规则保持不变。
 - 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo / Stash 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
 - Tampermonkey 的 `tampermonkey.net` 根域名及子域名（包括 `accounts.tampermonkey.net`）在六套入口中直连，位置在既有网站例外之后、业务规则之前；Mihomo / Stash 的专用 DNS 随国内/国外环境使用对应解析器，避免被通用国外集合改走代理。仅调整这个域名后缀，不放行整个浏览器进程，也不改变 Google、Microsoft 等第三方登录和云同步服务的分流。保留扩展同步与 TLS 验证；端点可达不代表整个 OAuth 流程已通过。[Tampermonkey 同步说明](https://www.tampermonkey.net/faq.php?locale=en&q=Q105)
@@ -168,7 +171,7 @@
 
 ### 首条匹配与优先级
 
-- Mihomo 的 DNS 策略有顺序语义：私有域名优先，其次是已有明确域名例外、AI 等专属服务，最后才是通用服务及国内/国外大集合。不能只比对键值而忽略顺序；国外版 AI 的 `#AI` 解析策略必须早于 `geolocation-!cn` 等重叠规则。[Mihomo DNS](https://wiki.metacubex.one/config/dns/)
+- Mihomo 的 DNS 策略有顺序语义：私有域名优先，其次是已有明确域名例外、AI 等专属服务，最后才是通用服务及国内/国外大集合。不能只比对键值而忽略顺序；两地版 AI 的 `#AI` 解析策略必须早于 `geolocation-!cn` 等重叠规则。[Mihomo DNS](https://wiki.metacubex.one/config/dns/)
 - VS Code、Postman 和 JetBrains 等通用开发工具的进程兜底位于 AI 域名规则之后：Copilot/OpenAI 请求可进入 AI，普通开发流量仍是节点选择。Teams 两个进程统一进入微软/苹果服务。
 - 微信、支付宝整应用选路仍在 AI 域名规则之前：国内版 DIRECT，国外版国内服务。未进入 VPN 的应用不受这些规则控制；这次没有改动手机分应用名单。
 - Stash 将 OpenAI 与其他 AI 的 geosite DNS 策略一起放在通用 geosite 之前；它使用自己的 DNS 机制，不能把 Mihomo 的 `#策略组` 语法套用到 Stash。
@@ -196,6 +199,7 @@
 
 - `.github/config/shared.yaml` 与 `shared.js` 是同步维护的内部共同源码，不提供独立导入。
 - 六套入口由各客户端内部共同源码、环境差异及最终分组精简投影生成，不分别手改地区版。内部源码仍保留细分服务组作为规则分类来源，**不代表公开入口仍有这些组**；生成的 JS 也在运行时投影为精简组。开发依赖仅用于生成和测试，客户端不需要 Node.js 或 npm。
+- `tune_mihomo.cjs` 在精简后为两个 Mihomo 入口统一添加 AI 地区自动组、懒测速/容差和 AI DNS；同一自包含函数嵌入 JS。`validate_mihomo_tuning.cjs` 独立验证允许的差异、回国隔离、可见组不增加、幂等与负向控制。Stash / Shadowrocket 不调用这一 Mihomo 专属投影，本次保持文件不变。
 - `.github/config/shared.stoverride` 维护 Stash 公共规则与原生语法；IPv6 跟随 Stash 自身设置。
 - `.github/config/shared.conf` 维护 Shadowrocket 公共规则与原生语法；地区组筛选和测速端点与公共配置保持语义同步。
 - 以后修改主配置时，需要同步检查 JS、Stash 和 Shadowrocket 三类版本。
@@ -215,14 +219,16 @@
 
 | 项目 | 国内版 | 国外版 |
 | --- | --- | --- |
-| 总组数（三类客户端一致） | 21 | 24 |
-| Mihomo 隐藏自动组 | 7 | 8 |
+| Mihomo 总组数 | 24 | 27 |
+| Stash / Shadowrocket 总组数 | 21 | 24 |
+| Mihomo 隐藏自动组 | 10 | 11 |
 | Mihomo 可见组（客户端支持隐藏时） | 14 | 16 |
 | 地区手动组 | 香港、台湾、日本、新加坡、美国、越南 | 国内版六组 + 中国 |
 | 国内服务 / 中国两个组 | 删除；保留国内规则并改为 DIRECT | 保留，国内服务默认 DIRECT |
 
 - 普通业务合并进 `节点选择`：漏网之鱼、GitHub、YouTube、Netflix、谷歌服务、电报消息、Meta / X、TikTok、Spotify。合并后不能再给这些业务分别选择国家。
 - 保持独立：AI、游戏平台、越南服务、哔哩哔哩港澳台、广告过滤、全部节点；微软与苹果合并为 `微软/苹果服务`。
+- Mihomo AI 内部提供美国、日本、新加坡三个隐藏 AI 自动组，默认美国，不新增可见业务组或跨国家 AI 自动池。
 - 韩国手动、自动组均删除；韩国订阅节点不删除。Shadowrocket 的单项包装组 `全局直连` 删除，使用内建 DIRECT。
 - 保留地区手动组供手选。Stash / Shadowrocket 保留自身的显示语义，不添加未经验证的隐藏字段。
 - 独立回归检查最终组集合、全部规则的匹配内容/顺序、策略目标、DNS 引用、保留组测速、客户端字段、回国隔离和韩国节点可选性；旧组的选中缓存不会迁移到合并后的组，导入后手动核对节点选择。

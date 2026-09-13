@@ -4,6 +4,7 @@ const { ROOT, read, parse, evaluate, normalize, renderProfiles } = require("./bu
 const fs = require("node:fs");
 const path = require("node:path");
 const { checkConsolidation } = require("./validate_consolidation.cjs");
+const { checkMihomoTuning } = require("./validate_mihomo_tuning.cjs");
 // 已退役的根目录入口不可重新出现；共同源码只供生成器使用。
 for (const file of ["防DNS泄露.yaml", "防DNS泄露.js", "Windows-国内网络覆写.yaml", "Windows-国内网络覆写.js"]) {
   assert(!fs.existsSync(path.join(ROOT, file)), `旧入口应已移除：${file}`);
@@ -94,12 +95,13 @@ function firstExit(groups, name) {
   return group["include-all"] ? group["empty-fallback"] : firstExit(groups, group.proxies[0]);
 }
 
-for (const { environment, stem, yaml, js, base, detailedConfig } of renderProfiles()) {
+for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConfig } of renderProfiles()) {
   assert.equal(read(`${stem}.yaml`), yaml, `${stem}.yaml 生成结果过期`);
   assert.equal(read(`${stem}.js`), js, `${stem}.js 生成结果过期`);
   const compact = parse(read(`${stem}.yaml`));
   assert.deepEqual(normalize(compact), normalize(evaluate(read(`${stem}.js`))), `${stem} 全配置不同步`);
-  checkConsolidation(compact, detailedConfig, environment, "mihomo");
+  checkConsolidation(consolidatedConfig, detailedConfig, environment, "mihomo");
+  checkMihomoTuning(compact, consolidatedConfig);
   checkReferences(compact);
   checkDeviceBoundary(js, compact);
   // 原有环境语义测试继续覆盖详细中间配置；公开精简结果另作独立全对象比较。
