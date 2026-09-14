@@ -103,6 +103,7 @@
 - 明确将 `copilot.microsoft.com` 网页入口归 AI，与已有 `com.microsoft.copilot` 包名一致；Mihomo 同步 `#AI` DNS，Stash 使用自身 DNS 策略。依据 [Microsoft Copilot 客户端说明](https://learn.microsoft.com/en-us/microsoft-365/copilot/microsoft-365-copilot-app-overview)，只补精确网页入口，不把整个 Bing、MSN、微软登录或更新服务挪到 AI；这不等于穷尽全部 Copilot 企业功能或共享依赖。
 - Shadowrocket 的 OpenAI / Claude / Gemini / GitHub Copilot 改用与 Mihomo、Stash 同源的 MetaCubeX 纯域名 `DOMAIN-SET`，取消旧 classical 集合中按共享根域、关键词及云厂商 ASN 归 AI 的规则。三端格式不同、上游会更新，不承诺文件逐字相同或所有第三方主机都已证明独占。
 - 回归包含共享根域负例、双 Copilot 入口和 DNS 正例；联网下载器检查实际 AI 文本规则，隔离 Mihomo 用真实 MRS/文本快照检查 DNS 选路。离线合成样本、公开快照及客户端实测是不同证据层，不能互相替代。
+- Mihomo 两地版对 Gemini 专属的 `gemini.gstatic.com` 及其子域增加 AI DNS 例外，避免被通用 `.gstatic.com` DNS 提前接管。普通 Google 静态资源仍走原策略，不把共享 `gstatic.com` 根域整体归 AI；隔离内核回归覆盖根域、子域、相似域名和删除例外的负向控制。
 - Mihomo 的 `.vn`、`.com.vn` 等地域 DNS 兜底后置于专属业务集合：Google / YouTube 越南域名继续跟随节点选择，普通越南业务继续跟随越南服务。只改变地域匹配顺序，不更换 DNS 服务器或越南服务默认值；两环境均有真实规则快照及恢复错误顺序的负向对照。
 
 ## 使用方法
@@ -190,6 +191,7 @@
 - 广告缓存使用独立路径，避免旧 MRS 与新 classical 文件混用。切换后若业务异常，先查看是否命中 `广告过滤`，可临时将该组改为 DIRECT 对照；不需要关闭 TLS 证书校验或清空全部客户端数据。
 - 微信 / 支付宝的 classical provider 用于 DNS 策略时，Mihomo 只取其中域名规则，相关提示不表示 ASN 也参与 DNS 匹配。`no-resolve` 避免仅为匹配 IP/ASN 而触发解析，不禁止业务请求本身的正常 DNS 查询。
 - 新增来源由 `validate_rule_sources.cjs` 检查格式、缓存隔离、AI 优先级和 DNS 同步，并纳入唯一离线验证入口。离线测试不能保证远程源永远可用；上游文件会继续变化，实机仍须核对命中日志。手机 ChatGPT 的 SSL 提示、支付或导航体验不能仅凭更换规则集宣告修复。
+- 已知上游边界（2026-09-14）：`category-games-cn` 经 [Tencent 游戏源](https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tencent-games#L20) 收入整个 `in.th` 公共注册后缀，可能误收普通泰国网站，并影响 Mihomo 对应业务 DNS。此项尚未修复；当前保留自动更新，不增加全后缀 DIRECT 例外。优先推动上游修正，修正后仍须检查实际文本/MRS 与相关 DNS；格式检查通过不代表业务分类无误。Stash 的 `geosite:category-games-cn` 也需要单独核对，不能仅替换 rule-provider 就宣告三端修复。
 
 ### 首条匹配与优先级
 

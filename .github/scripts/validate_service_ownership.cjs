@@ -26,8 +26,8 @@ const MEMBERS = {
   steam: ["steampowered.com", "steamcommunity.com", "steamstatic.com", "steamchina.com"],
   "category-games-global": ["xbox.com", "xboxlive.com", "battle.net"],
   openai: ["openai.com", "chatgpt.com"], anthropic: ["claude.ai"],
-  "google-gemini": ["gemini.google.com"], "github-copilot": ["githubcopilot.com"],
-  google: ["google.com", "google.com.vn", "youtube.vn"], youtube: ["youtube.com", "youtube.vn"], github: ["github.com", "githubcopilot.com"],
+  "google-gemini": ["gemini.google.com", "gemini.gstatic.com"], "github-copilot": ["githubcopilot.com"],
+  google: ["google.com", "google.com.vn", "youtube.vn", "gstatic.com"], youtube: ["youtube.com", "youtube.vn"], github: ["github.com", "githubcopilot.com"],
   microsoft: ["microsoft.com", "windowsupdate.com", "office.com", "xbox.com", "xboxlive.com", "github.com", "githubcopilot.com"],
   apple: ["apple.com", "icloud.com"], telegram: ["telegram.org"],
   netflix: ["netflix.com"], spotify: ["spotify.com"], tiktok: ["tiktok.com"],
@@ -71,7 +71,7 @@ function checkRoutes(config, client, domestic) {
   const samples = [[BILI_HOSTS, BILI],
     [["store.steampowered.com", "cdn.steamchina.com", "dl.steam.clngaa.com", "www.wegame.com", "www.xbox.com", "assets.xboxlive.com"], "游戏平台"],
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com", "p01.icloud.com"], SYSTEM],
-    [["chatgpt.com", "api.openai.com", "auth0.openai.com", "claude.ai", "gemini.google.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"],
+    [["chatgpt.com", "api.openai.com", "auth0.openai.com", "claude.ai", "gemini.google.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"],
     [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
     [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
@@ -83,7 +83,8 @@ function checkRoutes(config, client, domestic) {
   for (const host of ["notbilibili.com", "bilibili.com.evil.test", "shared.akamaized.net"]) {
     assert.notEqual(route(host), BILI, "不可扩大到相似域名或共享 CDN 根域名");
   }
-  for (const host of [...SHARED_AI_HOSTS, "unrelated.s3.amazonaws.com", "unrelated.cloudinary.com", "copilot.microsoft.com.evil.test", "notcopilot.microsoft.com"]) {
+  for (const host of [...SHARED_AI_HOSTS, "unrelated.s3.amazonaws.com", "unrelated.cloudinary.com", "copilot.microsoft.com.evil.test", "notcopilot.microsoft.com",
+    "www.gstatic.com", "notgemini.gstatic.com", "gemini.gstatic.com.evil.test"]) {
     assert.notEqual(route(host), "AI", "AI 专属资源不可扩展到共享服务根域名");
   }
   if (client !== "mihomo") return;
@@ -105,7 +106,7 @@ function checkDns(config, domestic) {
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com"], SYSTEM],
     [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
     [["github.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"],
-    [["api.openai.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"]];
+    [["api.openai.com", "api.githubcopilot.com", "copilot.microsoft.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com", ...EXTRA_AI_HOSTS], "AI"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     const servers = firstDns(config, host);
     assert(Array.isArray(servers) && servers.length === 2 && servers.every(server => server.endsWith("#" + owner)), host + " DNS 未跟随 " + owner);

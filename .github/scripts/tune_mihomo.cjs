@@ -36,6 +36,9 @@ function tuneMihomo(config) {
     policies[key] = [...servers];
   }
   const explicit = {};
+  // Gemini 集合含专属静态资源，但通用 .gstatic.com 显式 DNS 在集合前。
+  // 仅补专属子域，不能把整个共享 gstatic.com 改为 AI，也不改变其他策略顺序。
+  for (const key of ["gemini.gstatic.com", ".gemini.gstatic.com"]) explicit[key] = [...servers];
   for (const rule of config.rules) {
     const [type, domain, target] = rule.split(",");
     if (target !== "AI" || !["DOMAIN", "DOMAIN-SUFFIX"].includes(type)) continue;

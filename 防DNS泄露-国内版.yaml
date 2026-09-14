@@ -126,6 +126,12 @@ dns:
     rule-set:private:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
+    gemini.gstatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .gemini.gstatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
     perplexity.ai:
       - https://1.1.1.1/dns-query#AI
       - https://8.8.8.8/dns-query#AI

@@ -48,7 +48,8 @@ function checkTuning(actual, before) {
   for (const provider of ["openai", "anthropic", "google-gemini", "github-copilot"]) {
     expectedPolicy["rule-set:" + provider] = [...SERVERS];
   }
-  const explicitKeys = [];
+  const explicitKeys = ["gemini.gstatic.com", ".gemini.gstatic.com"];
+  for (const key of explicitKeys) expectedPolicy[key] = [...SERVERS];
   for (const rule of before.rules) {
     const [type, domain, target] = rule.split(",");
     if (target !== "AI") continue;
@@ -77,6 +78,8 @@ function checkMihomoTuning(actual, before) {
   checkTuning(actual, before);
   assert.deepEqual(tuneMihomo(clone(actual)), actual, "调优重复执行必须幂等");
   const mutations = [
+    value => { delete value.dns["nameserver-policy"]["gemini.gstatic.com"]; },
+    value => { delete value.dns["nameserver-policy"][".gemini.gstatic.com"]; },
     value => { value.dns["nameserver-policy"]["rule-set:openai"] = ["https://1.1.1.1/dns-query#节点选择"]; },
     value => { value["proxy-groups"].find(g => g.name === "美国-AI-自动").proxies = ["美国-自动", "日本-自动"]; },
     value => { value["proxy-groups"].find(g => g.name === "美国-AI-自动")["empty-fallback"] = "DIRECT"; },
@@ -89,7 +92,7 @@ function checkMihomoTuning(actual, before) {
     const broken = clone(actual); mutate(broken);
     assert.throws(() => checkTuning(broken, before), "负向控制应捕获调优退化");
   }
-  console.log("Mihomo 调优：3 个隐藏地区 AI 组、排除香港候选、叶节点隔离、DNS、测速范围、幂等与 7 个负向控制 OK");
+  console.log("Mihomo 调优：3 个隐藏地区 AI 组、排除香港候选、叶节点隔离、Gemini 专属 DNS、测速范围、幂等与 9 个负向控制 OK");
 }
 
 module.exports = { checkMihomoTuning };

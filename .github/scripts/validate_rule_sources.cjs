@@ -13,7 +13,7 @@ const SHARED_AI_HOSTS = ["auth0.com", "statsigapi.net", "intercom.io", "intercom
 const AI_REQUIRED_HOSTS = {
   openai: ["api.openai.com", "auth0.openai.com", "chatgpt.com"],
   anthropic: ["claude.ai", "api.anthropic.com"],
-  "google-gemini": ["gemini.google.com", "generativelanguage.googleapis.com"],
+  "google-gemini": ["gemini.google.com", "generativelanguage.googleapis.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com"],
   "github-copilot": ["api.githubcopilot.com", "copilot-proxy.githubusercontent.com", "copilot-workspace.githubnext.com",
     "copilotprodattachments.blob.core.windows.net", "copilot-telemetry-service.githubusercontent.com", "copilot-telemetry.githubusercontent.com"],
 };

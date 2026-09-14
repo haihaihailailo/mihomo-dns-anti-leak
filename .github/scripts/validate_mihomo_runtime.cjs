@@ -279,12 +279,13 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
   const original = parse(read(file));
   const providers = snapshotProviders(file, manifest);
   let entries = Object.entries(original.dns["nameserver-policy"]);
-  if (mutation) {
+  if (mutation === true) {
     const policies = original.dns["nameserver-policy"];
     entries = entries.map(([key, value]) => key === "rule-set:github"
       ? ["rule-set:microsoft", policies["rule-set:microsoft"]]
       : key === "rule-set:microsoft" ? ["rule-set:github", policies["rule-set:github"]] : [key, value]);
   }
+  if (mutation === "gemini") entries = entries.filter(([key]) => !["gemini.gstatic.com", ".gemini.gstatic.com"].includes(key));
   const aiKeys = new Set(["rule-set:openai", "rule-set:anthropic", "rule-set:google-gemini", "rule-set:github-copilot"]);
   // 本轮新增的 Pages 显式 DNS 与 GitHub 集合拥有相同出口；不能映射成通用上游。
   const githubKeys = new Set(["rule-set:github", "github.io", ".github.io"]);
@@ -311,17 +312,26 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
       "avatars.githubusercontent.com", "github.githubassets.com", "pages.github.io"];
     for (const host of githubHosts) {
       // 仅交换大集合不能遮挡前置 Pages 例外，其余五个域名必须暴露错误顺序。
-      const intercepted = mutation && !host.endsWith(".github.io");
+      const intercepted = mutation === true && !host.endsWith(".github.io");
       assert.equal(await query(port, host), intercepted ? "198.51.100.10" : "203.0.113.30", region + " " + host);
     }
     assert.equal(await query(port, "api.githubcopilot.com"), "203.0.113.20", "Copilot 仍先匹配 AI");
     assert.equal(await query(port, "copilot.microsoft.com"), "203.0.113.20", "Microsoft Copilot 显式 DNS 仍先匹配 AI");
     assert.equal(await query(port, "auth0.openai.com"), "203.0.113.20", "OpenAI 自有登录域仍走 AI");
+    for (const host of ["gemini.gstatic.com", "cdn.gemini.gstatic.com"]) {
+      assert.equal(await query(port, host), mutation === "gemini" ? "198.51.100.10" : "203.0.113.20",
+        "Gemini 专属静态资源 DNS 不可被通用 Google 规则接管：" + host);
+    }
+    for (const host of ["www.gstatic.com", "notgemini.gstatic.com", "gemini.gstatic.com.evil.test"]) {
+      assert.equal(await query(port, host), "198.51.100.10", "普通 Google 资源或相似域名不可误入 AI：" + host);
+    }
     for (const host of SHARED_AI_HOSTS) assert.equal(await query(port, host), "198.51.100.10", "真实 AI 规则不得接管共享根域：" + host);
     for (const host of ["teams.microsoft.com", "notgithub.com", "github.com.evil.test"]) {
       assert.equal(await query(port, host), "198.51.100.10", "普通微软/相似域名不可误入 GitHub");
     }
-    console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，GitHub " + (mutation ? "微软前置负向控制/Pages例外保留" : "修复后") + "、双 Copilot/OpenAI 登录/共享根域 " + (12 + SHARED_AI_HOSTS.length) + "/" + (12 + SHARED_AI_HOSTS.length) + " OK");
+    const label = mutation === "gemini" ? "删除 Gemini DNS 例外负向控制"
+      : mutation ? "微软前置负向控制/Pages例外保留" : "修复后";
+    console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，" + label + "、GitHub/双 Copilot/OpenAI 登录/Gemini 资源/共享根域 " + (17 + SHARED_AI_HOSTS.length) + "/" + (17 + SHARED_AI_HOSTS.length) + " OK");
   } finally { await stop(running); }
 }
 async function providerCase(file, manifest) {
@@ -382,6 +392,7 @@ async function providerCase(file, manifest) {
       for (const region of ["国内", "国外"]) {
         await githubDnsCase(region, manifest, general, github, ai, false);
         await githubDnsCase(region, manifest, general, github, ai, true);
+        await githubDnsCase(region, manifest, general, github, ai, "gemini");
         await serviceDnsCase(region, servicePorts, false, manifest);
         await serviceDnsCase(region, servicePorts, true, manifest);
       }
