@@ -223,6 +223,9 @@
 
 ### 通用配置与设备设置的边界
 
+- 用户指定服务器例外：Mihomo 国内/国外 YAML、JS 仅将 `47.81.15.184` 的 **TCP 22** 连接设为 DIRECT，位于既有局域网/广告/网站例外之后、应用分流之前，避免 TUN 代理出口与 SSH 来源白名单不一致。采用 [AND 逻辑规则](https://wiki.metacubex.one/config/rules/#and-or-not)，IP 子规则带 `no-resolve`；不扩展到其他主机、该主机的其他端口、UDP 或整个 `ssh.exe` 进程。此条按仓库所有者要求公开，其他用户不需要该例外时可删除；服务器地址未来变动需重新核对。
+- 这不修改云安全组、服务器防火墙、SSH 密钥或系统路由，也不保证动态公网 IP 永远与白名单一致；Stash / Shadowrocket 的原生配置本次不变。
+
 - 内部共同源码承载各设备可复用的域名/应用分流、DNS 策略、回国隔离和测速参数；两地入口通过生成器同步共有部分，环境差异不绑定某家机场。
 - 两地 JS 覆写保留输入中显式的 `tun.enable`、`tun.device`、`tun.mtu`、`tun.gso`、`tun.gso-max-size`、`tun.auto-redirect`、`tun.inet4-address`、`tun.inet6-address` 和原有顶层 `mode` / `ipv6`。未设置时不自行添加这些设备参数；`dns.ipv6` / `dns.fake-ip-range6` 则使用上述公共值。这不等于信任订阅里的所有 TUN 字段，也不把 MTU 固定为本机数值。
 - Sparkle 仍会在自定义覆写之后合并软件管理字段。协议栈、MTU 和私人路由排除应在设备侧核对；数组会替换而非自动追加。使用本仓库 DNS 劫持策略时，应确认末层 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探交由仓库管理时，不再开启软件整块 DNS/嗅探接管；不要为调整一个字段覆盖整个 DNS 策略。

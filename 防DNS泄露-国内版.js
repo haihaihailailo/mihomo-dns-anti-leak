@@ -326,6 +326,7 @@ GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
 DOMAIN-SUFFIX,jspoo.com,DIRECT
 DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,download.nvidia.com,DIRECT
 DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
@@ -1995,7 +1996,9 @@ function consolidateGroups(config, domestic) {
   // 不做域名/包名的文本替换，不删除规则，不改变 no-resolve 或匹配优先级。
   config.rules = config.rules.map(rule => {
     const parts = rule.split(",");
-    const index = ["MATCH", "FINAL"].includes(parts[0]) ? 1 : 2;
+    // 逻辑规则的 payload 内含逗号；其策略位于最后，不能误改内层 IP/端口。
+    const index = ["AND", "OR", "NOT"].includes(parts[0]) ? parts.length - 1
+      : ["MATCH", "FINAL"].includes(parts[0]) ? 1 : 2;
     if (!parts[index]) throw new Error("无法识别策略规则：" + rule);
     if (removed.has(parts[index])) throw new Error("规则直接引用已删除地区：" + rule);
     parts[index] = target(parts[index]);

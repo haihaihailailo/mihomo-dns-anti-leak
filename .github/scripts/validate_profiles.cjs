@@ -185,7 +185,8 @@ function checkReferences(config, { sparkle = true } = {}) {
   for (const rule of config.rules) {
     const [type, value, policy] = rule.split(",");
     if (type === "RULE-SET") assert(providers[value], `未知规则集：${value}`);
-    visit(type === "MATCH" ? value : policy);
+    visit(["AND", "OR", "NOT"].includes(type) ? rule.slice(rule.lastIndexOf(",") + 1)
+      : type === "MATCH" ? value : policy);
   }
   for (const [key, servers] of Object.entries(config.dns["nameserver-policy"])) {
     if (key.startsWith("rule-set:")) assert(providers[key.slice(9)], `DNS 未知规则集：${key}`);
@@ -340,4 +341,5 @@ console.log("内部共同源码 / Stash 引用、驱动精确直连、三个 JS 
 require("./validate_native_profiles.cjs");
 require("./validate_rule_sources.cjs").run();
 require("./validate_priority.cjs").run();
+require("./validate_ssh_direct.cjs").run();
 require("./validate_service_ownership.cjs").run();

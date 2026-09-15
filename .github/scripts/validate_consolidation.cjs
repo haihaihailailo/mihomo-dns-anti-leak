@@ -38,7 +38,8 @@ function checkConsolidation(actual, detailed, environment, client) {
   }
   expected.rules = detailed.rules.map(rule => {
     const parts = rule.split(",");
-    const slot = ["MATCH", "FINAL"].includes(parts[0]) ? 1 : 2;
+    const slot = /^(AND|OR|NOT),/.test(rule) ? parts.length - 1
+      : ["MATCH", "FINAL"].includes(parts[0]) ? 1 : 2;
     assert(!deleted.includes(parts[slot]), "基线规则引用被删除地区，须单独审查");
     parts[slot] = expectedTarget(parts[slot]);
     return parts.join(",");

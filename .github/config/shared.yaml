@@ -784,6 +784,8 @@ rules:
   - "DOMAIN-SUFFIX,jspoo.com,DIRECT"
   # 官网与账户认证精确直连；第三方同步/登录服务仍按各自规则分流。
   - "DOMAIN-SUFFIX,tampermonkey.net,DIRECT"
+  # 用户指定服务器：仅 TCP/22 直连；不放行其余端口或其他 SSH 目标，不为匹配额外解析 DNS。
+  - "AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT"
   # 公司域名优先于开发工具整进程代理；仍跟随 国内服务 的手动选择。
   - "DOMAIN-SUFFIX,yhglobal.com,国内服务"
   # 驱动下载域名直连例外；也覆盖浏览器下载，不放行整个 nvidia.com。

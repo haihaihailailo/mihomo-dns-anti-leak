@@ -323,6 +323,7 @@ GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
 DOMAIN-SUFFIX,jspoo.com,DIRECT
 DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,download.nvidia.com,DIRECT
 DOMAIN-SUFFIX,download.nvidia.cn,DIRECT

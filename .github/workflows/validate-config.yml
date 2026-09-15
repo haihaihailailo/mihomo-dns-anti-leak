@@ -188,6 +188,8 @@ jobs:
                 errors << "Rule ##{index + 1} references unknown policy: #{parts[2]}" unless policies.include?(parts[2])
               elsif type == "MATCH"
                 errors << "Rule ##{index + 1} references unknown policy: #{parts[1]}" unless policies.include?(parts[1])
+              elsif ["AND", "OR", "NOT"].include?(type)
+                errors << "Rule ##{index + 1} references unknown policy: #{parts[-1]}" unless policies.include?(parts[-1])
               else
                 policy = parts[2]
                 errors << "Rule ##{index + 1} is too short: #{rule}" if policy.nil? || policy.empty?

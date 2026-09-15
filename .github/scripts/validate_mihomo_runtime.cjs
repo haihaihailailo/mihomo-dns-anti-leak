@@ -174,6 +174,93 @@ async function aiGroupsCase(region, empty) {
     console.log(region + " Mihomo AI 分组：" + (empty ? "空节点 REJECT" : "实际地区/回国筛选") + "、隐藏/端点/默认值 OK（无公网探测）");
   } finally { await stop(running); }
 }
+async function sshDirectCase(region) {
+  const { RULE } = require("./validate_ssh_direct.cjs");
+  const source = parse(read("防DNS泄露-" + region + "版.yaml"));
+  assert.equal(source.rules.filter(rule => rule === RULE).length, 1);
+  const peers = new Set(), hits = []; let onHit;
+  const mocks = [];
+  async function mock(name) {
+    const server = net.createServer(peer => {
+      peers.add(peer); peer.on("error", () => {}); peer.on("close", () => peers.delete(peer));
+      let text = "";
+      peer.on("data", data => {
+        text += data;
+        if (!text.includes("\r\n\r\n")) return;
+        hits.push({ name, request: text.split("\r\n")[0] });
+        peer.removeAllListeners("data");
+        peer.write("HTTP/1.1 200 Connection established\r\n\r\n");
+        onHit?.(); // 以模拟出站真正收到 CONNECT 为证，不以入站提前返回的 200 为证。
+      });
+    });
+    mocks.push(server);
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    return server.address().port;
+  }
+  const directPort = await mock("direct"), fallbackPort = await mock("fallback");
+  const reserve = net.createServer();
+  await new Promise(resolve => reserve.listen(0, "127.0.0.1", resolve));
+  const port = reserve.address().port;
+  await new Promise(resolve => reserve.close(resolve));
+  const dnsProbe = socket(); const dnsPort = await bind(dnsProbe); let dnsQueries = 0;
+  dnsProbe.on("message", (message, remote) => {
+    dnsQueries++;
+    const response = Buffer.from(message); response.writeUInt16BE(0x8183, 2);
+    for (const offset of [6, 8, 10]) response.writeUInt16BE(0, offset);
+    dnsProbe.send(response, remote.port, remote.address);
+  });
+  // 两种出站均终止于自建 HTTP mock；保留真实匹配条件，不会访问该公网 IP/端口。
+  const running = start({ ...base(), port,
+    proxies: [["fixture-direct", directPort], ["fixture-fallback", fallbackPort]].map(([name, p]) =>
+      ({ name, type: "http", server: "127.0.0.1", port: p })),
+    rules: [RULE.replace(/,DIRECT$/, ",fixture-direct"), "MATCH,fixture-fallback"],
+    dns: { enable: true, ipv6: false, "use-hosts": false, "use-system-hosts": false,
+      nameserver: ["udp://127.0.0.1:" + dnsPort], "default-nameserver": ["127.0.0.1:" + dnsPort] },
+  });
+  async function connect(target) {
+    return new Promise((resolve, reject) => {
+      const peer = net.connect(port, "127.0.0.1"); peers.add(peer);
+      let text = "", sent = false, done = false;
+      const finish = error => {
+        if (done) return; done = true; onHit = undefined; clearTimeout(timer); peer.destroy();
+        error ? reject(error) : resolve();
+      };
+      const timer = setTimeout(() => finish(Error("SSH 逻辑规则 loopback 超时: " + JSON.stringify({ text, sent, hits }))), 1200);
+      onHit = () => finish();
+      peer.once("connect", () => peer.write("CONNECT " + target + " HTTP/1.1\r\nHost: " + target + "\r\n\r\n"));
+      peer.on("data", data => {
+        text += data;
+        if (!text.includes("\r\n\r\n")) return;
+        if (!/^HTTP\/1\.1 200/.test(text)) return finish(Error("HTTP mock 未接通"));
+        // Mihomo 可先回复 CONNECT 200，再等待客户端数据才真正拨号。
+        if (!sent) { sent = true; peer.write("loopback-probe\r\n"); }
+      });
+      peer.once("error", finish);
+      peer.once("close", () => { peers.delete(peer); if (!done) finish(Error("HTTP mock 提前关闭")); });
+    });
+  }
+  try {
+    for (let i = 0; ; i++) {
+      try { await connect("47.81.15.184:22"); break; }
+      catch (error) { if (error.code !== "ECONNREFUSED" || i >= 15 || !children.has(running.child)) throw Error(error.message + running.logs()); await pause(80); }
+    }
+    assert.equal(hits.at(-1).name, "direct", "目标 TCP/22 未命中直连条件");
+    for (const target of ["47.81.15.184:443", "47.81.15.184:23", "47.81.15.185:22", "unresolved.example.test:22"]) {
+      const count = hits.length;
+      await connect(target);
+      assert.equal(hits.length, count + 1);
+      assert.equal(hits.at(-1).name, "fallback", "逻辑规则越界：" + target);
+      assert.equal(hits.at(-1).request, "CONNECT " + target + " HTTP/1.1");
+    }
+    assert.equal(dnsQueries, 0, "匹配 SSH 例外不应触发额外 DNS");
+    console.log(region + " SSH 精确规则：真实内核匹配 TCP/22、其他端口/主机/域名回退、零额外 DNS OK（仅 loopback mock）");
+  } finally {
+    await stop(running);
+    for (const peer of peers) peer.destroy();
+    for (const server of mocks) await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => dnsProbe.close(resolve));
+  }
+}
 async function dnsCase(region, general, ai, mutation) {
   const reserve = socket(); const port = await bind(reserve);
   await new Promise(resolve => reserve.close(resolve));
@@ -404,6 +491,7 @@ async function providerCase(file, manifest) {
     const general = await upstream([198,51,100,10]);
     const ai = await upstream([203,0,113,20]);
     for (const region of ["国内", "国外"]) {
+      await sshDirectCase(region);
       for (const state of ["enabled", "global-off", "dns-off", "no-pool"]) await fakeIpDnsCase(region, general, state);
       await aiGroupsCase(region, false);
       await aiGroupsCase(region, true);
