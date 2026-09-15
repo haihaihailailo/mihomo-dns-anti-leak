@@ -20,7 +20,7 @@ const children = new Set();
 const sockets = new Set();
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
-  !/^(CLASH_|MIHOMO_|HTTP_PROXY$|HTTPS_PROXY$|ALL_PROXY$|NO_PROXY$)/i.test(key)));
+  !/^(CLASH_|MIHOMO_|HTTP_PROXY$|HTTPS_PROXY$|ALL_PROXY$|NO_PROXY$|SKIP_SYSTEM_IPV6_CHECK$)/i.test(key)));
 const watchdog = setTimeout(() => {
   for (const child of children) child.kill();
   for (const socket of sockets) socket.close();
@@ -58,12 +58,12 @@ function base() {
     profile: { "store-selected": false, "store-fake-ip": false }, rules: ["MATCH,DIRECT"] };
 }
 let configSequence = 0;
-function start(config) {
+function start(config, testEnv = {}) {
   // 完整 DNS 策略与快照路径可能超过 Windows 命令行长度；只写入本次隔离目录。
   const file = path.join(directory, "case-" + (++configSequence) + ".yaml");
   fs.writeFileSync(file, YAML.stringify(config), { flag: "wx" });
   const child = spawn(binary, ["-d", directory, "-f", file],
-    { windowsHide: true, env, stdio: ["ignore", "pipe", "pipe"] });
+    { windowsHide: true, env: { ...env, ...testEnv }, stdio: ["ignore", "pipe", "pipe"] });
   children.add(child); let log = "";
   child.stdout.on("data", data => log = (log + data).slice(-16000));
   child.stderr.on("data", data => log = (log + data).slice(-16000));
@@ -102,7 +102,10 @@ async function fakeIpDnsCase(region, general, state) {
     nameserver: ["127.0.0.1:" + general], "default-nameserver": ["127.0.0.1:" + general] });
   if (state === "dns-off") dns.ipv6 = false;
   if (state === "no-pool") delete dns["fake-ip-range6"];
-  const running = start({ ...base(), ipv6: state !== "global-off", dns });
+  // Mihomo config/utils.go checks host global-unicast IPv6 before creating the pool.
+  // Hosted CI can be IPv4-only: use its supported test switch ONLY for this owned,
+  // loopback-only child. No TUN, OS address/route change or public IPv6 connectivity claim.
+  const running = start({ ...base(), ipv6: state !== "global-off", dns }, { SKIP_SYSTEM_IPV6_CHECK: "true" });
   const resolver = new Resolver({ timeout: 500, tries: 1 });
   resolver.setServers(["127.0.0.1:" + port]);
   try {
