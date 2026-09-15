@@ -20,6 +20,18 @@ function check(config) {
     ["unresolved.example.test", 22, "TCP"]]) assert(!matches(...row), "例外越界：" + row);
 }
 function run() {
+  for (const file of ["validate-config.yml", "validate-health-checks.yml"]) {
+    const workflow = parse(read(".github/workflows/" + file));
+    const checkTrigger = (candidate, event) => assert(
+      candidate.on[event].paths.includes(".github/scripts/validate_ssh_direct.cjs"),
+      file + " 缺少 SSH 回归测试变更触发器：" + event);
+    for (const event of ["push", "pull_request"]) {
+      checkTrigger(workflow, event);
+      const broken = structuredClone(workflow);
+      broken.on[event].paths = broken.on[event].paths.filter(path => path !== ".github/scripts/validate_ssh_direct.cjs");
+      assert.throws(() => checkTrigger(broken, event), { code: "ERR_ASSERTION" });
+    }
+  }
   for (const stem of [".github/config/shared", "防DNS泄露-国内版", "防DNS泄露-国外版"]) {
     for (const config of [parse(read(stem + ".yaml")), evaluate(read(stem + ".js"))]) {
       check(config);
@@ -39,6 +51,6 @@ function run() {
   const fixture = RULE.replace(")),DIRECT", ")),GitHub");
   shared.rules = [fixture];
   assert.deepEqual(consolidateGroups(shared, true).rules, [RULE.replace(")),DIRECT", ")),节点选择")]);
-  console.log("服务器 TCP/22 精确直连：3 套 YAML/JS、范围负例、退化负向控制和逻辑规则投影 OK");
+  console.log("服务器 TCP/22 精确直连：CI 触发器及负例、3 套 YAML/JS、范围负例、退化负向控制和逻辑规则投影 OK");
 }
 module.exports = { run, RULE };

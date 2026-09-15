@@ -249,7 +249,7 @@ SHADOWROCKET_REQUIRED_RULES = (
     "rule/Shadowrocket/Twitter/Twitter.list,Meta / X",
     "rule/Shadowrocket/Facebook/Facebook.list,Meta / X",
     "geo/geosite/steam@cn.list,游戏平台",
-    "geo/geosite/category-games-cn.list,游戏平台",
+    "geo/geosite/category-games-cn.list)),游戏平台",
     "geo/geosite/steam.list,游戏平台",
     "geo/geosite/category-games-!cn.list,游戏平台",
     "rule/Shadowrocket/WeChat/WeChat.list,国内服务",
@@ -622,7 +622,7 @@ for filename, text in (
         rule = f"RULE-SET,{provider},国内服务"
         if rule not in text:
             fail(f"{filename}: {provider} is not routed to 国内服务")
-        if text.rfind(rule) > text.rfind("RULE-SET,cn,国内服务"):
+        if text.rfind(rule) > text.rfind("AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,cn)),国内服务"):
             fail(f"{filename}: {provider} must precede the general China rule")
 
     if "DOMAIN-SUFFIX,aliapp.org,国内服务" not in text:
@@ -649,9 +649,13 @@ for filename, text in (
     for provider, (source_name, policy) in GAME_PROVIDER_ROUTES.items():
         if source_name not in text:
             fail(f"{filename}: game provider source is missing: {source_name}")
-        if f"RULE-SET,{provider},{policy}" not in text:
+        expected_rule = (
+            f"AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,{provider})),{policy}"
+            if provider == "category-games-cn" else f"RULE-SET,{provider},{policy}"
+        )
+        if expected_rule not in text:
             fail(f"{filename}: game provider {provider} is not routed to {policy}")
-    domestic_game_position = text.find("RULE-SET,category-games-cn,游戏平台")
+    domestic_game_position = text.find("AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,category-games-cn)),游戏平台")
     overseas_game_position = text.find("DOMAIN-SUFFIX,steampowered.com,游戏平台")
     if not 0 <= domestic_game_position < overseas_game_position:
         fail(f"{filename}: domestic game rules must precede overseas game rules")
@@ -827,7 +831,7 @@ for required_rule in SHADOWROCKET_REQUIRED_RULES:
         fail(f".github/config/shared.conf: synchronized service rule is missing: {required_rule}")
 
 shadow_domestic_game_position = shadow_rules.find(
-    "geo/geosite/category-games-cn.list,游戏平台"
+    "geo/geosite/category-games-cn.list)),游戏平台"
 )
 shadow_overseas_game_position = shadow_rules.find(
     "DOMAIN-SUFFIX,steampowered.com,游戏平台"
@@ -843,7 +847,7 @@ for obsolete_rule in (
 
 wechat_position = shadow_rules.find("rule/Shadowrocket/WeChat/WeChat.list,国内服务")
 alipay_position = shadow_rules.find("rule/Shadowrocket/AliPay/AliPay.list,国内服务")
-china_position = shadow_rules.find("rule/Shadowrocket/China/China_Domain.list,国内服务")
+china_position = shadow_rules.find("rule/Shadowrocket/China/China_Domain.list)),国内服务")
 if not (0 <= wechat_position < china_position and 0 <= alipay_position < china_position):
     fail(".github/config/shared.conf: WeChat and AliPay rules must precede the general China list")
 

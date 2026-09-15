@@ -142,6 +142,9 @@ dns: #!replace
     copilot.microsoft.com:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
+    +.in.th:
+      - https://1.1.1.1/dns-query
+      - https://8.8.8.8/dns-query
     geosite:cn: https://223.5.5.5/dns-query
     +.alipaylog.com: https://223.5.5.5/dns-query
     +.aliapp.org: https://223.5.5.5/dns-query
@@ -700,7 +703,7 @@ rules: #!replace
   - RULE-SET,bilibili,哔哩哔哩港澳台
   - RULE-SET,biliintl,哔哩哔哩港澳台
   - RULE-SET,steam-cn,游戏平台
-  - RULE-SET,category-games-cn,游戏平台
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,category-games-cn)),游戏平台
   - DOMAIN-SUFFIX,steampowered.com,游戏平台
   - DOMAIN-SUFFIX,steamcommunity.com,游戏平台
   - DOMAIN-SUFFIX,steamstatic.com,游戏平台
@@ -777,7 +780,7 @@ rules: #!replace
   - DOMAIN-SUFFIX,aliapp.org,国内服务
   - RULE-SET,wechat,国内服务,no-resolve
   - RULE-SET,alipay,国内服务
-  - RULE-SET,cn,国内服务
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,cn)),国内服务
   - GEOIP,CN,国内服务,no-resolve
   - RULE-SET,geolocation-!cn,节点选择
   - MATCH,节点选择

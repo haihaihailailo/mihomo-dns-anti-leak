@@ -26,7 +26,7 @@ function checkTree(groups, rules, finalType) {
   assert.equal(new Set(rules).size, rules.length, "重复规则");
   for (const rule of rules) {
     const parts = rule.split(",");
-    visit(parts[0] === finalType ? parts[1] : parts[2]);
+    visit(/^(AND|OR|NOT),/.test(rule) ? parts.at(-1) : parts[0] === finalType ? parts[1] : parts[2]);
   }
 }
 function shadowGroup(body) {

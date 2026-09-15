@@ -5,6 +5,7 @@ const path = require("node:path");
 const { createHash } = require("node:crypto");
 const { read, parse } = require("./build_profiles.cjs");
 const { parseShadow } = require("./build_native_profiles.cjs");
+const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const { parsePayload, AI_DOMAIN_SOURCES, checkAiDomainPayload } = require("./validate_rule_sources.cjs");
 const hash = body => createHash("sha256").update(body).digest("hex");
 const LIMIT = 4194304;
@@ -22,7 +23,7 @@ function sources() {
       for (const { url, behavior, format } of Object.values(parse(read(file))["rule-providers"])) add({ url, behavior, format });
     }
     for (const rule of parseShadow(read("shadowrocket-" + region + "版.conf")).rules) {
-      const [type, url] = rule.split(",");
+      const [type, url] = unwrapInThGuard(rule).split(",");
       if (["DOMAIN-SET", "RULE-SET"].includes(type)) add({ url, behavior: type === "DOMAIN-SET" ? "domain" : "classical", format: "text" });
     }
   }
@@ -40,6 +41,11 @@ function validateBody(body, source) {
   if (aiName) {
     assert.equal(source.behavior, "domain", "AI 来源不得悄然改为 classical");
     checkAiDomainPayload(payload, aiName);
+  }
+  if (source.url?.endsWith("/geo/geosite/category-games-cn.list")) {
+    // 当前只存在误收的公共后缀。出现具体游戏子域时应审查例外，不能静默漏掉它。
+    const specific = payload.filter(rule => rule.replace(/^[+.]+/, "").endsWith(".in.th"));
+    assert.equal(specific.length, 0, "上游新增 in.th 游戏条目，须复核隔离及具体域名/DNS 例外：" + specific.join(", "));
   }
   return payload.length;
 }
@@ -83,6 +89,9 @@ async function selfTest() {
   } finally { clearTimeout(keepAlive); }
   assert.throws(() => validateBody(Buffer.from("payload: ["), { behavior: "classical", format: "yaml" }));
   assert.throws(() => validateBody(Buffer.from("<html>bad MRS</html>"), { format: "mrs" }));
+  const gameSource = { ...source, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-cn.list" };
+  assert.equal(validateBody(Buffer.from("+.wegame.com\n+.in.th"), gameSource), 2);
+  await assert.rejects(() => download(gameSource, async () => new Response("+.wegame.com\n+.fixture-game.in.th")), /须复核隔离/);
   const aiSource = { ...source, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.list" };
   assert.equal(validateBody(Buffer.from("+.openai.com\n+.chatgpt.com\no33249.ingest.sentry.io"), aiSource), 3);
   await assert.rejects(() => download(aiSource, async () => new Response("+.openai.com\n+.stripe.com")), /AI 上游误收共享服务/);

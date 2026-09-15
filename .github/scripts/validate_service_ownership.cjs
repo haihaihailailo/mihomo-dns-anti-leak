@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const { read, parse, evaluate } = require("./build_profiles.cjs");
 const { parseShadow } = require("./build_native_profiles.cjs");
 const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
+const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const BILI = "哔哩哔哩港澳台";
 const SYSTEM = "微软/苹果服务";
 const BILI_PACKAGES = ["tv.danmaku.bili", "com.bstar.intl", "com.bilibili.app.blue",
@@ -22,7 +23,7 @@ const MEMBERS = {
     "biligame.com", "upos-hz-mirrorakam.akamaized.net", "bilibili.tv"],
   biliintl: ["bstarstatic.com", "biliintl.com", "bilibili.tv"],
   "steam-cn": ["steamchina.com", "dl.steam.clngaa.com"],
-  "category-games-cn": ["biligame.com", "wegame.com"],
+  "category-games-cn": ["biligame.com", "wegame.com", "in.th"],
   steam: ["steampowered.com", "steamcommunity.com", "steamstatic.com", "steamchina.com"],
   "category-games-global": ["xbox.com", "xboxlive.com", "battle.net"],
   openai: ["openai.com", "chatgpt.com"], anthropic: ["claude.ai"],
@@ -46,7 +47,9 @@ function providerName(value) {
 }
 function firstRoute(config, host, process = "browser.exe") {
   for (const rule of config.rules) {
-    const [type, value, owner] = rule.split(",");
+    const inner = unwrapInThGuard(rule);
+    if (inner !== rule && suffix(host, "in.th")) continue;
+    const [type, value, owner] = inner.split(",");
     if (["MATCH", "FINAL"].includes(type)) return value;
     if ((type === "PROCESS-NAME" && value === process)
       || (type === "DOMAIN" && value === host)
@@ -149,12 +152,51 @@ function checkAppDnsBoundary(config) {
       "DNS 按域名分组，不应假定等于发起 App 分组：" + host);
   }
 }
+function checkInThBoundary(config, client, domestic) {
+  const sources = client === "shadowrocket" ? [
+    "DOMAIN-SET,https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-cn.list",
+    "DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list",
+  ] : ["RULE-SET,category-games-cn", "RULE-SET,cn"];
+  const guards = sources.map((source, i) => "AND,((NOT,((DOMAIN-SUFFIX,in.th))),(" + source + ")),"
+    + (i === 0 ? "游戏平台" : domestic ? "DIRECT" : "国内服务"));
+  assert.deepEqual(config.rules.filter(rule => rule.includes("in.th")), guards, "仅隔离两个过宽集合，不能增加全后缀强制出口");
+  const ordinary = ["in.th", "www.thnic.in.th", "thaionline.in.th", "ordinary.example.in.th"];
+  for (const host of ordinary) assert.equal(firstRoute(config, host), "节点选择", "普通 in.th 应继续后续匹配：" + host);
+  for (const host of ["notin.th", "in.th.example.test"]) assert.equal(firstRoute(config, host), "节点选择");
+  for (const [i, rule] of guards.entries()) {
+    const bad = structuredClone(config);
+    bad.rules = bad.rules.map(item => item === rule ? unwrapInThGuard(item) : item);
+    assert.equal(firstRoute(bad, ordinary[1]), i === 0 ? "游戏平台" : domestic ? "DIRECT" : "国内服务",
+      "移除任一隔离条件必须能复现误分类");
+  }
+  const explicit = structuredClone(config);
+  explicit.rules.unshift("DOMAIN-SUFFIX,fixture-game.in.th,游戏平台");
+  assert.equal(firstRoute(explicit, "cdn.fixture-game.in.th"), "游戏平台", "已明确的游戏域名不应被公共后缀隔离抢先匹配");
+  if (client === "mihomo") {
+    for (const app of [...STEAM_PROCESSES, ...GAME_PACKAGES]) assert.equal(firstRoute(config, ordinary[1], app), "游戏平台");
+    const expected = ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"];
+    for (const host of ordinary) assert.deepEqual(firstDns(config, host), expected, "in.th DNS 不应误归国内游戏：" + host);
+    for (const key of ["in.th", ".in.th"]) {
+      const bad = structuredClone(config);
+      delete bad.dns["nameserver-policy"][key];
+      assert(firstDns(bad, key === "in.th" ? "in.th" : ordinary[1]).every(server => server.endsWith("#游戏平台")),
+        "去掉 DNS 隔离须复现游戏组解析");
+    }
+    const keys = Object.keys(config.dns["nameserver-policy"]);
+    assert(keys.indexOf(".steampowered.com") >= 0 && keys.indexOf(".steampowered.com") < keys.indexOf("in.th"), "具体游戏 DNS 须先于公共后缀隔离");
+    assert(keys.indexOf(".in.th") < keys.indexOf("rule-set:category-games-cn"));
+  } else if (client === "stash") {
+    // Stash 文档优先级是 exact > wildcard > geosite，不能套用 Mihomo 的有序模型。
+    assert.deepEqual(config.dns["nameserver-policy"]["+.in.th"], ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]);
+    assert.equal(config.dns["follow-rule"], true);
+  }
+}
 function run() {
   for (const file of ["validate-config.yml", "validate-health-checks.yml"]) {
     const workflow = parse(read(".github/workflows/" + file));
-    for (const event of ["push", "pull_request"]) assert(
-      workflow.on[event].paths.includes(".github/scripts/validate_service_ownership.cjs"),
-      file + " 缺少业务归属测试变更触发器：" + event);
+    for (const event of ["push", "pull_request"]) for (const script of ["validate_service_ownership", "in_th_guard"]) assert(
+      workflow.on[event].paths.includes(".github/scripts/" + script + ".cjs"),
+      file + " 缺少业务归属测试变更触发器：" + event + " / " + script);
   }
   for (const environment of ["国内", "国外"]) {
     const domestic = environment === "国内";
@@ -164,20 +206,24 @@ function run() {
       checkRoutes(variant, "mihomo", domestic);
       checkDns(variant, domestic);
       checkAppDnsBoundary(variant);
+      checkInThBoundary(variant, "mihomo", domestic);
     }
     negativeControls(config, domestic);
     const stash = parse(read("stash-" + environment + "版.stoverride"));
     checkRoutes(stash, "stash", domestic);
+    checkInThBoundary(stash, "stash", domestic);
     const keys = Object.keys(stash.dns["nameserver-policy"]);
     for (const name of ["bilibili", "biliintl", "steam@cn", "category-games-cn", "steam", "category-games-!cn", "apple"]) {
       assert(keys.indexOf("geosite:" + name) >= 0 && keys.indexOf("geosite:" + name) < keys.indexOf("geosite:cn"));
     }
     const shadow = parseShadow(read("shadowrocket-" + environment + "版.conf"));
     checkRoutes(shadow, "shadowrocket", domestic);
+    checkInThBoundary(shadow, "shadowrocket", domestic);
     const badCopilot = structuredClone(shadow);
     badCopilot.rules = badCopilot.rules.filter(rule => !rule.includes("/github-copilot.list,AI"));
     assert.throws(() => checkRoutes(badCopilot, "shadowrocket", domestic));
   }
   console.log("六套入口业务归属：B站/游戏/微软苹果/AI、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及13类负向控制 OK");
+  console.log("in.th 临时隔离：六套入口、两个集合、DNS、整应用与具体游戏优先、误分类复现负例 OK（非原生客户端实测）");
 }
 module.exports = { run, MEMBERS };

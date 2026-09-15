@@ -208,6 +208,9 @@ const OVERRIDE = {
       ".dl.delivery.mp.microsoft.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       ".googleapis.cn": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      // 临时隔离上游误收的公共后缀；不强制业务直连，具体服务 DNS 仍优先。
+      "in.th": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
+      ".in.th": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:openai": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:anthropic": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
       "rule-set:google-gemini": ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"],
@@ -757,7 +760,7 @@ RULE-SET,github-copilot,AI
 RULE-SET,bilibili,哔哩哔哩港澳台
 RULE-SET,biliintl,哔哩哔哩港澳台
 RULE-SET,steam-cn,游戏平台
-RULE-SET,category-games-cn,游戏平台
+AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,category-games-cn)),游戏平台
 DOMAIN-SUFFIX,steampowered.com,游戏平台
 DOMAIN-SUFFIX,steamcommunity.com,游戏平台
 DOMAIN-SUFFIX,steamstatic.com,游戏平台
@@ -900,7 +903,7 @@ PROCESS-NAME,JetBrains Toolbox.exe,节点选择
 PROCESS-NAME,idea64.exe,节点选择
 PROCESS-NAME,pycharm64.exe,节点选择
 PROCESS-NAME,webstorm64.exe,节点选择
-RULE-SET,cn,国内服务
+AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,cn)),国内服务
 GEOIP,CN,国内服务,no-resolve
 RULE-SET,geolocation-!cn,漏网之鱼
 MATCH,漏网之鱼
@@ -1937,6 +1940,14 @@ const ENVIRONMENT = {
       ".vietnamworks.com": [
         "https://1.1.1.1/dns-query#越南服务",
         "https://8.8.8.8/dns-query#越南服务"
+      ],
+      "in.th": [
+        "https://1.1.1.1/dns-query#节点选择",
+        "https://8.8.8.8/dns-query#节点选择"
+      ],
+      ".in.th": [
+        "https://1.1.1.1/dns-query#节点选择",
+        "https://8.8.8.8/dns-query#节点选择"
       ],
       "rule-set:openai": [
         "https://1.1.1.1/dns-query#AI",

@@ -62,6 +62,8 @@ dns: #!replace
     "+.windsurf.build": https://1.1.1.1/dns-query
     "+.windsurf.com": https://1.1.1.1/dns-query
     "copilot.microsoft.com": https://1.1.1.1/dns-query
+    # DNS 的 geosite 与路由 provider 独立；通配策略隔离两个过宽集合。
+    "+.in.th": [https://1.1.1.1/dns-query, https://8.8.8.8/dns-query]
     "geosite:openai": https://1.1.1.1/dns-query
     "geosite:anthropic": https://1.1.1.1/dns-query
     "geosite:google-gemini": https://1.1.1.1/dns-query
@@ -584,7 +586,7 @@ rules: #!replace
   - RULE-SET,bilibili,哔哩哔哩港澳台
   - RULE-SET,biliintl,哔哩哔哩港澳台
   - RULE-SET,steam-cn,游戏平台
-  - RULE-SET,category-games-cn,游戏平台
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,category-games-cn)),游戏平台
   - DOMAIN-SUFFIX,steampowered.com,游戏平台
   - DOMAIN-SUFFIX,steamcommunity.com,游戏平台
   - DOMAIN-SUFFIX,steamstatic.com,游戏平台
@@ -661,7 +663,7 @@ rules: #!replace
   - DOMAIN-SUFFIX,aliapp.org,DIRECT
   - RULE-SET,wechat,DIRECT,no-resolve
   - RULE-SET,alipay,DIRECT
-  - RULE-SET,cn,DIRECT
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,cn)),DIRECT
   - GEOIP,CN,DIRECT,no-resolve
   - RULE-SET,geolocation-!cn,节点选择
   - MATCH,节点选择

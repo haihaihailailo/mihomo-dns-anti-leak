@@ -14,6 +14,8 @@ on:
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
       - ".github/scripts/validate_priority.cjs"
+      - ".github/scripts/validate_ssh_direct.cjs"
+      - ".github/scripts/in_th_guard.cjs"
       - ".github/scripts/validate_service_ownership.cjs"
       - ".github/scripts/check_remote_rules.cjs"
       - ".github/scripts/check_health_endpoints.cjs"
@@ -44,6 +46,8 @@ on:
       - ".github/scripts/validate_profiles.cjs"
       - ".github/scripts/validate_rule_sources.cjs"
       - ".github/scripts/validate_priority.cjs"
+      - ".github/scripts/validate_ssh_direct.cjs"
+      - ".github/scripts/in_th_guard.cjs"
       - ".github/scripts/validate_service_ownership.cjs"
       - ".github/scripts/check_remote_rules.cjs"
       - ".github/scripts/check_health_endpoints.cjs"
@@ -190,6 +194,9 @@ jobs:
                 errors << "Rule ##{index + 1} references unknown policy: #{parts[1]}" unless policies.include?(parts[1])
               elsif ["AND", "OR", "NOT"].include?(type)
                 errors << "Rule ##{index + 1} references unknown policy: #{parts[-1]}" unless policies.include?(parts[-1])
+                rule.scan(/\(RULE-SET,([^,)]+)/).flatten.each do |provider|
+                  errors << "Rule ##{index + 1} references unknown nested rule-provider: #{provider}" unless providers.key?(provider)
+                end
               else
                 policy = parts[2]
                 errors << "Rule ##{index + 1} is too short: #{rule}" if policy.nil? || policy.empty?

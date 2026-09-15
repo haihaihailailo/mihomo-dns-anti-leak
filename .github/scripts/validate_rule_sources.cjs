@@ -2,6 +2,7 @@
 const assert = require("node:assert/strict");
 const { parse, renderProfiles } = require("./build_profiles.cjs");
 const { renderNativeProfiles, parseShadow } = require("./build_native_profiles.cjs");
+const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const AI = ["anthropic", "google-gemini", "github-copilot"];
 const AI_DOMAIN_SOURCES = ["openai", ...AI];
 // 多租户基础设施不应整根归 AI；保留上游的服务专属主机，不当作浏览器来源识别。
@@ -119,7 +120,7 @@ function run() {
   for (const { content, client, environment } of renderNativeProfiles()) {
     if (client === "stash") checkProviders(parse(content), client, environment === "国外");
     else {
-      const { rules } = parseShadow(content);
+      const rules = parseShadow(content).rules.map(unwrapInThGuard);
       const ads = "RULE-SET,https://raw.githubusercontent.com/" + ADS + "/main/" + ADS_LIST + ",广告过滤";
       assert.equal(rules.filter(rule => rule === ads).length, 1);
       const domestic = environment === "国内" ? "DIRECT" : "国内服务";

@@ -192,7 +192,9 @@
 - 广告缓存使用独立路径，避免旧 MRS 与新 classical 文件混用。切换后若业务异常，先查看是否命中 `广告过滤`，可临时将该组改为 DIRECT 对照；不需要关闭 TLS 证书校验或清空全部客户端数据。
 - 微信 / 支付宝的 classical provider 用于 DNS 策略时，Mihomo 只取其中域名规则，相关提示不表示 ASN 也参与 DNS 匹配。`no-resolve` 避免仅为匹配 IP/ASN 而触发解析，不禁止业务请求本身的正常 DNS 查询。
 - 新增来源由 `validate_rule_sources.cjs` 检查格式、缓存隔离、AI 优先级和 DNS 同步，并纳入唯一离线验证入口。离线测试不能保证远程源永远可用；上游文件会继续变化，实机仍须核对命中日志。手机 ChatGPT 的 SSL 提示、支付或导航体验不能仅凭更换规则集宣告修复。
-- 已知上游边界（2026-09-14）：`category-games-cn` 经 [Tencent 游戏源](https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tencent-games#L20) 收入整个 `in.th` 公共注册后缀，可能误收普通泰国网站，并影响 Mihomo 对应业务 DNS。此项尚未修复；当前保留自动更新，不增加全后缀 DIRECT 例外。优先推动上游修正，修正后仍须检查实际文本/MRS 与相关 DNS；格式检查通过不代表业务分类无误。Stash 的 `geosite:category-games-cn` 也需要单独核对，不能仅替换 rule-provider 就宣告三端修复。
+- 上游误分类的临时隔离（2026-09-15）：`category-games-cn` 经 [Tencent 游戏源](https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tencent-games#L20) 收入整个 `in.th` 公共注册后缀，已解码的 `cn.mrs` 也包含它。两地版对国内游戏/国内域名集合使用 AND/NOT 排除该后缀后继续后续匹配，不增加全后缀 DIRECT 或固定节点规则；原有具体业务域名、整应用规则和 GeoIP 条件仍保留，规则源与每日更新不变。这是配置侧隔离，不是上游数据修复。
+- DNS 同步隔离：Mihomo 为 `in.th` 与子域使用通用境外 DoH、解析连接跟随 `节点选择`，优先级低于具体业务域名、高于过宽集合；Stash 用 `+.in.th` 的境外 DoH 策略覆盖独立 geosite 误分类，保留 `follow-rule`，不套用 Mihomo 的 `#策略组` 语法。[Stash DNS 优先级](https://stash.wiki/en/features/dns-server)
+- 隔离范围与回退：当前国内游戏文本集合没有独立登记的 `in.th` 游戏子域。今后若有真实游戏使用该后缀，需要明确域名及对应 DNS 例外，或待上游修正后连同隔离条件一起复核；不能靠整个公共后缀推断游戏归属。公开规则检查会提示此类新增游戏条目。撤销须同时核对路由和 DNS，不能只删其中一层。隔离内核测试只证明 Mihomo 条件匹配；Stash/Shadowrocket 仍需原生客户端导入验收。
 
 ### 首条匹配与优先级
 

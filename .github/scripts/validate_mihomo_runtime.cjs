@@ -12,6 +12,7 @@ const { read, parse } = require("./build_profiles.cjs");
 const { hash, validateBody } = require("./check_remote_rules.cjs");
 const { MEMBERS } = require("./validate_service_ownership.cjs");
 const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
+const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const binary = process.env.MIHOMO_TEST_BIN;
 assert(binary && path.isAbsolute(binary) && fs.existsSync(binary), "MIHOMO_TEST_BIN 须为已有内核的绝对路径");
 const directory = fs.mkdtempSync(path.join(process.env.MIHOMO_TEST_OUTPUT || os.tmpdir(), "mihomo-loopback-"));
@@ -336,7 +337,8 @@ async function serviceDnsCase(region, ports, mutation, manifest) {
   const original = parse(read("防DNS泄露-" + region + "版.yaml"));
   let entries = Object.entries(original.dns["nameserver-policy"]);
   const regional = key => /^\.?(vn|com\.vn|net\.vn|org\.vn|edu\.vn|gov\.vn)$/.test(key);
-  if (mutation) entries = [
+  if (mutation === "in-th") entries = entries.filter(([key]) => !["in.th", ".in.th"].includes(key));
+  else if (mutation) entries = [
     ...entries.filter(([key]) => manifest ? regional(key) : key === "rule-set:cn"),
     ...entries.filter(([key]) => manifest ? !regional(key) : key !== "rule-set:cn"),
   ];
@@ -365,7 +367,8 @@ async function serviceDnsCase(region, ports, mutation, manifest) {
       try { await query(port, "ready.example.test"); ready = true; break; } catch { await pause(100); }
     }
     assert(ready, "业务 DNS 内核未就绪：" + running.logs());
-    const cases = manifest ? [
+    const thaiHosts = ["in.th", "www.thnic.in.th", "thaionline.in.th", "ordinary.example.in.th"];
+    const cases = mutation === "in-th" ? thaiHosts.map(host => [host, "203.0.113.52"]) : manifest ? [
       ...["www.google.com.vn", "www.youtube.vn"].map(host => [host, mutation ? "203.0.113.54" : "198.51.100.10"]),
       ...["api.zalo.me", "api.zalopay.vn", "ordinary.example.vn"].map(host => [host, "203.0.113.54"]),
     ] : mutation ? [["www.bilibili.com", "198.51.100.10"], ["www.biligame.com", "198.51.100.10"]]
@@ -377,8 +380,9 @@ async function serviceDnsCase(region, ports, mutation, manifest) {
         ...["api.zalo.me", "api.zalopay.vn"].map(host => [host, "203.0.113.54"]),
         ...["www.perplexity.ai", "api.cursor.sh", "api.codeium.com"].map(host => [host, "203.0.113.20"]),
       ];
+    if (!mutation || (manifest && mutation === true)) cases.push(...thaiHosts.map(host => [host, "198.51.100.10"]));
     for (const [host, expected] of cases) assert.equal(await query(port, host), expected, region + " " + host);
-    const label = manifest ? (mutation ? "越南地域前置负向控制" : "Google/YouTube 越南域名与地域兜底")
+    const label = mutation === "in-th" ? "移除 in.th DNS 隔离复现游戏组误分类" : manifest ? (mutation ? "越南地域前置负向控制" : "Google/YouTube 越南域名与地域兜底、in.th 隔离")
       : mutation ? "CN 抢先匹配负向控制" : "B站/游戏/微软苹果/越南/AI";
     console.log(region + " 业务分组 loopback DNS：" + label + " " + cases.length + "/" + cases.length + " OK（" + (manifest ? "真实规则快照" : "合成规则集") + "）");
   } finally { await stop(running); }
@@ -461,6 +465,96 @@ async function githubDnsCase(region, manifest, general, github, ai, mutation) {
     console.log(file + "：真实 " + Object.keys(providers).length + " 集合/完整 DNS 顺序，" + label + "、GitHub/双 Copilot/OpenAI 登录/Gemini 资源/共享根域 " + (17 + SHARED_AI_HOSTS.length) + "/" + (17 + SHARED_AI_HOSTS.length) + " OK");
   } finally { await stop(running); }
 }
+async function inThRouteCase(region, manifest) {
+  const file = "防DNS泄露-" + region + "版.yaml";
+  const original = parse(read(file));
+  const guards = original.rules.filter(rule => unwrapInThGuard(rule) !== rule);
+  assert.equal(guards.length, 2);
+  const providers = snapshotProviders(file, manifest);
+  const peers = new Set(), mocks = [], hits = [];
+  let onHit;
+  async function mock(name) {
+    const server = net.createServer(peer => {
+      peers.add(peer); peer.on("error", () => {}); peer.on("close", () => peers.delete(peer));
+      let received = "";
+      peer.on("data", data => {
+        received += data;
+        if (!received.includes("\r\n\r\n")) return;
+        peer.removeAllListeners("data");
+        hits.push({ name, request: received.split("\r\n")[0] });
+        peer.write("HTTP/1.1 200 Connection established\r\n\r\n");
+        onHit?.();
+      });
+    });
+    mocks.push(server);
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    return { name, type: "http", server: "127.0.0.1", port: server.address().port };
+  }
+  async function connect(port, host) {
+    return new Promise((resolve, reject) => {
+      const peer = net.connect(port, "127.0.0.1"); peers.add(peer);
+      let done = false, sent = false, response = "";
+      const finish = error => {
+        if (done) return; done = true; onHit = undefined; clearTimeout(timer); peer.destroy();
+        error ? reject(error) : resolve();
+      };
+      const timer = setTimeout(() => finish(Error("in.th loopback 超时：" + host)), 1200);
+      onHit = () => finish();
+      peer.once("connect", () => peer.write("CONNECT " + host + ":443 HTTP/1.1\r\nHost: " + host + ":443\r\n\r\n"));
+      peer.on("data", data => {
+        response += data;
+        if (!response.includes("\r\n\r\n") || sent) return;
+        if (!/^HTTP\/1\.1 200/.test(response)) return finish(Error("in.th HTTP mock 未接通"));
+        sent = true; peer.write("loopback-probe\r\n");
+      });
+      peer.once("error", finish);
+      peer.once("close", () => { peers.delete(peer); if (!done) finish(Error("in.th HTTP mock 提前关闭")); });
+    });
+  }
+  try {
+    const proxies = [];
+    for (const name of ["fixture-game", "fixture-cn", "fixture-fallback"]) proxies.push(await mock(name));
+    for (const mutation of [null, 0, 1]) {
+      const reserve = net.createServer();
+      await new Promise(resolve => reserve.listen(0, "127.0.0.1", resolve));
+      const port = reserve.address().port;
+      await new Promise(resolve => reserve.close(resolve));
+      const rules = guards.map((rule, i) => (mutation === i ? unwrapInThGuard(rule) : rule)
+        .replace(/,[^,]+$/, i === 0 ? ",fixture-game" : ",fixture-cn"));
+      // 只有两个真实集合条件和明确的合成游戏例外；所有出站均止于本次自建 mock。
+      const running = start({ ...base(), port, proxies,
+        "rule-providers": providers,
+        rules: ["DOMAIN-SUFFIX,fixture-game.in.th,fixture-game", ...rules, "MATCH,fixture-fallback"],
+      });
+      try {
+        for (let i = 0; ; i++) {
+          try { await connect(port, "ready.example.test"); break; }
+          catch (error) {
+            if (error.code !== "ECONNREFUSED" || i >= 15 || !children.has(running.child)) throw Error(error.message + running.logs());
+            await pause(80);
+          }
+        }
+        const thaiOwner = mutation === 0 ? "fixture-game" : mutation === 1 ? "fixture-cn" : "fixture-fallback";
+        const cases = [
+          ...["in.th", "www.thnic.in.th", "thaionline.in.th", "ordinary.example.in.th"].map(host => [host, thaiOwner]),
+          ["www.wegame.com", "fixture-game"], ["www.baidu.com", "fixture-cn"],
+          ["cdn.fixture-game.in.th", "fixture-game"], ["in.th.example.test", "fixture-fallback"],
+        ];
+        for (const [host, expected] of cases) {
+          const count = hits.length;
+          await connect(port, host);
+          assert.equal(hits.length, count + 1);
+          assert.deepEqual(hits.at(-1), { name: expected, request: "CONNECT " + host + ":443 HTTP/1.1" }, region + " " + host);
+        }
+        console.log(region + " in.th 内核路由：" + (mutation === null ? "隔离有效" : "移除 " + ["游戏", "CN"][mutation] + " 隔离复现误分类")
+          + " " + cases.length + "/" + cases.length + " OK（真实 MRS / loopback 出站，非网站访问）");
+      } finally { await stop(running); }
+    }
+  } finally {
+    for (const peer of peers) peer.destroy();
+    for (const server of mocks) await new Promise(resolve => server.close(resolve));
+  }
+}
 async function providerCase(file, manifest) {
   const providers = snapshotProviders(file, manifest);
   const reserve = net.createServer();
@@ -519,11 +613,13 @@ async function providerCase(file, manifest) {
       await providerCase("stash-国外版.stoverride", manifest);
       const github = await upstream([203,0,113,30]);
       for (const region of ["国内", "国外"]) {
+        await inThRouteCase(region, manifest);
         await githubDnsCase(region, manifest, general, github, ai, false);
         await githubDnsCase(region, manifest, general, github, ai, true);
         await githubDnsCase(region, manifest, general, github, ai, "gemini");
         await serviceDnsCase(region, servicePorts, false, manifest);
         await serviceDnsCase(region, servicePorts, true, manifest);
+        await serviceDnsCase(region, servicePorts, "in-th", manifest);
       }
     } else console.log("未指定 MIHOMO_RULE_CACHE，跳过远程快照完整初始化");
   } finally {

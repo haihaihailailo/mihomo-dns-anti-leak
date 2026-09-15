@@ -7,6 +7,7 @@ const YAML = require("yaml");
 const { renderNativeProfiles } = require("./build_native_profiles.cjs");
 const { consolidateGroups } = require("./consolidate_groups.cjs");
 const { tuneMihomo } = require("./tune_mihomo.cjs");
+const { unwrapInThGuard } = require("./in_th_guard.cjs");
 
 const ROOT = path.resolve(__dirname, "../..");
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -36,7 +37,7 @@ function serviceDnsPolicies(base, policies, foreign) {
     "GitHub", "YouTube", "Netflix", "谷歌服务", "电报消息", "Meta / X", "TikTok", "Spotify"]);
   const result = clone(policies);
   for (const rule of base.rules) {
-    const [type, value, owner] = rule.split(",");
+    const [type, value, owner] = unwrapInThGuard(rule).split(",");
     if (!owners.has(owner)) continue;
     const local = !foreign && (["哔哩哔哩港澳台", "越南服务", "微软服务", "苹果服务"].includes(owner)
       || ["steam-cn", "category-games-cn"].includes(value));
@@ -55,7 +56,10 @@ function serviceDnsPolicies(base, policies, foreign) {
   const ordered = { "rule-set:private": result["rule-set:private"] };
   // .vn 等地域兜底不是专属业务；不得抢在 Google/YouTube 的越南域名集合之前。
   const regionalKeys = new Set(["vn", "com.vn", "net.vn", "org.vn", "edu.vn", "gov.vn"].flatMap(domain => [domain, "." + domain]));
-  for (const [key, value] of Object.entries(result)) if (!key.startsWith("rule-set:") && !regionalKeys.has(key)) ordered[key] = value;
+  const quarantinedKeys = new Set(["in.th", ".in.th"]);
+  for (const [key, value] of Object.entries(result)) if (!key.startsWith("rule-set:") && !regionalKeys.has(key) && !quarantinedKeys.has(key)) ordered[key] = value;
+  // 明确业务域名先于公共后缀隔离；后者只屏蔽过宽大集合的 DNS 分类。
+  for (const key of quarantinedKeys) if (Object.hasOwn(result, key)) ordered[key] = result[key];
   for (const name of preferred) if (Object.hasOwn(result, "rule-set:" + name)) {
     ordered["rule-set:" + name] = result["rule-set:" + name];
   }
@@ -85,6 +89,7 @@ function environmentSettings(base, environment) {
     "rule-set:wechat", "rule-set:alipay", "aliapp.org", ".aliapp.org", "yhglobal.com", ".yhglobal.com",
   ]);
   const externalKeys = {
+    "in.th": "节点选择", ".in.th": "节点选择",
     "rule-set:private": "DIRECT",
     "jspoo.com": "DIRECT", ".jspoo.com": "DIRECT",
     "tampermonkey.net": "DIRECT", ".tampermonkey.net": "DIRECT",
