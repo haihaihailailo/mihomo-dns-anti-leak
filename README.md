@@ -20,7 +20,8 @@
 | 启动 / 节点 / 直连 DNS | 国内 DoH | Cloudflare / Google DoH |
 | 已知国内域名 DNS | 国内 DoH | 国内 DoH 跟随国内服务；切回国时也经所选出口查询 |
 | 默认 DNS 兜底 | 保留国内 GeoIP 判断与经节点选择的外部 DNS | 不使用 CN GeoIP 兜底；默认 DNS 跟随节点选择（首选 DIRECT） |
-| TUN / IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
+| TUN / 顶层 IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
+| DNS 双栈 fake-ip | 内置 `dns.ipv6: true` 与 IPv6 fake-ip 地址池 | 同左 |
 
 - GitHub、YouTube、Netflix、Google、Telegram、Meta / X、TikTok、Spotify 和漏网流量直接归入 `节点选择`，不再单独设组。GitHub 不再单独首选香港，Telegram 不再单独首选新加坡。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
 - Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
@@ -48,7 +49,7 @@
 
 1. 先在客户端备份当前配置与手动策略选择。
 2. 停用客户端中已有的原版覆写和国内 DNS 补充层，改为所选国内版或国外版，**只启用一套、一个格式，不再叠加补充层**。保留机场订阅。仓库已移除旧的 `防DNS泄露.yaml` / `.js` 与 `Windows-国内网络覆写.yaml` / `.js` 入口；仍引用旧 URL 的客户端须手动更换，新文件不会自动替换旧导入项。
-3. TUN、IPv6、系统代理和运行模式仍在软件里选择。要使用这些分流，应选择规则模式；文件不会强制切模式。
+3. TUN、顶层 IPv6、系统代理和运行模式仍在软件里选择；Mihomo 两版的 DNS 双栈 fake-ip 已内置。要使用这些分流，应选择规则模式；文件不会强制切模式。
 4. 查看最终 DNS、上述策略组、实际连接日志；确认账号登录、工作站点和手机业务。不只看测速绿灯。
 5. 回退时停用新入口，从导入前的客户端备份恢复配置与手选；旧文件也可从 Git 历史找回。本文不要求清除全部客户端缓存，也不修改本机运行配置。
 
@@ -66,7 +67,7 @@
 ## 功能
 
 - DNS 防泄露：Mihomo 启用 `respect-rules`，国内域名使用国内 DoH，代理节点域名另走加密启动 DNS，避免递归；国内版的外部 DNS 跟随 `节点选择`，国外版见上表。Stash 使用 `follow-rule` 与独立的代理节点 DNS；Shadowrocket 主、备用 DNS 均使用 DoH，仅国内版强制备用 DoH 经代理。
-- IPv6：Mihomo YAML、JS 与 Stash 覆写不强制开启或关闭 IPv6，跟随客户端/软件自身设置；Shadowrocket 版本当前显式关闭 IPv6，以降低 iOS 隧道外泄风险。
+- IPv6：Mihomo YAML / JS 不强制顶层 `ipv6` 开关，但两地 DNS 均内置 `ipv6: true` 和 `fake-ip-range6: fdfe:dcba:9876::1/64`，详见下方双栈说明。Stash 沿用自身 IPv6 设置；Shadowrocket 版本当前显式关闭 IPv6，以降低 iOS 隧道外泄风险。
 - fake-ip：显式使用 `fake-ip-filter-mode: blacklist`，对局域网、路由器、NTP、推送等域名返回真实 IP，降低局域网和系统服务异常概率。
 - TUN 参数：主配置提供 DNS 劫持和局域网绕过参数，但不写入 `tun.enable`；是否启用 TUN / VPN 由客户端软件决定。启用后，国内应用由包名和域名规则精确分流。
 - Stash 适配：提供两地 `.stoverride`，保留 DNS、Sniffer、策略组、规则集和分流规则。
@@ -148,7 +149,7 @@
 
 - 两地版本保留客户端运行模式。`Global` 会绕过业务分流；切到 **规则 / Rule** 前，先核对 Codex 等关键应用的策略与节点连通性，避免切换后无法连接。
 - 两地版本不强制进程识别模式，保留客户端设置。Mihomo 默认的 `strict` 按规则需要识别进程；路由器不能按远端手机 App 进程识别流量，此类设备可在最后一层设置 `find-process-mode: off`，依靠域名/IP 分流。
-- TUN 和 IPv6 开关继续由客户端管理，不下发本机专属 MTU、网卡绑定、系统 DNS 或 Windows 路由表修改。
+- TUN 和顶层 IPv6 开关继续由客户端管理，DNS 双栈参数由 Mihomo 公共配置提供；不下发本机专属 MTU、网卡绑定、系统 DNS 或 Windows 路由表修改。
 - 系统代理模式仅接管遵循系统代理设置的应用，不能据此保证所有应用及其 DNS 都被接管。有其他 VPN / 隧道时，先核对其路由，再由客户端决定是否启用 TUN。
 - YAML 入口作为机场订阅的覆写使用，DNS 数组须按入口替换，不能再次追加旧补充层；导入后检查最终合并结果。
 
@@ -206,14 +207,23 @@
 
 - 开机后 TUN 全部超时且日志出现 `reject loopback connection` 时，先检查网卡转发、其他 VPN/互联软件的后台服务和路由。关闭软件界面的“开机启动”不代表其 Windows 服务已停止。不要通过关闭防火墙、跳过证书校验或反复更换 DNS 掩盖回环；具体服务的停用应由设备所有者确认并保留回退。仓库不自动修改这些系统设置。
 - 顶层 `ipv6`、`dns.ipv6` 与公网 IPv6 连通性是不同层：DNS 关闭 AAAA 不等于关闭 Windows IPv6，也不保证应用自带 IPv6 地址可达。按 [Mihomo DNS 文档](https://wiki.metacubex.one/config/dns/#ipv6) 对实际 DNS 监听端口做 UDP/TCP 的 A/AAAA 查询；控制 API 的上游查询不能替代这一验证。
-- 测试原生 IPv6 时，确认实际出口地址族；域名嗅探可能把请求重新解析为 IPv4。国内/国外入口均不强制 IPv6 开关，不能把一台设备的公网 IPv6 失败套用到所有用户。
+- 测试原生 IPv6 时，确认实际出口地址族；域名嗅探可能把请求重新解析为 IPv4。国内/国外入口均不强制顶层 IPv6 开关，不能把一台设备的公网 IPv6 失败套用到所有用户。
 - 系统代理和 TUN 同时开启时，显式 HTTP 代理请求与不使用 HTTP 代理、进入 TUN 的请求可用于比较入口，但这不是“系统代理单独开启”的对照实验。网站 200/404 只证明相应请求的结果，不能替代 App 登录、长连接、后台切换和移动网络实测。
 - Sub-Store 更新出现 HTTP 403，应先检查上游订阅的下载授权、限时开关或链接有效期；组合订阅的一个来源失败不等于全部节点失效。不要公布带 token 的日志，也不要以关闭 TLS 验证修复 403。修改订阅源和放宽错误处理需要另行确认。
+
+### Mihomo 两地共用 DNS 双栈 fake-ip（2026-09-15）
+
+- 国内版、国外版的 YAML / JS 均内置 `dns.ipv6: true` 与 `dns.fake-ip-range6: fdfe:dcba:9876::1/64`；既有 IPv4 池、上游 DNS、业务 DNS 策略、过滤表和路由规则不变。[Mihomo DNS 参数说明](https://wiki.metacubex.one/config/dns/#fake-ip-range6)
+- 用于避免部分 Windows 多网卡 / TUN 环境在空 AAAA 响应后长时间等待。此前单台 Windows / Sparkle 对照测试有效，不代表所有设备或网站都存在同一原因，也不保证解决手机 ChatGPT 的 SSL 提示。
+- **覆写顺序变更：** JS 不再保留输入中的旧 `dns.ipv6` / `dns.fake-ip-range6`，而是与 YAML 一样使用本仓库值；顶层 `ipv6` 与 TUN 开关仍由客户端决定。客户端关闭顶层 IPv6 时，Mihomo 不建立 IPv6 fake-ip 池；客户端末层再次覆写 DNS 时，以最终合并结果为准。[最低支持内核的解析实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.27/config/config.go)
+- IPv6 fake-ip 是核心内部域名映射，不等于公网 IPv6 出口可用，也不会修改物理网卡 DNS。需要使用它时，客户端须开启顶层 IPv6 并正确接管 IPv6 流量；系统代理只覆盖遵循代理设置的应用，不能保证其他应用能处理这些虚拟地址。命中过滤表的域名仍取真实解析，真实 IPv6 连通性须另测。
+- 已有本机 Windows DNS6 补充层的用户：先更新所选地区版，确认最终配置含以上两项，再停用同值补充层并复核，保留备份供回退。无需新增第三个导入入口。本次仓库修改不会自动删除本机补充层或更新任何设备。
+- 本项只适用于 Mihomo YAML / JS，不将字段复制进 Stash / Shadowrocket 原生入口。离线回归检查缺省/旧输入、顶层开关保留、幂等和负向控制；可选隔离内核测试检查 UDP A/AAAA 映射、局域网过滤及关闭开关/删除地址池的结果，不作为手机或全机 TUN 实测。
 
 ### 通用配置与设备设置的边界
 
 - 内部共同源码承载各设备可复用的域名/应用分流、DNS 策略、回国隔离和测速参数；两地入口通过生成器同步共有部分，环境差异不绑定某家机场。
-- 两地 JS 覆写保留输入中显式的 `tun.enable`、`tun.device`、`tun.mtu`、`tun.gso`、`tun.gso-max-size`、`tun.auto-redirect`、`tun.inet4-address`、`tun.inet6-address`，以及 `dns.ipv6`、`dns.fake-ip-range6` 和原有顶层 `mode` / `ipv6`。未设置时不自行添加设备参数；这不等于信任订阅里的所有 TUN 字段，也不把 MTU 固定为本机数值。
+- 两地 JS 覆写保留输入中显式的 `tun.enable`、`tun.device`、`tun.mtu`、`tun.gso`、`tun.gso-max-size`、`tun.auto-redirect`、`tun.inet4-address`、`tun.inet6-address` 和原有顶层 `mode` / `ipv6`。未设置时不自行添加这些设备参数；`dns.ipv6` / `dns.fake-ip-range6` 则使用上述公共值。这不等于信任订阅里的所有 TUN 字段，也不把 MTU 固定为本机数值。
 - Sparkle 仍会在自定义覆写之后合并软件管理字段。协议栈、MTU 和私人路由排除应在设备侧核对；数组会替换而非自动追加。使用本仓库 DNS 劫持策略时，应确认末层 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探交由仓库管理时，不再开启软件整块 DNS/嗅探接管；不要为调整一个字段覆盖整个 DNS 策略。
 - 不下发订阅地址、具体节点选择、代理环境变量、系统代理开关、网卡名、MTU、Windows 路由或其他 VPN 的设置。更换机场后核对所选地区组非空，切换所在地后检查已保存的手选策略。
 - 验证顺序：先检查最终合并配置，再观察连接日志中的命中规则和出口，然后测试实际登录/业务。测速 URL 可达只证明该端点可达，不等于吞吐速度、服务解锁或整个 App 正常。

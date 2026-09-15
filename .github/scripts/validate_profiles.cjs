@@ -102,7 +102,7 @@ function checkDeviceBoundary(js, source) {
   const result = evaluate(js, input);
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
   for (const key of Object.keys(deviceTun)) assert(!Object.hasOwn(evaluate(js).tun, key), `设备字段不应凭空下发：${key}`);
-  assert.deepEqual(result.dns, { ...source.dns, ipv6: false }, "保留设备字段不得改变公共 DNS 策略");
+  assert.deepEqual(result.dns, source.dns, "订阅旧 DNS 字段不得覆盖公共 DNS 策略");
   assert.deepEqual(evaluate(js, result), result, "携带设备字段时重复覆写不幂等");
   const controlled = { tun: { ...deviceTun, stack: "gvisor", "route-exclude-address": ["192.0.2.0/24"], "dns-hijack": ["any:53", "tcp://any:53"] } };
   const merged = mergeClient(result, controlled);
@@ -114,6 +114,38 @@ function checkDeviceBoundary(js, source) {
   // 回归之前的真实问题：后置数组不会自动追加仓库的 TCP 劫持项。
   const incomplete = mergeClient(result, { tun: { "dns-hijack": ["any:53"] } });
   assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));
+}
+function checkSharedFakeIp(js, source, label) {
+  const expected = { ipv6: true, "fake-ip-range6": "fdfe:dcba:9876::1/64" };
+  const check = config => {
+    assert.equal(config.dns["enhanced-mode"], "fake-ip");
+    assert.equal(config.dns["fake-ip-range"], "198.18.0.1/16");
+    for (const [key, value] of Object.entries(expected)) assert.equal(config.dns[key], value, `公共 DNS 字段错误：${key}`);
+  };
+  check(source);
+  for (const enabled of [undefined, false, true]) {
+    for (const dns of [undefined, {}, { ipv6: false }, { "fake-ip-range6": "" },
+      { ipv6: false, "fake-ip-range6": "fd00:1234::1/64" }]) {
+      const input = {};
+      if (enabled !== undefined) Object.assign(input, { ipv6: enabled, tun: { enable: enabled } });
+      if (dns !== undefined) input.dns = clone(dns);
+      const result = evaluate(js, input);
+      check(result);
+      assert.deepEqual(result.dns, source.dns, "输入不能改变其余 DNS 策略");
+      assert.deepEqual(result.dns, mergeClient(input, source).dns, "YAML/JS 对旧 DNS 输入的覆写语义不同");
+      assert.equal(Object.hasOwn(result, "ipv6"), Object.hasOwn(input, "ipv6"));
+      assert.equal(result.ipv6, enabled, "不得强开客户端顶层 IPv6");
+      assert.equal(result.tun.enable, enabled, "不得强开客户端 TUN");
+      assert.deepEqual(evaluate(js, result), result, "DNS 双栈覆写必须幂等");
+    }
+  }
+  // 负向控制：旧 DNS 关闭值、丢失地址池、沿用旧池均必须被检测到。
+  for (const patch of [{ ipv6: false }, { "fake-ip-range6": undefined }, { "fake-ip-range6": "fd00:1234::1/64" }]) {
+    const broken = clone(source);
+    Object.assign(broken.dns, patch);
+    assert.throws(() => check(broken), { code: "ERR_ASSERTION" });
+  }
+  console.log(`${label}: 共同 DNS 双栈默认、旧输入覆盖、顶层开关保留、YAML/JS 合并一致、幂等与 3 个负向控制 OK`);
 }
 const driverRules = [
   "DOMAIN-SUFFIX,download.nvidia.com,DIRECT", "DOMAIN-SUFFIX,download.nvidia.cn,DIRECT",
@@ -177,6 +209,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
   checkMihomoTuning(compact, consolidatedConfig);
   checkReferences(compact);
   checkDeviceBoundary(js, compact);
+  checkSharedFakeIp(js, compact, stem);
   checkTunSelectors(js, compact, stem);
   // 原有环境语义测试继续覆盖详细中间配置；公开精简结果另作独立全对象比较。
   const config = detailedConfig;
@@ -260,19 +293,20 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
     };
     if (enabled !== undefined) Object.assign(input, {
       ipv6: enabled, tun: { enable: enabled, "inet6-address": ["fdfe:dcba:9876::1/126"] },
-      dns: { ipv6: enabled, "fake-ip-range6": "fdfe:dcba:9876::1/64" },
+      dns: { ipv6: enabled, "fake-ip-range6": "fd00:1234::1/64" },
     });
     const expected = clone(input);
     const result = evaluate(js, input);
     for (const key of ["mode", "ipv6", "find-process-mode", "mixed-port", "proxies", "proxy-providers"]) {
       assert.deepEqual(result[key], expected[key], `客户端字段变化：${key}`);
     }
-    for (const [section, keys] of Object.entries({ tun: ["enable", "inet6-address"], dns: ["ipv6", "fake-ip-range6"] })) {
+    for (const [section, keys] of Object.entries({ tun: ["enable", "inet6-address"] })) {
       for (const key of keys) {
         assert.deepEqual(result[section][key], expected[section]?.[key]);
         if (enabled === undefined) assert(!Object.hasOwn(result[section], key));
       }
     }
+    assert.deepEqual(normalize(result.dns), normalize(compact.dns), "DNS 应使用公共值而非客户端输入旧值");
     assert.deepEqual(normalize(evaluate(js, result)), normalize(result), "重复覆写不幂等");
   }
   console.log(`${stem}: 全配置同步、差异范围、DNS/分流、回国隔离、空组保护、客户端保留 OK`);
@@ -284,6 +318,7 @@ const stash = parse(read(".github/config/shared.stoverride"));
 checkReferences(main);
 checkDriverRouting(main);
 checkDeviceBoundary(read(".github/config/shared.js"), main);
+checkSharedFakeIp(read(".github/config/shared.js"), main, "shared.js");
 checkTunSelectors(read(".github/config/shared.js"), main, "shared.js");
 checkReferences(stash, { sparkle: false });
 const shadowRules = read(".github/config/shared.conf").split("[Rule]")[1].split("\n")

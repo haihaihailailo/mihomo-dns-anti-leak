@@ -113,12 +113,15 @@ const OVERRIDE = {
   dns: {
     enable: true,
     listen: "127.0.0.1:1053",
+    // 两地共用双栈 fake-ip；顶层 IPv6 / TUN 开关仍由客户端决定。
+    ipv6: true,
     "prefer-h3": false,
     "respect-rules": true,
     "use-system-hosts": false,
     "cache-algorithm": "arc",
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
+    "fake-ip-range6": "fdfe:dcba:9876::1/64",
     // blacklist：匹配 fake-ip-filter 的域名返回真实 IP，其余域名返回 fake-ip。
     "fake-ip-filter-mode": "blacklist",
     "fake-ip-filter": [
@@ -916,12 +919,12 @@ function deepClone(value) {
 // 入口函数：客户端调用 main(config)，返回覆写后的配置。
 function main(config) {
   const next = deepClone(OVERRIDE);
-  // 这些字段由客户端管理；替换整个 DNS/TUN 对象时也要保留显式设置。
+  // 这些 TUN 字段由客户端管理；替换对象时也要保留显式设置。
   // 未设置的字段不补默认值，与 YAML 覆写保持一致。
+  // dns.ipv6 / fake-ip-range6 由共同源码管理，不沿用订阅旧值；顶层 ipv6 不覆写。
   for (const [section, keys] of Object.entries({
     tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
       "include-package", "exclude-package", "include-android-user", "include-uid", "exclude-uid", "include-uid-range", "exclude-uid-range"],
-    dns: ["ipv6", "fake-ip-range6"],
   })) {
     for (const key of keys) {
       if (config[section] && Object.prototype.hasOwnProperty.call(config[section], key)) {

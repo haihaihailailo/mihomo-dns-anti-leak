@@ -5,6 +5,7 @@ const path = require("node:path");
 const os = require("node:os");
 const dgram = require("node:dgram");
 const net = require("node:net");
+const { Resolver } = require("node:dns").promises;
 const { spawn } = require("node:child_process");
 const YAML = require("yaml");
 const { read, parse } = require("./build_profiles.cjs");
@@ -88,6 +89,42 @@ async function query(port, domain) {
     value.once("message", response => { clearTimeout(timer); value.close(); resolve([...response.subarray(-4)].join(".")); });
     value.send(packet, port, "127.0.0.1");
   });
+}
+async function fakeIpDnsCase(region, general, state) {
+  const source = parse(read("防DNS泄露-" + region + "版.yaml"));
+  const reserve = socket(); const port = await bind(reserve);
+  await new Promise(resolve => reserve.close(resolve));
+  // 保留公共 fake-ip 参数与过滤表；只将上游替换为合成 loopback，不加载订阅/公网规则。
+  const dns = Object.fromEntries(["ipv6", "enhanced-mode", "fake-ip-range", "fake-ip-range6",
+    "fake-ip-filter-mode", "fake-ip-filter"].map(key => [key, source.dns[key]]));
+  Object.assign(dns, { enable: true, listen: "127.0.0.1:" + port,
+    "use-hosts": false, "use-system-hosts": false,
+    nameserver: ["127.0.0.1:" + general], "default-nameserver": ["127.0.0.1:" + general] });
+  if (state === "dns-off") dns.ipv6 = false;
+  if (state === "no-pool") delete dns["fake-ip-range6"];
+  const running = start({ ...base(), ipv6: state !== "global-off", dns });
+  const resolver = new Resolver({ timeout: 500, tries: 1 });
+  resolver.setServers(["127.0.0.1:" + port]);
+  try {
+    let addresses;
+    for (let i = 0; i < 20; i++) {
+      assert(children.has(running.child), "双栈 DNS 内核提前退出：" + running.logs());
+      try { addresses = await resolver.resolve4("dualstack.example"); break; }
+      catch { await pause(100); }
+    }
+    assert(addresses?.length, "双栈 DNS 监听未就绪：" + running.logs());
+    assert(addresses.every(ip => /^198\.18\./.test(ip)), "IPv4 fake-ip 池应保留");
+    if (state === "enabled") {
+      const ipv6 = await resolver.resolve6("dualstack.example");
+      assert(ipv6.length && ipv6.every(ip => /^fdfe:dcba:9876:/.test(ip)), "AAAA 未返回公共 IPv6 fake-ip");
+      assert.deepEqual(await resolver.resolve6("dualstack.example"), ipv6, "同一域名的 IPv6 映射应稳定");
+    } else {
+      await assert.rejects(resolver.resolve6("dualstack.example"), { code: "ENODATA" },
+        "关闭顶层 IPv6 / DNS IPv6 / 删除地址池应停止下发 IPv6 fake-ip");
+    }
+    assert.deepEqual(await resolver.resolve4("router.lan"), ["198.51.100.10"], "局域网 fake-ip 过滤不得变化");
+    console.log(region + " 双栈 fake-ip / " + state + "：UDP A/AAAA、过滤与开关边界 OK（无 TUN / 公网出口测试）");
+  } finally { resolver.cancel(); await stop(running); }
 }
 async function aiGroupsCase(region, empty) {
   const config = parse(read("防DNS泄露-" + region + "版.yaml"));
@@ -364,6 +401,7 @@ async function providerCase(file, manifest) {
     const general = await upstream([198,51,100,10]);
     const ai = await upstream([203,0,113,20]);
     for (const region of ["国内", "国外"]) {
+      for (const state of ["enabled", "global-off", "dns-off", "no-pool"]) await fakeIpDnsCase(region, general, state);
       await aiGroupsCase(region, false);
       await aiGroupsCase(region, true);
       await dnsCase(region, general, ai, false);
