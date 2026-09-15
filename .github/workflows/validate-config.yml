@@ -263,10 +263,10 @@ jobs:
             errors << "external DNS policy #{policy} must follow 节点选择" unless Array(Hash(dns["nameserver-policy"])[policy]) == external_dns
           end
 
-          # IPv6 is intentionally inherited from the client/software instead of being forced by the override.
+          # Top-level IPv6 remains client-owned; shared DNS provides dual-stack fake-ip.
           errors << "top-level IPv6 must follow client settings" if main.key?("ipv6")
-          errors << "dns.ipv6 must follow client settings" if dns.key?("ipv6")
-          errors << "fake-ip-range6 must follow client settings" if dns.key?("fake-ip-range6")
+          errors << "shared DNS IPv6 must be enabled" unless dns["ipv6"] == true
+          errors << "shared IPv6 fake-ip pool is missing or changed" unless dns["fake-ip-range6"] == "fdfe:dcba:9876::1/64"
           errors << "tun.inet6-address must follow client settings" if tun.key?("inet6-address")
 
           groups = Array(main["proxy-groups"]).to_h { |group| [group["name"], group] }
