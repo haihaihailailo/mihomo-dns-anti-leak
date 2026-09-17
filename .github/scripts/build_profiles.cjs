@@ -86,6 +86,7 @@ function environmentSettings(base, environment) {
   assert.equal(environment, "国外");
   const policies = {};
   const domesticKeys = new Set([
+    "aweme.snssdk.com", "is.snssdk.com", "getui.com", ".getui.com", "getui.net", ".getui.net", "gepush.com", ".gepush.com", "igexin.com", ".igexin.com",
     "rule-set:cn", "rule-set:steam-cn", "rule-set:category-games-cn",
     "rule-set:wechat", "rule-set:alipay", "aliapp.org", ".aliapp.org", "yhglobal.com", ".yhglobal.com",
   ]);

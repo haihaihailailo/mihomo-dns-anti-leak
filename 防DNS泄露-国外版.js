@@ -186,6 +186,16 @@ const OVERRIDE = {
       ".jspoo.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "tampermonkey.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".tampermonkey.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "aweme.snssdk.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "is.snssdk.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "getui.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".getui.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "getui.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".getui.net": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "gepush.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".gepush.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      "igexin.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
+      ".igexin.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       ".aliapp.org": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "yhglobal.com": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
@@ -329,6 +339,12 @@ GEOIP,LAN,DIRECT,no-resolve
 RULE-SET,reject,广告过滤
 DOMAIN-SUFFIX,jspoo.com,DIRECT
 DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+DOMAIN,aweme.snssdk.com,国内服务
+DOMAIN,is.snssdk.com,国内服务
+DOMAIN-SUFFIX,getui.com,国内服务
+DOMAIN-SUFFIX,getui.net,国内服务
+DOMAIN-SUFFIX,gepush.com,国内服务
+DOMAIN-SUFFIX,igexin.com,国内服务
 AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT
 DOMAIN-SUFFIX,yhglobal.com,国内服务
 DOMAIN-SUFFIX,download.nvidia.com,DIRECT
@@ -1124,6 +1140,46 @@ const ENVIRONMENT = {
       ".tampermonkey.net": [
         "https://1.1.1.1/dns-query#DIRECT",
         "https://8.8.8.8/dns-query#DIRECT"
+      ],
+      "aweme.snssdk.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "is.snssdk.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "getui.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".getui.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "getui.net": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".getui.net": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "gepush.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".gepush.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      "igexin.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
+      ],
+      ".igexin.com": [
+        "https://223.5.5.5/dns-query#国内服务",
+        "https://doh.pub/dns-query#国内服务"
       ],
       "aliapp.org": [
         "https://223.5.5.5/dns-query#国内服务",

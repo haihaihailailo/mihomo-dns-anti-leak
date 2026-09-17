@@ -10,7 +10,7 @@ const EDITORS = ["Code.exe", "code.exe", "Postman.exe", "JetBrains Toolbox.exe",
 const GPU_PROCESSES = ["NVIDIA App.exe", "NVIDIA GeForce Experience.exe", "NvContainer.exe",
   "NVDisplay.Container.exe", "nvngx_update.exe", "AMDSoftware.exe", "AMDRSServ.exe", "AMDInstallManager.exe"];
 const FIXTURES = {
-  private: ["router.test"], reject: ["ads.example.test", "ads.tampermonkey.net"],
+  private: ["router.test"], reject: ["ads.example.test", "ads.tampermonkey.net", "ads.getui.com"],
   openai: ["chatgpt.com", "openai.com"], anthropic: ["claude.ai"],
   "google-gemini": ["gemini.google.com"], "github-copilot": ["githubcopilot.com"],
   google: ["google.com"], github: [...GITHUB_DOMAINS, "githubcopilot.com"],
@@ -18,7 +18,8 @@ const FIXTURES = {
   "geolocation-!cn": ["chatgpt.com", "openai.com", "claude.ai", "githubcopilot.com", "google.com", "tampermonkey.net", ...GITHUB_DOMAINS],
 };
 const suffix = (host, domain) => host === domain || host.endsWith("." + domain);
-const member = (name, host) => (FIXTURES[name] || []).some(domain => suffix(host, domain));
+const ADS_URL = "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET-Only.Ads.list";
+const member = (name, host) => (FIXTURES[name === ADS_URL ? "reject" : name] || []).some(domain => suffix(host, domain));
 function firstRoute(config, host, processName) {
   for (const rule of config.rules) {
     const [type, value, target] = rule.split(",");
@@ -160,6 +161,52 @@ function tampermonkeyRegression(config, foreign = false, prefix = "rule-set:") {
     assert.throws(() => checkTampermonkey(badDns, foreign, prefix), /DNS/);
   }
 }
+const DOMESTIC_EXACT = ["aweme.snssdk.com", "is.snssdk.com"];
+const PUSH_SUFFIXES = ["getui.com", "getui.net", "gepush.com", "igexin.com"];
+function checkDomesticDomains(config, foreign, shared, prefix = "rule-set:") {
+  const target = foreign || shared ? "国内服务" : "DIRECT";
+  const expectedRules = [...DOMESTIC_EXACT.map(host => "DOMAIN," + host + "," + target),
+    ...PUSH_SUFFIXES.map(host => "DOMAIN-SUFFIX," + host + "," + target)];
+  const anchor = config.rules.indexOf("DOMAIN-SUFFIX,tampermonkey.net,DIRECT");
+  assert(anchor >= 0);
+  assert.deepEqual(config.rules.slice(anchor + 1, anchor + 7), expectedRules, "国内域名必须位于广告/网站例外之后、业务规则之前");
+  for (const rule of expectedRules) assert.equal(config.rules.filter(item => item === rule).length, 1, "国内域名规则必须唯一");
+  const hosts = [...DOMESTIC_EXACT, ...PUSH_SUFFIXES.flatMap(host => [host, "sdk." + host])];
+  for (const host of hosts) {
+    assert.equal(firstRoute(config, host, "Code.exe"), target, "国内域名被通用规则截走：" + host);
+    if (config.dns) {
+      const expected = prefix === "geosite:" ? "https://223.5.5.5/dns-query"
+        : ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"].map(url => foreign ? url + "#国内服务" : url);
+      assert.deepEqual(firstDns(config, host, prefix), expected, "国内域名 DNS 出口错误：" + host);
+    }
+  }
+  assert.equal(firstRoute(config, "ads.getui.com", "Code.exe"), "广告过滤", "推送例外不可绕过广告规则");
+  const without = structuredClone(config);
+  without.rules = without.rules.filter(rule => !expectedRules.includes(rule));
+  if (without.dns) {
+    for (const key of [...DOMESTIC_EXACT, ...PUSH_SUFFIXES.flatMap(host => [host, "." + host, "+." + host])]) {
+      delete without.dns["nameserver-policy"][key];
+    }
+  }
+  const negatives = [...DOMESTIC_EXACT.flatMap(host => ["sub." + host, host + ".evil.test", "not" + host]),
+    ...PUSH_SUFFIXES.flatMap(host => [host + ".evil.test", "not" + host]),
+    "snssdk.com", "i.snssdk.com", "ecomuser.snssdk.com", "tiktok.com"];
+  for (const host of negatives) {
+    assert.equal(firstRoute(config, host, "Code.exe"), firstRoute(without, host, "Code.exe"), "国内例外扩大到其他域名：" + host);
+    if (config.dns) assert.deepEqual(firstDns(config, host, prefix), firstDns(without, host, prefix), "国内 DNS 例外扩大范围：" + host);
+  }
+}
+function domesticDomainRegression(config, foreign = false, shared = false, prefix = "rule-set:") {
+  checkDomesticDomains(config, foreign, shared, prefix);
+  const bad = structuredClone(config);
+  bad.rules = bad.rules.filter(rule => !rule.startsWith("DOMAIN,aweme.snssdk.com,"));
+  assert.throws(() => checkDomesticDomains(bad, foreign, shared, prefix), /国内域名/);
+  if (config.dns) {
+    const badDns = structuredClone(config);
+    delete badDns.dns["nameserver-policy"]["aweme.snssdk.com"];
+    assert.throws(() => checkDomesticDomains(badDns, foreign, shared, prefix), /DNS/);
+  }
+}
 function checkGpuProcesses(config) {
   const ads = config.rules.indexOf("RULE-SET,reject,广告过滤");
   const ai = config.rules.indexOf("PROCESS-NAME,com.openai.chatgpt,AI");
@@ -190,6 +237,8 @@ function run() {
     checkOrder(config);
     checkGithub(config);
     tampermonkeyRegression(config, stem.includes("国外"));
+    domesticDomainRegression(config, stem.includes("国外"), stem.startsWith(".github/"));
+    domesticDomainRegression(evaluate(read(stem + ".js")), stem.includes("国外"), stem.startsWith(".github/"));
     checkGpuProcesses(config);
     const badGpu = structuredClone(config);
     badGpu.rules = badGpu.rules.map(rule => rule === "PROCESS-NAME,NVIDIA App.exe,DIRECT" ? "PROCESS-NAME,NVIDIA App.exe,节点选择" : rule);
@@ -219,13 +268,19 @@ function run() {
     checkGithub(config, "geosite:");
     checkDirectSite(config);
     tampermonkeyRegression(config, stem.includes("国外"), "geosite:");
+    domesticDomainRegression(config, stem.includes("国外"), stem.startsWith(".github/"), "geosite:");
     assert.deepEqual(config.dns["nameserver-policy"]["+.jspoo.com"],
       stem.includes("国外") ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"] : "https://223.5.5.5/dns-query");
   }
   for (const file of [".github/config/shared.conf", "shadowrocket-国内版.conf", "shadowrocket-国外版.conf"]) {
     checkDirectSite(parseShadow(read(file)));
     tampermonkeyRegression(parseShadow(read(file)));
+    domesticDomainRegression(parseShadow(read(file)), file.includes("国外"), file.startsWith(".github/"));
   }
+  for (const region of ["国内", "国外"]) {
+    domesticDomainRegression(parse(read("防DNS泄露-路由器-" + region + "版.yaml")), region === "国外");
+  }
+  console.log("国内精确域名/推送后缀的跨入口路由、DNS、广告优先级、相似域名及负向控制 OK");
   console.log("DNS 有序同步、AI/GitHub/微软集合重叠、GPU 整进程直连、整应用优先级、Tampermonkey 直连/DNS及负向控制 OK");
 }
 if (require.main === module) run();

@@ -100,6 +100,12 @@ dns: #!replace
     +.tampermonkey.net:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
+    aweme.snssdk.com: https://223.5.5.5/dns-query
+    is.snssdk.com: https://223.5.5.5/dns-query
+    +.getui.com: https://223.5.5.5/dns-query
+    +.getui.net: https://223.5.5.5/dns-query
+    +.gepush.com: https://223.5.5.5/dns-query
+    +.igexin.com: https://223.5.5.5/dns-query
     +.perplexity.ai:
       - https://1.1.1.1/dns-query
       - https://8.8.8.8/dns-query
@@ -674,6 +680,12 @@ rules: #!replace
   - RULE-SET,reject,广告过滤
   - DOMAIN-SUFFIX,jspoo.com,DIRECT
   - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+  - DOMAIN,aweme.snssdk.com,国内服务
+  - DOMAIN,is.snssdk.com,国内服务
+  - DOMAIN-SUFFIX,getui.com,国内服务
+  - DOMAIN-SUFFIX,getui.net,国内服务
+  - DOMAIN-SUFFIX,gepush.com,国内服务
+  - DOMAIN-SUFFIX,igexin.com,国内服务
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
   - DOMAIN,ota.nvidia.com,DIRECT

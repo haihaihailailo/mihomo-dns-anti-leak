@@ -52,7 +52,8 @@ function stashProfile(source, environment) {
     }
     for (const [key, value] of entries) {
       if (Object.hasOwn(policies, key)) continue;
-      const domestic = ["geosite:cn", "+.alipaylog.com", "+.aliapp.org"].includes(key);
+      const domestic = ["geosite:cn", "+.alipaylog.com", "+.aliapp.org",
+        "aweme.snssdk.com", "is.snssdk.com", "+.getui.com", "+.getui.net", "+.gepush.com", "+.igexin.com"].includes(key);
       policies[key] = domestic ? value : GLOBAL;
     }
     text = dnsBlock(text, "nameserver-policy", policies);

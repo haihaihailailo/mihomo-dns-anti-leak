@@ -259,6 +259,30 @@
 - 本项只适用于 Mihomo YAML / JS，不将字段复制进 Stash / Shadowrocket 原生入口。离线回归检查缺省/旧输入、顶层开关保留、幂等和负向控制；可选隔离内核测试检查 UDP A/AAAA 映射、局域网过滤及关闭开关/删除地址池的结果，不作为手机或全机 TUN 实测。
 - IPv4-only CI 中，双栈合成测试仅为自建回环子进程设置内核支持的 `SKIP_SYSTEM_IPV6_CHECK=true`，避免宿主地址检查提前清空测试池；不设置到客户端或公共配置，也不修改网卡/路由。生产环境仍受内核宿主 IPv6 检查约束，缺少合适的 IPv6 地址时不保证建立池。[内核检查实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.27/config/utils.go)
 
+### 国内业务域名与推送例外
+
+- `aweme.snssdk.com`、`is.snssdk.com` 使用精确域名规则；`getui.com`、`getui.net`、`gepush.com`、`igexin.com` 覆盖根域名及子域名。十二个公开入口同步更新，国内版 DIRECT，国外版跟随 `国内服务`，位置在广告及既有网站例外之后、其他业务规则之前。
+- Mihomo 使用对应的国内 DoH，国外版解析连接绑定 `#国内服务`；Stash 保留国内 DoH 和原生 `follow-rule`。Shadowrocket 只同步路由，保留自身全局 DNS 机制，不套用其他客户端的域名 DNS 语法。
+- 不放行整个 `snssdk.com`，不改变 `i.snssdk.com`、`ecomuser.snssdk.com` 或 TikTok 的既有分流。广告规则仍优先；推送域名例外不表示其所有请求都免于广告过滤。
+- 离线回归覆盖两地路由/DNS、广告重叠、开发工具进程、相似域名边界及删除规则/DNS 的负向控制。它不证明所有客户端实机正常。若本地自定义覆写已加入相同域名补丁，更新后先核对最终生效配置，再决定是否移除重复的本地域名补丁；节点 UDP 设置须单独保留和核对。
+
+### 可选：阻止 Mihomo 的末尾 UDP 直连回退
+
+[Mihomo v1.19.31 的规则匹配实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.31/tunnel/tunnel.go#L615-L668) 会跳过声明不支持 UDP 的目标；遍历后没有可用匹配时返回 DIRECT。这与节点连接超时不同。服务商支持 UDP 时，应先核对最终节点配置及实际双向通信，不能仅凭 `udp: true` 判断可用。
+
+需要拒绝这种末尾回退时，可在本地规则模式配置的最后一个 `MATCH` **之后**加入下面一行，保留原有全部规则及 MATCH 目标：
+
+```yaml
+rules:
+  # 此处保留全部既有规则
+  - MATCH,节点选择
+  - NETWORK,udp,REJECT
+```
+
+这是可选的本地配置，公共入口不自动加入，也不统一强制节点启用 UDP。前面的 MATCH 目标支持 UDP 时照常命中；被跳过后才可能走到 REJECT。代价是这部分 UDP 请求失败，通话、游戏或 QUIC 可能受影响，能否改用 TCP 取决于应用。
+
+此行不能阻止此前已命中的 DIRECT，也不能保证被跳过的专属业务规则仍走原业务组；它不检测实际节点故障，不适用于全局/直连模式或所有其他客户端，不是整机零泄露保证。启用后检查最终规则、UDP 命中与真实业务；回退时仅移除本地新增的这一行。
+
 ### 通用配置与设备设置的边界
 
 - 用户指定服务器例外：Mihomo 国内/国外 YAML、JS 仅将 `47.81.15.184` 的 **TCP 22** 连接设为 DIRECT，位于既有局域网/广告/网站例外之后、应用分流之前，避免 TUN 代理出口与 SSH 来源白名单不一致。采用 [AND 逻辑规则](https://wiki.metacubex.one/config/rules/#and-or-not)，IP 子规则带 `no-resolve`；不扩展到其他主机、该主机的其他端口、UDP 或整个 `ssh.exe` 进程。此条按仓库所有者要求公开，其他用户不需要该例外时可删除；服务器地址未来变动需重新核对。

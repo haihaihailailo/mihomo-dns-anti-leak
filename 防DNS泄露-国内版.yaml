@@ -245,6 +245,36 @@ dns:
     .tampermonkey.net:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
+    aweme.snssdk.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    is.snssdk.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    getui.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .getui.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    getui.net:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .getui.net:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    gepush.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .gepush.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    igexin.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .igexin.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
     aliapp.org:
       - https://223.5.5.5/dns-query
       - https://doh.pub/dns-query
@@ -1576,6 +1606,12 @@ rules:
   - RULE-SET,reject,广告过滤
   - DOMAIN-SUFFIX,jspoo.com,DIRECT
   - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+  - DOMAIN,aweme.snssdk.com,DIRECT
+  - DOMAIN,is.snssdk.com,DIRECT
+  - DOMAIN-SUFFIX,getui.com,DIRECT
+  - DOMAIN-SUFFIX,getui.net,DIRECT
+  - DOMAIN-SUFFIX,gepush.com,DIRECT
+  - DOMAIN-SUFFIX,igexin.com,DIRECT
   - AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT
   - DOMAIN-SUFFIX,yhglobal.com,DIRECT
   - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
