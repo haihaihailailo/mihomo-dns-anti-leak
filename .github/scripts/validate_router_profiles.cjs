@@ -2,7 +2,8 @@
 const assert = require('node:assert/strict');
 const YAML = require('yaml');
 const { read, renderProfiles } = require('./build_profiles.cjs');
-const { routerConfig, renderRouterProfiles } = require('./build_router_profiles.cjs');
+const { routerConfig, renderRouterProfiles, renderRouterOverrides } = require('./build_router_profiles.cjs');
+const { spawnSync } = require('node:child_process');
 const clone = value => JSON.parse(JSON.stringify(value));
 
 function run() {
@@ -47,5 +48,44 @@ function run() {
   assert.deepEqual(routerConfig(synthetic), { dns: {}, 'find-process-mode': 'off',
     rules: ['DOMAIN,example.org,DIRECT', 'MATCH,REJECT'] });
   assert.deepEqual(synthetic, before);
+  for (const result of renderRouterOverrides(sources)) {
+    assert.equal(read(result.file), result.content, `${result.file} 生成结果过期`);
+    const commands = result.content.split('\n').filter(line => line && !line.startsWith('#') && line !== '[Overwrite]');
+    const decoded = {};
+    for (const line of commands) {
+      const match = line.match(/^ruby_edit "\$CONFIG_FILE" "\['([a-z-]+)'\]" "([^"\n]+)"$/);
+      assert(match, 'Only deterministic ruby_edit commands are allowed');
+      const [, key, expression] = match;
+      assert(!Object.hasOwn(decoded, key), 'Duplicate assignments race in OpenClash');
+      const payload = expression.match(/YAML\.safe_load\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\), aliases: true\)/);
+      assert(payload);
+      assert(!/[`$\\]/.test(expression), 'Shell interpolation in Ruby expression');
+      decoded[key] = JSON.parse(Buffer.from(payload[1], 'base64').toString('utf8'));
+    }
+    assert.deepEqual(decoded, result.config, 'Module must contain the complete router projection');
+    const input = { ...clone(synthetic), 'mixed-port': 9876, mode: 'rule',
+      dns: { ...clone(synthetic.dns), 'nameserver-policy': { 'old.invalid': 'old-group' },
+        'proxy-server-nameserver-policy': { 'old.invalid': 'old-group' } },
+      'proxy-groups': [{ name: 'old-group', type: 'select', proxies: ['DIRECT'] }],
+      'rule-providers': { old: {} } };
+    const expected = { ...clone(input), ...clone(result.config),
+      dns: { ...clone(synthetic.dns), ...clone(result.config.dns) } };
+    if (process.env.OPENCLASH_RUBY_TEST === '1') {
+      // Run actual POSIX shell quoting and Ruby assignment semantics, in memory.
+      // Mirrors official ruby_edit's Value$2=$3 contract, not router service logic.
+      const shell = 'ruby_edit() { printf "threads << Thread.new { Value%s=%s }\\n" "$2" "$3"; }\nCONFIG_FILE=synthetic-only\n' + commands.join('\n');
+      const sh = spawnSync('sh', ['-s'], { input: shell, encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 });
+      assert.equal(sh.status, 0, sh.error?.message || sh.stderr);
+      const program = `require 'yaml'; require 'json'; Value=JSON.parse(STDIN.read); 2.times do\nthreads=[]\n${sh.stdout}\nthreads.each(&:value)\nend; STDOUT.write(JSON.generate(Value))`;
+      const ruby = spawnSync('ruby', ['-E', 'UTF-8', '-e', program], {
+        input: JSON.stringify(input), encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024,
+      });
+      assert.equal(ruby.status, 0, ruby.error?.message || ruby.stderr);
+      assert.deepEqual(JSON.parse(ruby.stdout), expected, 'Ruby merge, Chinese/regex roundtrip and idempotence');
+      console.log(`${result.file}: real sh/Ruby roundtrip, private/device preservation, stale DNS removal OK`);
+    } else {
+      console.log(`${result.file}: exact payload/source parity OK; native sh/Ruby NOT RUN (OPENCLASH_RUBY_TEST=1)`);
+    }
+  }
 }
 module.exports = { run };

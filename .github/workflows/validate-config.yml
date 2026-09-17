@@ -136,6 +136,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Check routing and health-check topology
+        env:
+          OPENCLASH_RUBY_TEST: "1"
         run: python3 .github/scripts/validate_health_checks.py
 
       - name: Compare YAML and JS full config
@@ -480,6 +482,7 @@ jobs:
           const configs = ['国内', '国外'].flatMap(region => [
             `防DNS泄露-${region}版.yaml`, `防DNS泄露-${region}版.js`,
             `防DNS泄露-路由器-${region}版.yaml`,
+            `防DNS泄露-路由器-${region}版.conf`,
             `stash-${region}版.stoverride`, `shadowrocket-${region}版.conf`,
           ]).map(file => {
             const data = steps.checkout === 'success' ? readRegular(path.join(root, file)) : null;

@@ -5,7 +5,7 @@ const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const YAML = require("yaml");
 const { renderNativeProfiles } = require("./build_native_profiles.cjs");
-const { renderRouterProfiles } = require("./build_router_profiles.cjs");
+const { renderRouterProfiles, renderRouterOverrides } = require("./build_router_profiles.cjs");
 const { consolidateGroups } = require("./consolidate_groups.cjs");
 const { tuneMihomo } = require("./tune_mihomo.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
@@ -181,7 +181,7 @@ if (require.main === module) {
   const check = process.argv.includes("--check");
   const profiles = renderProfiles();
   const native = renderNativeProfiles();
-  const router = renderRouterProfiles(profiles);
+  const router = [...renderRouterProfiles(profiles), ...renderRouterOverrides(profiles)];
   const bytes =
     profiles.reduce((sum, r) => sum + Buffer.byteLength(r.yaml) + Buffer.byteLength(r.js), 0)
     + [...native, ...router].reduce((sum, r) => sum + Buffer.byteLength(r.content), 0);

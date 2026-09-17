@@ -38,4 +38,30 @@ function renderRouterProfiles(profiles) {
   });
 }
 
-module.exports = { routerConfig, renderRouterProfiles };
+function renderRouterOverrides(profiles) {
+  return profiles.map(({ environment, config: source }) => {
+    const config = routerConfig(source);
+    // OpenClash v0.47.156 [Overwrite] + ruby_edit. Avoid its [YAML] eval/echo
+    // interpolation: encode public JSON data, never executable/private input.
+    const lines = Object.entries(config).map(([key, value]) => {
+      if (!/^[a-z-]+$/.test(key)) throw new Error(`Unsafe overwrite key: ${key}`);
+      const encoded = Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
+      const decoded = `YAML.safe_load('${encoded}'.unpack1('m0').force_encoding('UTF-8'), aliases: true)`;
+      const expression = key === 'dns'
+        ? `(Value.fetch('dns', {}).select { |k, _| ['listen', 'ipv6', 'fake-ip-range6'].include?(k) }).merge(${decoded})`
+        : decoded;
+      return `ruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
+    });
+    const content = [
+      `# OpenClash 路由器${environment}版远程覆写；自动生成，请勿手改。`,
+      '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、IPv6 由 OpenClash 管理。',
+      '# Base64 是公开 JSON 的转义载体，不是加密；勿向本文件添加订阅或凭据。',
+      '[Overwrite]', ...lines, '',
+    ].join('\n');
+    // OpenClash assembles Ruby in a single command argument; retain ample headroom.
+    if (Buffer.byteLength(content) > 110000) throw new Error('OpenClash module exceeds command budget');
+    return { environment, file: `防DNS泄露-路由器-${environment}版.conf`, content, config };
+  });
+}
+
+module.exports = { routerConfig, renderRouterProfiles, renderRouterOverrides };

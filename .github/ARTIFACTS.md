@@ -6,7 +6,7 @@
 
 | 入口 | 接入点 | 不会做的操作 |
 | --- | --- | --- |
-| `npm run build:profiles` | 先完整渲染十个文件（包括两份路由器 YAML），检查总输出不超过 4 MiB、生成物预算和未完成事务，再写固定源码入口 | 不打包源码/依赖，不创建日期副本，不删源码 |
+| `npm run build:profiles` | 先完整渲染十二个文件（包括路由器 YAML 与远程 CONF 各两份），检查总输出不超过 4 MiB、生成物预算和未完成事务，再写固定源码入口 | 不打包源码/依赖，不创建日期副本，不删源码 |
 | `python .github/scripts/validate_health_checks.py` | 先生成物预检，再限 192 MiB Node 堆、45 秒生命周期合成回归；其余原有离线测试不变 | 不联网、不启动实际客户端、不执行大包构建 |
 | `check_remote_rules.cjs --output-dir .generated/runs/<唯一名称>` | 下载前预留 336 MiB；逐项原子登记；相同哈希正文复用文件而非硬链接；成功候选/最近失败分别留根 | 不读取订阅、不导入旧快照所有权 |
 | 显式 `MIHOMO_ENDPOINT_OUTPUT=<仓库绝对路径>/.generated/runs/<唯一名称>` + 唯一入口 | 预留 2 MiB；报告带源配置哈希；普通报告最多 7 天且受 100 MiB 上限约束 | 不把公网探测当节点/业务验收 |
