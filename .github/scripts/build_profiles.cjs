@@ -9,6 +9,7 @@ const { renderRouterProfiles, renderRouterOverrides } = require("./build_router_
 const { consolidateGroups } = require("./consolidate_groups.cjs");
 const { tuneMihomo } = require("./tune_mihomo.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
+const { annotateYaml, annotateJs } = require("./config_comments.cjs");
 
 const ROOT = path.resolve(__dirname, "../..");
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -171,8 +172,8 @@ function renderProfiles() {
     const stem = `防DNS泄露-${environment}版`;
     const note = `${environment}使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。\n国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN / 顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。`;
     // 输出完整配置供单次导入，保留共有规则与 provider；不要复制本机订阅和手选状态。
-    const yaml = note.split("\n").map(line => `# ${line}\n`).join("") + YAML.stringify(config, { lineWidth: 0, aliasDuplicateObjects: false });
-    const js = `// ${note.replace(/\n/g, "\n// ")}\nconst applySharedConfig = (() => {\n${jsSource}\nreturn main;\n})();\n\nconst ENVIRONMENT = ${JSON.stringify(settings, null, 2)};\n\n${applyEnvironment.toString()}\n\n${consolidateGroups.toString()}\n\n${tuneMihomo.toString()}\n\nfunction main(config) {\n  return tuneMihomo(consolidateGroups(applyEnvironment(applySharedConfig(config), ENVIRONMENT), ${environment === "国内"}));\n}\n`;
+    const yaml = annotateYaml(note.split("\n").map(line => `# ${line}\n`).join("") + YAML.stringify(config, { lineWidth: 0, aliasDuplicateObjects: false }));
+    const js = annotateJs(`// ${note.replace(/\n/g, "\n// ")}\nconst applySharedConfig = (() => {\n${jsSource}\nreturn main;\n})();\n\nconst ENVIRONMENT = ${JSON.stringify(settings, null, 2)};\n\n${applyEnvironment.toString()}\n\n${consolidateGroups.toString()}\n\n${tuneMihomo.toString()}\n\nfunction main(config) {\n  return tuneMihomo(consolidateGroups(applyEnvironment(applySharedConfig(config), ENVIRONMENT), ${environment === "国内"}));\n}\n`);
     assert.deepEqual(normalize(parse(yaml)), normalize(evaluate(js)), `${stem} YAML/JS 不同步`);
     return { environment, stem, yaml, js, config, consolidatedConfig, detailedConfig, settings, base };
   });

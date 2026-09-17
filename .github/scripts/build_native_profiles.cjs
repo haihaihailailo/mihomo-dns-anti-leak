@@ -6,6 +6,7 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const YAML = require("yaml");
 const { consolidateGroups } = require("./consolidate_groups.cjs");
+const { annotateYaml, annotateShadow } = require("./config_comments.cjs");
 const ROOT = path.resolve(__dirname, "../..");
 const read = file => fs.readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
 const parse = text => YAML.parse(text, { merge: true, uniqueKeys: true, maxAliasCount: 1000 });
@@ -177,7 +178,7 @@ function renderNativeProfiles({ compact = true } = {}) {
   return detailed.map(item => ({
     ...item,
     detailedContent: item.content,
-    content: !compact ? item.content : (item.client === "stash" ? compactStash : compactShadow)(item.content, item.environment === "国内"),
+    content: (item.client === "stash" ? annotateYaml : annotateShadow)(!compact ? item.content : (item.client === "stash" ? compactStash : compactShadow)(item.content, item.environment === "国内")),
   }));
 }
 

@@ -5,6 +5,8 @@ on:
     paths:
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
+      - ".github/scripts/config_comments.cjs"
+      - ".github/scripts/validate_config_comments.cjs"
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"
@@ -44,6 +46,8 @@ on:
     paths:
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
+      - ".github/scripts/config_comments.cjs"
+      - ".github/scripts/validate_config_comments.cjs"
       - "防DNS泄露-*版.*"
       - "package.json"
       - "package-lock.json"

@@ -8,6 +8,18 @@ import re
 import subprocess
 import sys
 
+# 注释改动的定向入口只读文件、执行有界合成检查，不创建/封存/清理测试产物。
+# 完整验收仍走下方原流程，保留生命周期前置检查；此模式不宣称完整 CI 通过。
+if "--check-comments" in sys.argv:
+    if len(sys.argv) != 3 or not re.fullmatch(r"[0-9a-f]{40}", sys.argv[2]):
+        raise SystemExit("Usage: validate_health_checks.py --check-comments <full baseline SHA>")
+    subprocess.run(
+        ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_config_comments.cjs"))],
+        check=True, timeout=60,
+        env={**os.environ, "CONFIG_COMMENTS_BASELINE": sys.argv[2]},
+    )
+    raise SystemExit(0)
+
 AUTOMATIC_HEALTH_CHECKS = {
     "自动选择": ("https://cp.cloudflare.com/generate_204", "204"),
     "香港-自动": ("https://www.google.com.hk/generate_204", "204"),
@@ -522,6 +534,10 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             )
 
 
+subprocess.run(
+    ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_config_comments.cjs"))],
+    check=True, timeout=60,
+)
 subprocess.run(
     ["node", "--max-old-space-size=192", str(Path(__file__).with_name("artifact_lifecycle.cjs")), "--check"],
     check=True, timeout=40,

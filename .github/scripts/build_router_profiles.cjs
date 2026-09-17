@@ -1,5 +1,6 @@
 // OpenClash 公共模板：复用已完成环境投影/精简/调优的 Mihomo 配置。
 const YAML = require('yaml');
+const { MARK, fieldComment, annotateYaml } = require('./config_comments.cjs');
 
 const CLIENT_KEYS = [
   'tun', 'ipv6', 'mode', 'log-level', 'port', 'socks-port', 'mixed-port',
@@ -34,7 +35,7 @@ function renderRouterProfiles(profiles) {
       '仅保留域名/IP 分流；开启 IPv6 前须同时配置接管和 DNS，详见 README 路由器章节。',
     ].map(line => `# ${line}\n`).join('');
     return { environment, file: `防DNS泄露-路由器-${environment}版.yaml`,
-      content: note + document.toString({ lineWidth: 0, aliasDuplicateObjects: false }), config };
+      content: annotateYaml(note + document.toString({ lineWidth: 0, aliasDuplicateObjects: false })), config };
   });
 }
 
@@ -50,12 +51,15 @@ function renderRouterOverrides(profiles) {
       const expression = key === 'dns'
         ? `(Value.fetch('dns', {}).select { |k, _| ['listen', 'ipv6', 'fake-ip-range6'].include?(k) }).merge(${decoded})`
         : decoded;
-      return `ruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
+      const note = fieldComment(key) + (key === 'dns' ? '保留设备 DNS 监听/IPv6 字段后合并公共 DNS。' : '整段赋值替换该公共字段。');
+      return `# ${MARK}${note}\nruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
     });
     const content = [
       `# OpenClash 路由器${environment}版远程覆写；自动生成，请勿手改。`,
       '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、IPv6 由 OpenClash 管理。',
       '# Base64 是公开 JSON 的转义载体，不是加密；勿向本文件添加订阅或凭据。',
+      `# 各字段、策略组和逐条规则的明文说明见同目录 防DNS泄露-路由器-${environment}版.yaml。`,
+      '# 下方每条命令只写入一个公共字段；不要手动编辑编码正文。',
       '[Overwrite]', ...lines, '',
     ].join('\n');
     // OpenClash assembles Ruby in a single command argument; retain ample headroom.
