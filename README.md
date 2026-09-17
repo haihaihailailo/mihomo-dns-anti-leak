@@ -1,6 +1,6 @@
 # Mihomo DNS 防泄露配置
 
-面向 Mihomo / Clash Meta / Clash Party / Mihomo Party / Stash / Shadowrocket 的个人 DNS 防泄露、fake-ip、TUN 参数、IPv6 与规则分流配置。
+面向 Mihomo / Clash Meta / Clash Party / Mihomo Party / OpenClash / Stash / Shadowrocket 的个人 DNS 防泄露、fake-ip、TUN 参数、IPv6 与规则分流配置。
 
 ## 先按所在地选择（Mihomo / ClashMi）
 
@@ -45,7 +45,22 @@
 - Stash 每次仅启用一个地区覆写；Shadowrocket 每次仅启用一个地区配置，并保留已导入的订阅节点。跨境后核对已保存的手动选择，尤其不能在国内遗留 `节点选择 = DIRECT`。
 - 两个旧通用入口 `stash.stoverride`、`shadowrocket.conf` 已移入内部生成来源；旧导入 URL 不会自动转向新文件，请手动更换。生成与静态回归通过不代表 iOS / macOS 实机通过，导入后仍需检查登录、长连接、规则命中和空地区组。
 
-### 切换与回退
+### OpenClash 路由器专用模板
+
+| 路由器所在网络 | 公共 YAML 模板 |
+| --- | --- |
+| 中国大陆 | [防DNS泄露-路由器-国内版.yaml](防DNS泄露-路由器-国内版.yaml) |
+| 越南及其他境外地区 | [防DNS泄露-路由器-国外版.yaml](防DNS泄露-路由器-国外版.yaml) |
+
+- 由同一 Mihomo 地区配置生成，保留对应版本的策略组、测速、域名/IP 规则及 DNS 策略；只提供 YAML，不另维护 JS。它是**不含节点的公共模板**，不是下载后即可独立运行的机场配置。请在本地副本加入自己的 `proxies` 或 `proxy-providers`，再通过 OpenClash 配置管理导入；地区组通过 `include-all` 纳入本地节点。不要把私人副本提交到 GitHub，也不要直接用公共 URL 更新覆盖已加入订阅的私人文件。
+- 移除全部 `PROCESS-*` 规则及桌面 TUN 块，明确使用 `find-process-mode: "off"`（引号不可省略，兼容 OpenClash 的 YAML 1.1 处理）。路由器无法识别远端手机包名，因此 NVIDIA/AMD 等整进程直连不再适用，只保留已有精确域名规则；不承诺整个应用的未知域名都被覆盖。[Mihomo 进程匹配模式](https://wiki.metacubex.one/config/general/)
+- OpenClash 本地负责运行模式、DNS 监听、TUN/透明转发、防火墙、端口、认证、接管设备及启动设置。使用分流应选择规则模式；不向公共文件写网卡名、IP 白名单、密钥、订阅 URL 或节点密码。公共模板不指定 `dns.listen`、顶层 `ipv6`、`dns.ipv6` 或 IPv6 fake-ip 池。
+- 先按 IPv4 部署；不使用 IPv6 时，路由器 LAN 的 RA/DHCPv6 和 OpenClash IPv6 代理/DNS 开关应保持一致，不能仅靠模板防止绕过。以后开启 IPv6，须在本地同时验证接管、DNS 和客户端实际路由；本模板不自动开关路由器 IPv6。
+- 保留模板的 DNS 策略、`respect-rules`、嗅探及测速语义；在 OpenClash 覆写设置中核对最终运行配置，避免额外自定义 DNS/规则覆盖它们。规则集及 GEO 缓存是路由器本地数据；首次启动应确认下载完成、组内确有可用节点，再测试业务。
+- 需要临时开启下载权限的机场，应先在机场网站开启，再手动更新本地订阅。缓存缺失仍可能触发首次下载；不在公共模板加入特定机场更新地址或保证缓存永远可用。
+- 验收先限一台设备，避免与电脑/手机代理重复接管；核对日志命中和真实登录后再扩大范围。回退时恢复原来的本地配置及接管范围。公开模板通过静态/内核加载不等于已在你的 OpenClash、手机或全网完成实测。
+
+### 桌面与手机切换与回退
 
 1. 先在客户端备份当前配置与手动策略选择。
 2. 停用客户端中已有的原版覆写和国内 DNS 补充层，改为所选国内版或国外版，**只启用一套、一个格式，不再叠加补充层**。保留机场订阅。仓库已移除旧的 `防DNS泄露.yaml` / `.js` 与 `Windows-国内网络覆写.yaml` / `.js` 入口；仍引用旧 URL 的客户端须手动更换，新文件不会自动替换旧导入项。
@@ -55,14 +70,15 @@
 
 ## 文件
 
-供用户导入的配置共 **6 套、8 个文件**：Mihomo、Stash、Shadowrocket 各有国内版和国外版；其中 Mihomo 每套提供 YAML / JS 两种格式。内部共同源码不作为额外配置入口。
+公开入口共 **8 套、10 个文件**：Mihomo 桌面/手机、OpenClash 路由器、Stash、Shadowrocket 各有国内版和国外版；其中 Mihomo 桌面/手机每套提供 YAML / JS 两种格式，路由器仅提供无节点 YAML 模板。内部共同源码不作为额外配置入口。
 
 - `防DNS泄露-国内版.yaml` / `.js`：中国大陆使用的 Mihomo 覆写，已内置国内 DNS 设置。
 - `防DNS泄露-国外版.yaml` / `.js`：越南及其他境外地区使用的 Mihomo 覆写。
+- `防DNS泄露-路由器-国内版.yaml` / `防DNS泄露-路由器-国外版.yaml`：OpenClash 公共模板，私有订阅与设备设置由路由器本地维护。
 - `stash-国内版.stoverride` / `stash-国外版.stoverride`：Stash 原生地区覆写。
 - `shadowrocket-国内版.conf` / `shadowrocket-国外版.conf`：Shadowrocket 原生地区配置。
 - `.github/config/shared.yaml` / `shared.js` / `shared.stoverride` / `shared.conf`：只供维护与生成使用的共同源码，不导入客户端；Mihomo YAML / JS 保持全配置同步，苹果格式按各自语义维护。
-- `.github/scripts/build_profiles.cjs`：统一生成八个入口文件；苹果环境差异在 `build_native_profiles.cjs` 中维护；`consolidate_groups.cjs` 统一精简最终分组、规则目标和 DNS 策略引用。校验均由唯一离线入口调用。
+- `.github/scripts/build_profiles.cjs`：统一生成十个入口文件；苹果环境差异在 `build_native_profiles.cjs` 中维护，路由器投影在 `build_router_profiles.cjs` 中维护；`consolidate_groups.cjs` 统一精简最终分组、规则目标和 DNS 策略引用。校验均由唯一离线入口调用。
 
 ## 功能
 
@@ -238,12 +254,13 @@
 ### 同步与验证
 
 - `.github/config/shared.yaml` 与 `shared.js` 是同步维护的内部共同源码，不提供独立导入。
-- 六套入口由各客户端内部共同源码、环境差异及最终分组精简投影生成，不分别手改地区版。内部源码仍保留细分服务组作为规则分类来源，**不代表公开入口仍有这些组**；生成的 JS 也在运行时投影为精简组。开发依赖仅用于生成和测试，客户端不需要 Node.js 或 npm。
+- 八套入口由各客户端内部共同源码、环境差异及最终分组精简投影生成，不分别手改地区版。内部源码仍保留细分服务组作为规则分类来源，**不代表公开入口仍有这些组**；生成的 JS 也在运行时投影为精简组。开发依赖仅用于生成和测试，客户端不需要 Node.js 或 npm。
 - `tune_mihomo.cjs` 在精简后为两个 Mihomo 入口统一添加 AI 地区自动组、懒测速/容差和 AI DNS；同一自包含函数嵌入 JS。`validate_mihomo_tuning.cjs` 独立验证允许的差异、回国隔离、可见组不增加、幂等与负向控制。Stash / Shadowrocket 不调用这一 Mihomo 专属投影，本次保持文件不变。
 - `.github/config/shared.stoverride` 维护 Stash 公共规则与原生语法；IPv6 跟随 Stash 自身设置。
 - `.github/config/shared.conf` 维护 Shadowrocket 公共规则与原生语法；地区组筛选和测速端点与公共配置保持语义同步。
 - 以后修改主配置时，需要同步检查 JS、Stash 和 Shadowrocket 三类版本。
-- 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新八个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
+- 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新十个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
+- 路由器回归由同一入口调用：检查 YAML 1.1/1.2 的字符串 `off`、进程规则移除、设备/私有字段隔离、完整差异允许范围及生成漂移；CI 另执行 Ruby aliases 解析和两份模板的 Mihomo 加载。不会联网读取私人订阅或修改路由器。
 - CI 对两地入口新增全对象 YAML/JS 对比、生成漂移检查、引用/循环检查、默认出口、DNS、回国隔离、空组保护和客户端 TUN/IPv6 保留测试，并分别运行 Mihomo 配置加载。测试数据为合成节点，不访问订阅或切换本机网络。
 - CI 对四个苹果地区版验证生成漂移、原生格式结构、默认出口、DNS、回国隔离、引用/循环和规则/测速保留，并检查 Stash 的替换标记。Shadowrocket 的结构解析器不是其内核；不会把 Mihomo 加载成功当作苹果客户端实测。
 - CI 会自动校验主 YAML 解析、主 JS 语法、主 YAML/JS 全配置同步、规则引用完整性、Stash 覆写解析、Shadowrocket 关键策略语义和 mihomo 加载测试。
@@ -252,12 +269,13 @@
 - 内核 CI 分别测试最低支持的 `v1.19.27` 和官方 `latest` 正式版，两组都运行配置加载、隔离 DNS/AI 分组及公开规则快照初始化。关闭矩阵 fail-fast，避免一组失败遮住另一组结果；两组都必须通过，不自动提高最低支持版本。下载后先核对官方资产 SHA-256，再检查实际二进制版本。
 - 独立的 `Check public health-check endpoints` workflow 每天 04:50（UTC+8）检查两个 Mihomo 公开 YAML 的全部测速 URL（按 URL / 预期状态 / 超时去重，当前 14 个），也可手动运行。它不在 push / PR 上执行公网探测，不影响普通配置 CI；只检测主分支，发布后才会生效。GitHub 定时任务可能延迟，并非精确计时器。
 - 端点探测按 [Mihomo URLTest 实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.30/adapter/adapter.go) 使用 HEAD、不跟随重定向，严格核对配置的预期状态，保留 TLS 验证。每个 URL 最多尝试 3 次、间隔 1.5 秒、单次按配置超时（上限 10 秒）、并发上限 4；不会把 302 登录跳转或 403 算成功。中途恢复标记为 RECOVERED，连续失败使独立 workflow 失败，并在 Actions summary / 日志列出受影响的组。
-- 探测只访问代码白名单内的公开地址，不读取机场订阅、节点凭据或本机控制器，不自动替换测速 URL / 切节点。本地 JSON / Markdown 报告带配置 SHA-256；默认离线入口只跑合成回归。需要显式实测时，设置 `MIHOMO_ENDPOINT_OUTPUT` 为父目录已存在、目标目录不存在的新路径，再运行同一个 `python .github/scripts/validate_health_checks.py`；已有报告不会覆盖。
+- 探测只访问代码白名单内的公开地址，不读取机场订阅、节点凭据或本机控制器，不自动替换测速 URL / 切节点。本地 JSON / Markdown 报告带配置 SHA-256；默认离线入口只跑合成回归。需要显式实测时，设置 `MIHOMO_ENDPOINT_OUTPUT` 为仓库内 `.generated/runs/<本次唯一名称>` 的绝对路径，再运行同一个 `python .github/scripts/validate_health_checks.py`；目标必须不存在，已有报告不会覆盖。
 - **公网探测只是执行机器的网络视角。** GitHub 机房可能被端点限流或地域限制；本地进程也可能经过当前代理/TUN。失败需结合客户端连接复核，成功不代表手机/电脑节点可用、AI 解锁、聊天流式响应正常或无 DNS 泄露。这项检查不复刻 Mihomo 的节点传输和 unified-delay 延迟测量。
 - `validate_priority.cjs` 额外比较 YAML/JS 的 DNS 键顺序，并用重叠域名、开发工具、微信/支付宝和 Teams 的合成请求检查首条匹配；负向控制确保恢复旧遮挡时检查会失败。
 - `mihomo -t` 只检查配置解析，不保证 HTTP 规则能下载或初始化。CI 另用 `check_remote_rules.cjs` 下载三个客户端配置中去重后的公开 URL，检查状态码、体积、文本格式并保存哈希快照；403、HTML 错误页、空正文和超时均判失败。不访问机场订阅，不关闭证书校验。
 - CI 随后通过唯一测试入口调用隔离内核回归：只用回环 DNS 和合成答案验证优先级，再让 Mihomo 初始化主配置及 Stash 的公开快照，包括 MRS 完整解码。后者只证明这些文件能被 Mihomo 解析，**不是 Stash / Shadowrocket 实机通过**。Shadowrocket 的 `+.domain` 匹配仍须在真实客户端核对。
-- 本地默认入口保持离线；已有 Mihomo 时可设置 `MIHOMO_TEST_BIN` 为其绝对路径后重跑该入口，启用回环测试。先显式运行 `node .github/scripts/check_remote_rules.cjs --output-dir <不存在的新目录>`，再将 `MIHOMO_RULE_CACHE` 指向其绝对路径，才能同时检查公开快照初始化。测试不改系统代理、TUN 开关或客户端配置；生成目录保留供审计，按需自行管理。
+- 本地默认入口保持离线；已有 Mihomo 时可设置 `MIHOMO_TEST_BIN` 为其绝对路径后重跑该入口，启用回环测试。先显式运行 `node .github/scripts/check_remote_rules.cjs --output-dir .generated/runs/<本次唯一名称>`，再将 `MIHOMO_RULE_CACHE` 指向其绝对路径，才能同时检查公开快照初始化。新快照正文可能复用上一快照文件，读取须使用项目加载器，不能只复制 manifest 所在目录。旧快照可显式只读引用，不会自动纳管或删除。`MIHOMO_TEST_OUTPUT` 若设置，也必须是 `.generated/runs/` 内不存在的新目录；缺省由工具生成唯一名称。测试不改系统代理、TUN 开关或客户端配置。
+- 新生成快照/测试缓存的容量、保留根、断点及安全回收规则见 [生成物生命周期](.github/ARTIFACTS.md)；不自动接管历史临时目录。
 - Dependabot 会每周检查 GitHub Actions 依赖更新。
 - YAML 开发依赖精确锁定为 `2.9.1`，锁文件记录来源与完整性；仅用于生成/验证，客户端无需安装。正常 merge alias、显式键覆盖、重复键拒绝和有限 alias 预算的递归拒绝均有离线回归。升级说明见 [YAML v2.9.1](https://github.com/eemeli/yaml/releases/tag/v2.9.1)。
 - Dependabot 也每周检查 npm 开发依赖，更新精确版本及锁文件后仍需通过现有 CI，不自动合并。最低内核矩阵、下载验证和依赖更新覆盖由 `validate_compatibility.cjs` 及负向控制检查。

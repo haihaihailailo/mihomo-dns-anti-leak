@@ -343,3 +343,4 @@ require("./validate_rule_sources.cjs").run();
 require("./validate_priority.cjs").run();
 require("./validate_ssh_direct.cjs").run();
 require("./validate_service_ownership.cjs").run();
+require("./validate_router_profiles.cjs").run();

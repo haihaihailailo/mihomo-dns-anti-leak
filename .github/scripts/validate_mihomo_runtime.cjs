@@ -2,7 +2,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const os = require("node:os");
+const lifecycle = require("./artifact_lifecycle.cjs");
 const dgram = require("node:dgram");
 const net = require("node:net");
 const { Resolver } = require("node:dns").promises;
@@ -15,8 +15,11 @@ const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const binary = process.env.MIHOMO_TEST_BIN;
 assert(binary && path.isAbsolute(binary) && fs.existsSync(binary), "MIHOMO_TEST_BIN 须为已有内核的绝对路径");
-const directory = fs.mkdtempSync(path.join(process.env.MIHOMO_TEST_OUTPUT || os.tmpdir(), "mihomo-loopback-"));
 const cacheDirectory = process.env.MIHOMO_RULE_CACHE;
+// External/legacy cache stays read-only. Managed snapshots are retained through an explicit dependency.
+const artifact = lifecycle.begin("runtime", process.env.MIHOMO_TEST_OUTPUT, lifecycle.dependency(cacheDirectory));
+const directory = artifact.directory;
+artifact.expectExternal(["cache.db", "cache.db-shm", "cache.db-wal", "country.mmdb", "ASN.mmdb", "geoip.metadb", "geoip.dat", "geosite.dat"]);
 const children = new Set();
 const sockets = new Set();
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -62,7 +65,7 @@ let configSequence = 0;
 function start(config, testEnv = {}) {
   // 完整 DNS 策略与快照路径可能超过 Windows 命令行长度；只写入本次隔离目录。
   const file = path.join(directory, "case-" + (++configSequence) + ".yaml");
-  fs.writeFileSync(file, YAML.stringify(config), { flag: "wx" });
+  artifact.put(path.basename(file), YAML.stringify(config), { materialize: true });
   const child = spawn(binary, ["-d", directory, "-f", file],
     { windowsHide: true, env: { ...env, ...testEnv }, stdio: ["ignore", "pipe", "pipe"] });
   children.add(child); let log = "";
@@ -394,13 +397,13 @@ function snapshotProviders(file, manifest) {
     const entry = manifest.entries.find(item => item.url === source.url);
     assert(entry && entry.behavior === source.behavior && entry.format === source.format, "快照与配置不符：" + name);
     assert.equal(entry.file, hash(source.url) + "." + source.format, "快照路径无效");
-    const body = fs.readFileSync(path.join(cacheDirectory, entry.file));
+    const body = lifecycle.readSnapshot(cacheDirectory, entry.file);
     assert.equal(hash(body), entry.sha256, "快照哈希不同：" + name);
     validateBody(body, source);
     // 遵守内核 home/SAFE_PATHS 限制；只复制已校验的公开数据，不放宽安全路径。
     const target = path.join(directory, entry.file);
     if (fs.existsSync(target)) assert.equal(hash(fs.readFileSync(target)), entry.sha256, "隔离目录快照哈希不同");
-    else fs.writeFileSync(target, body, { flag: "wx" });
+    else artifact.put(entry.file, body, { materialize: true }); // core home boundary requires this temporary materialization.
     providers[name] = { type: "file", behavior: source.behavior, format: source.format, path: target };
   }
   return providers;
@@ -581,6 +584,7 @@ async function providerCase(file, manifest) {
   } finally { await stop(running); }
 }
 (async () => {
+  let passed = false;
   try {
     const general = await upstream([198,51,100,10]);
     const ai = await upstream([203,0,113,20]);
@@ -607,7 +611,7 @@ async function providerCase(file, manifest) {
     }
     if (cacheDirectory) {
       assert(path.isAbsolute(cacheDirectory), "MIHOMO_RULE_CACHE 须为绝对路径");
-      const manifest = JSON.parse(fs.readFileSync(path.join(cacheDirectory, "manifest.json"), "utf8"));
+      const manifest = JSON.parse(lifecycle.readSnapshot(cacheDirectory, "manifest.json").toString("utf8"));
       assert.equal(manifest.failures.length, 0, "不能使用失败的下载快照");
       await providerCase("防DNS泄露-国外版.yaml", manifest);
       await providerCase("stash-国外版.stoverride", manifest);
@@ -622,9 +626,14 @@ async function providerCase(file, manifest) {
         await serviceDnsCase(region, servicePorts, "in-th", manifest);
       }
     } else console.log("未指定 MIHOMO_RULE_CACHE，跳过远程快照完整初始化");
+    passed = true;
   } finally {
-    for (const child of children) child.kill();
+    const closing = [...children].map(child => new Promise(resolve => {
+      child.once("close", resolve); child.kill();
+    }));
+    await Promise.all(closing); // no sealing/cleanup while the owned test core can still write.
     for (const value of [...sockets]) value.close();
     clearTimeout(watchdog);
+    artifact.finish(passed ? "validated" : "failed");
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });

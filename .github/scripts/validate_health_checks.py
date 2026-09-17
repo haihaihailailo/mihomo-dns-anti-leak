@@ -522,6 +522,16 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             )
 
 
+subprocess.run(
+    ["node", "--max-old-space-size=192", str(Path(__file__).with_name("artifact_lifecycle.cjs")), "--check"],
+    check=True, timeout=40,
+)
+subprocess.run(
+    ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_artifact_lifecycle.cjs"))],
+    check=True, timeout=45,
+    env={**os.environ, "MIHOMO_LIFECYCLE_SELFTEST": "1"},
+)
+
 check_group_file(".github/config/shared.yaml", stash=False)
 check_group_file(".github/config/shared.stoverride", stash=True)
 

@@ -6,6 +6,7 @@ Thumbs.db
 .vscode/
 .idea/
 node_modules/
+.generated/
 
 # Logs and temporary files
 *.log

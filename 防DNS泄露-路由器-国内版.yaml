@@ -1,0 +1,1733 @@
+# OpenClash 路由器国内版公共模板；由 build_profiles.cjs 生成，请勿手改。
+# 不含订阅/节点，须在路由器本地接入；不能单独提供代理。不要与桌面版叠加。
+# TUN、端口、运行模式、IPv6、认证及接管范围由 OpenClash 管理；不识别远端 App 包名。
+# 仅保留域名/IP 分流；开启 IPv6 前须同时配置接管和 DNS，详见 README 路由器章节。
+unified-delay: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+geo-auto-update: true
+geo-update-interval: 24
+tcp-concurrent: true
+sniffer:
+  enable: true
+  parse-pure-ip: true
+  skip-domain:
+    - +.lan
+    - +.local
+    - +.home.arpa
+    - +.localdomain
+    - router.asus.com
+    - tplogin.cn
+    - miwifi.com
+    - tendawifi.com
+    - time.*.com
+    - time.*.gov
+    - time.windows.com
+    - pool.ntp.org
+    - +.ntp.org
+    - +.push.apple.com
+    - courier.push.apple.com
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - localhost.work.weixin.qq.com
+  skip-dst-address:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - fc00::/7
+    - fe80::/10
+  sniff:
+    HTTP:
+      ports:
+        - 80
+        - 8080-8880
+      override-destination: true
+    TLS:
+      ports:
+        - 443
+        - 8443
+    QUIC:
+      ports:
+        - 443
+        - 8443
+dns:
+  enable: true
+  prefer-h3: false
+  respect-rules: true
+  use-system-hosts: false
+  cache-algorithm: arc
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - +.lan
+    - +.local
+    - +.home.arpa
+    - +.localdomain
+    - router.asus.com
+    - tplogin.cn
+    - miwifi.com
+    - tendawifi.com
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - +.push.apple.com
+    - courier.push.apple.com
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - +.in-addr.arpa
+    - +.ip6.arpa
+    - time.*.com
+    - time.*.gov
+    - time.windows.com
+    - pool.ntp.org
+    - +.ntp.org
+    - +.stun.*
+    - stun.*.*
+    - localhost.work.weixin.qq.com
+  default-nameserver:
+    - https://223.5.5.5/dns-query
+  nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query#节点选择
+    - https://8.8.8.8/dns-query#节点选择
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query#DIRECT
+    - https://doh.pub/dns-query#DIRECT
+  direct-nameserver:
+    - https://223.5.5.5/dns-query
+    - https://doh.pub/dns-query
+  direct-nameserver-follow-policy: true
+  nameserver-policy:
+    rule-set:private:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    gemini.gstatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .gemini.gstatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    perplexity.ai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .perplexity.ai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    perplexity.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .perplexity.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    pplx.ai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .pplx.ai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    ppl-ai-file-upload.s3.amazonaws.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    pplx-res.cloudinary.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    cursor-cdn.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .cursor-cdn.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    cursor.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .cursor.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    cursor.sh:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .cursor.sh:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    cursorapi.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .cursorapi.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    codeium.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .codeium.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    codeiumdata.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .codeiumdata.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    windsurf.build:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .windsurf.build:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    windsurf.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .windsurf.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    chatgpt.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .chatgpt.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    openai.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .openai.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    oaistatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .oaistatic.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    oaiusercontent.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    .oaiusercontent.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    copilot.microsoft.com:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    jspoo.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .jspoo.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    tampermonkey.net:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .tampermonkey.net:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    aliapp.org:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .aliapp.org:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    yhglobal.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .yhglobal.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    download.nvidia.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .download.nvidia.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    download.nvidia.cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    .download.nvidia.cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    ota.nvidia.com:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    gfwsl.geforce.cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    windowsupdate.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .windowsupdate.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    download.windowsupdate.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .download.windowsupdate.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    delivery.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .delivery.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    dl.delivery.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .dl.delivery.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    googleapis.cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .googleapis.cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    steampowered.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .steampowered.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    steamcommunity.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .steamcommunity.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    steamstatic.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .steamstatic.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    steamcontent.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .steamcontent.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    epicgames.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .epicgames.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    epicgamescdn.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .epicgamescdn.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    battle.net:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .battle.net:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    blizzard.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .blizzard.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    riotgames.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .riotgames.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    ubisoft.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .ubisoft.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    ea.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    .ea.com:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    accounts.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .accounts.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    accounts.youtube.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .accounts.youtube.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    play.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    dl.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    dl-ssl.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    android.apis.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    android.clients.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    android.googleapis.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    gstatic.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .gstatic.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    googleusercontent.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .googleusercontent.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    gvt1.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .gvt1.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    gvt2.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .gvt2.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    gvt3.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .gvt3.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    ggpht.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .ggpht.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    xn--ngstr-lra8j.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .xn--ngstr-lra8j.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    mtalk.google.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    github.io:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .github.io:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    v2rayse.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    displaycatalog.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .displaycatalog.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    prod.do.dsp.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .prod.do.dsp.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    do.dsp.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .do.dsp.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    update.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .update.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    wns.windows.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .wns.windows.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    windows.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .windows.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    msedge.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .msedge.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    microsoftonline.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .microsoftonline.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    msauth.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .msauth.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    live.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .live.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    storecatalogrevocation.storequality.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .storecatalogrevocation.storequality.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    img-prod-cms-rt-microsoft-com.akamaized.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .img-prod-cms-rt-microsoft-com.akamaized.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    img-s-msn-com.akamaized.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .img-s-msn-com.akamaized.net:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    manage.devcenter.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .manage.devcenter.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    share.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .share.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    pipe.aria.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .pipe.aria.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    api.cdp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    .api.cdp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    storeedgefd.dsx.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    livetileedge.dsx.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    licensing.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    tsfe.trafficshaping.dsp.mp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    adl.windows.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    ctldl.windowsupdate.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    definitionupdates.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    msedge.api.cdp.microsoft.com:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    x.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .x.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    twitter.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .twitter.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    t.co:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .t.co:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    twimg.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .twimg.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    facebook.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .facebook.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    facebook.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .facebook.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    fbcdn.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .fbcdn.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    messenger.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .messenger.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    instagram.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .instagram.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    cdninstagram.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .cdninstagram.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    threads.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .threads.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    whatsapp.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .whatsapp.com:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    whatsapp.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .whatsapp.net:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    zalo.me:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .zalo.me:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    zaloapp.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .zaloapp.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    grab.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .grab.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    gojek.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .gojek.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    nhaccuatui.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .nhaccuatui.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    vnexpress.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vnexpress.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    zalopay.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .zalopay.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    shopeefood.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .shopeefood.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    techcombank.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .techcombank.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    biz.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .biz.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    info.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .info.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    name.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .name.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    pro.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .pro.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    baomoi.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .baomoi.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    thegioididong.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .thegioididong.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    dienmayxanh.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .dienmayxanh.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    bachhoaxanh.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .bachhoaxanh.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    gearvn.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .gearvn.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    nguyenkim.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .nguyenkim.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    hoanghamobile.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .hoanghamobile.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    ahamove.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .ahamove.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    fpt.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .fpt.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    ghnexpress.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .ghnexpress.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    vietnamairlines.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vietnamairlines.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    vietjetair.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vietjetair.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    bambooairways.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .bambooairways.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    vexere.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vexere.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    traveloka.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .traveloka.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    chotot.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .chotot.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    muaban.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .muaban.net:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    vietnamworks.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vietnamworks.com:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    in.th:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    .in.th:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:openai:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:anthropic:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:google-gemini:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:github-copilot:
+      - https://1.1.1.1/dns-query#AI
+      - https://8.8.8.8/dns-query#AI
+    rule-set:bilibili:
+      - https://223.5.5.5/dns-query#哔哩哔哩港澳台
+      - https://doh.pub/dns-query#哔哩哔哩港澳台
+    rule-set:biliintl:
+      - https://223.5.5.5/dns-query#哔哩哔哩港澳台
+      - https://doh.pub/dns-query#哔哩哔哩港澳台
+    rule-set:steam-cn:
+      - https://223.5.5.5/dns-query#游戏平台
+      - https://doh.pub/dns-query#游戏平台
+    rule-set:category-games-cn:
+      - https://223.5.5.5/dns-query#游戏平台
+      - https://doh.pub/dns-query#游戏平台
+    rule-set:steam:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    rule-set:category-games-global:
+      - https://1.1.1.1/dns-query#游戏平台
+      - https://8.8.8.8/dns-query#游戏平台
+    rule-set:github:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:microsoft:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    rule-set:apple:
+      - https://223.5.5.5/dns-query#微软/苹果服务
+      - https://doh.pub/dns-query#微软/苹果服务
+    rule-set:wechat:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:alipay:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:google:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:youtube:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:telegram:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:twitter:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:facebook:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:netflix:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:tiktok:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    rule-set:spotify:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+    vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    com.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .com.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    net.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .net.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    org.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .org.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    edu.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .edu.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    gov.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    .gov.vn:
+      - https://223.5.5.5/dns-query#越南服务
+      - https://doh.pub/dns-query#越南服务
+    rule-set:cn:
+      - https://223.5.5.5/dns-query
+      - https://doh.pub/dns-query
+    rule-set:geolocation-!cn:
+      - https://1.1.1.1/dns-query#节点选择
+      - https://8.8.8.8/dns-query#节点选择
+proxy-groups:
+  - name: 节点选择
+    type: select
+    proxies:
+      - 自动选择
+      - 香港-自动
+      - 香港节点
+      - 台湾-自动
+      - 台湾节点
+      - 日本-自动
+      - 日本节点
+      - 新加坡-自动
+      - 新加坡节点
+      - 美国-自动
+      - 美国节点
+      - 越南-自动
+      - 越南节点
+      - 全部节点
+      - DIRECT
+    url: https://cp.cloudflare.com/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg
+  - name: 越南服务
+    type: select
+    proxies:
+      - DIRECT
+      - 越南-自动
+      - 越南节点
+      - 新加坡-自动
+      - 新加坡节点
+      - 香港-自动
+      - 香港节点
+      - 节点选择
+    url: https://www.google.com.vn/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/vn.png
+  - name: AI
+    type: select
+    proxies:
+      - 美国-AI-自动
+      - 日本-AI-自动
+      - 新加坡-AI-自动
+      - 美国节点
+      - 日本节点
+      - 新加坡节点
+      - 节点选择
+      - DIRECT
+    url: https://auth.openai.com/favicon.ico
+    expected-status: 200
+    timeout: 10000
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/chatgpt.svg
+  - name: 游戏平台
+    type: select
+    proxies:
+      - 节点选择
+      - DIRECT
+      - 自动选择
+      - 香港-自动
+      - 香港节点
+      - 日本-自动
+      - 日本节点
+      - 新加坡-自动
+      - 新加坡节点
+      - 美国-自动
+      - 美国节点
+    url: https://cdn.cloudflare.steamstatic.com/favicon.ico
+    expected-status: 200
+    timeout: 10000
+    icon: https://store.steampowered.com/favicon.ico
+  - name: 微软/苹果服务
+    type: select
+    proxies:
+      - DIRECT
+      - 香港-自动
+      - 新加坡-自动
+      - 香港节点
+      - 新加坡节点
+      - 美国-自动
+      - 美国节点
+      - 节点选择
+      - 自动选择
+      - 台湾-自动
+      - 台湾节点
+      - 日本-自动
+      - 日本节点
+      - 越南-自动
+      - 越南节点
+    url: https://www.microsoft.com/favicon.ico
+    expected-status: 200
+    timeout: 10000
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/microsoft.svg
+  - name: 哔哩哔哩港澳台
+    type: select
+    proxies:
+      - DIRECT
+      - 自动选择
+      - 节点选择
+      - 香港-自动
+      - 香港节点
+      - 台湾-自动
+      - 台湾节点
+      - 日本-自动
+      - 日本节点
+      - 新加坡-自动
+      - 新加坡节点
+      - 美国-自动
+      - 美国节点
+      - 越南-自动
+      - 越南节点
+    url: https://p.bstarstatic.com/fe-static/deps/bilibili_tv.ico?v=1
+    expected-status: 200
+    timeout: 10000
+    icon: https://testingcf.jsdelivr.net/gh/xiaolin-007/clash@main/icon/bilibili.svg
+  - name: 广告过滤
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/bug.svg
+  - name: 全部节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$
+    url: https://connectivitycheck.gstatic.com/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/adjust.svg
+  - name: 自动选择
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://cp.cloudflare.com/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))(?!(?:.*(?:回国|港广|港沪|港深|沪港|深港|广中)|(?!.*(?:广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$)|广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$)|广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$)|广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$)|广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$)|广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$)|越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$)|澳门|澳門|Macao|Macau|🇲🇴|(^|[^A-Z])MO([^A-Z]|$)|(^|[^A-Z])MFM([^A-Z]|$))).*(?:中国|上海|北京|广州|深圳|江苏|浙江|🇨🇳|(^|[^A-Z])China([^A-Z]|$)|(^|[^A-Z])CN(?!2(?:[^0-9]|$))([^A-Z]|$)))).*$
+    icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg
+  - name: 香港节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.com.hk/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/hk.png
+  - name: 香港-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.com.hk/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$))
+    icon: https://flagcdn.com/w320/hk.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 台湾节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.com.tw/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/tw.png
+  - name: 台湾-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.com.tw/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$))
+    icon: https://flagcdn.com/w320/tw.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 日本节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.co.jp/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/jp.png
+  - name: 日本-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.co.jp/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$))
+    icon: https://flagcdn.com/w320/jp.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 新加坡节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.com.sg/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/sg.png
+  - name: 新加坡-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.com.sg/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$))
+    icon: https://flagcdn.com/w320/sg.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 美国节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.com/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/us.png
+  - name: 美国-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.com/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$))
+    icon: https://flagcdn.com/w320/us.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 越南节点
+    type: select
+    include-all: true
+    empty-fallback: REJECT
+    filter: (?i)(越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$))
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+    url: https://www.google.com.vn/generate_204
+    expected-status: 204
+    timeout: 10000
+    icon: https://flagcdn.com/w320/vn.png
+  - name: 越南-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://www.google.com.vn/generate_204
+    expected-status: 204
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$))
+    icon: https://flagcdn.com/w320/vn.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 美国-AI-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://auth.openai.com/favicon.ico
+    expected-status: 200
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$))
+    icon: https://flagcdn.com/w320/us.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 日本-AI-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://auth.openai.com/favicon.ico
+    expected-status: 200
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$))
+    icon: https://flagcdn.com/w320/jp.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+  - name: 新加坡-AI-自动
+    type: url-test
+    interval: 300
+    tolerance: 100
+    url: https://auth.openai.com/favicon.ico
+    expected-status: 200
+    lazy: true
+    hidden: true
+    include-all: true
+    empty-fallback: REJECT
+    timeout: 10000
+    filter: (?i)(广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$))
+    icon: https://flagcdn.com/w320/sg.png
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
+rule-providers:
+  reject:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical-Only.Ads.yaml
+    path: ./ruleset/awavenue/only-ads-classical.yaml
+  private:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs
+    path: ./ruleset/metacubex/private.mrs
+  cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+    path: ./ruleset/metacubex/cn.mrs
+  wechat:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat_No_Resolve.yaml
+    path: ./ruleset/blackmatrix7/wechat-no-resolve.yaml
+  alipay:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AliPay/AliPay.yaml
+    path: ./ruleset/blackmatrix7/alipay.yaml
+  geolocation-!cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs
+    path: ./ruleset/metacubex/geolocation-!cn.mrs
+  google:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
+    path: ./ruleset/metacubex/google.mrs
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs
+    path: ./ruleset/metacubex/youtube.mrs
+  github:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs
+    path: ./ruleset/metacubex/github.mrs
+  microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs
+    path: ./ruleset/metacubex/microsoft.mrs
+  openai:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs
+    path: ./ruleset/metacubex/openai.mrs
+  anthropic:
+    type: http
+    behavior: domain
+    format: text
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.list
+    path: ./ruleset/metacubex/anthropic.list
+  google-gemini:
+    type: http
+    behavior: domain
+    format: text
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google-gemini.list
+    path: ./ruleset/metacubex/google-gemini.list
+  github-copilot:
+    type: http
+    behavior: domain
+    format: text
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github-copilot.list
+    path: ./ruleset/metacubex/github-copilot.list
+  telegram:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs
+    path: ./ruleset/metacubex/telegram.mrs
+  netflix:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs
+    path: ./ruleset/metacubex/netflix.mrs
+  tiktok:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs
+    path: ./ruleset/metacubex/tiktok.mrs
+  spotify:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs
+    path: ./ruleset/metacubex/spotify.mrs
+  apple:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs
+    path: ./ruleset/metacubex/apple.mrs
+  bilibili:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs
+    path: ./ruleset/metacubex/bilibili.mrs
+  biliintl:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs
+    path: ./ruleset/metacubex/biliintl.mrs
+  telegramcidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs
+    path: ./ruleset/metacubex/telegramcidr.mrs
+  twitter:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs
+    path: ./ruleset/metacubex/twitter.mrs
+  facebook:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs
+    path: ./ruleset/metacubex/facebook.mrs
+  steam:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs
+    path: ./ruleset/metacubex/steam.mrs
+  steam-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam@cn.mrs
+    path: ./ruleset/metacubex/steam-cn.mrs
+  category-games-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-cn.mrs
+    path: ./ruleset/metacubex/category-games-cn.mrs
+  category-games-global:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    size-limit: 4194304
+    proxy: 节点选择
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-!cn.mrs
+    path: ./ruleset/metacubex/category-games-global.mrs
+rules:
+  - IP-CIDR,0.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - IP-CIDR,255.255.255.255/32,DIRECT,no-resolve
+  - IP-CIDR6,::1/128,DIRECT,no-resolve
+  - IP-CIDR6,fc00::/7,DIRECT,no-resolve
+  - IP-CIDR6,fe80::/10,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN-SUFFIX,lan,DIRECT
+  - RULE-SET,private,DIRECT
+  - GEOIP,LAN,DIRECT,no-resolve
+  - RULE-SET,reject,广告过滤
+  - DOMAIN-SUFFIX,jspoo.com,DIRECT
+  - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
+  - AND,((IP-CIDR,47.81.15.184/32,no-resolve),(DST-PORT,22),(NETWORK,TCP)),DIRECT
+  - DOMAIN-SUFFIX,yhglobal.com,DIRECT
+  - DOMAIN-SUFFIX,download.nvidia.com,DIRECT
+  - DOMAIN-SUFFIX,download.nvidia.cn,DIRECT
+  - DOMAIN,ota.nvidia.com,DIRECT
+  - DOMAIN,gfwsl.geforce.cn,DIRECT
+  - DOMAIN-SUFFIX,perplexity.ai,AI
+  - DOMAIN-SUFFIX,perplexity.com,AI
+  - DOMAIN-SUFFIX,pplx.ai,AI
+  - DOMAIN,ppl-ai-file-upload.s3.amazonaws.com,AI
+  - DOMAIN,pplx-res.cloudinary.com,AI
+  - DOMAIN-SUFFIX,cursor-cdn.com,AI
+  - DOMAIN-SUFFIX,cursor.com,AI
+  - DOMAIN-SUFFIX,cursor.sh,AI
+  - DOMAIN-SUFFIX,cursorapi.com,AI
+  - DOMAIN-SUFFIX,codeium.com,AI
+  - DOMAIN-SUFFIX,codeiumdata.com,AI
+  - DOMAIN-SUFFIX,windsurf.build,AI
+  - DOMAIN-SUFFIX,windsurf.com,AI
+  - DOMAIN-SUFFIX,chatgpt.com,AI
+  - DOMAIN-SUFFIX,openai.com,AI
+  - DOMAIN-SUFFIX,oaistatic.com,AI
+  - DOMAIN-SUFFIX,oaiusercontent.com,AI
+  - DOMAIN,copilot.microsoft.com,AI
+  - RULE-SET,openai,AI
+  - RULE-SET,anthropic,AI
+  - RULE-SET,google-gemini,AI
+  - RULE-SET,github-copilot,AI
+  - RULE-SET,bilibili,哔哩哔哩港澳台
+  - RULE-SET,biliintl,哔哩哔哩港澳台
+  - RULE-SET,steam-cn,游戏平台
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,category-games-cn)),游戏平台
+  - DOMAIN-SUFFIX,steampowered.com,游戏平台
+  - DOMAIN-SUFFIX,steamcommunity.com,游戏平台
+  - DOMAIN-SUFFIX,steamstatic.com,游戏平台
+  - DOMAIN-SUFFIX,steamcontent.com,游戏平台
+  - DOMAIN-SUFFIX,epicgames.com,游戏平台
+  - DOMAIN-SUFFIX,epicgamescdn.com,游戏平台
+  - DOMAIN-SUFFIX,battle.net,游戏平台
+  - DOMAIN-SUFFIX,blizzard.com,游戏平台
+  - DOMAIN-SUFFIX,riotgames.com,游戏平台
+  - DOMAIN-SUFFIX,ubisoft.com,游戏平台
+  - DOMAIN-SUFFIX,ea.com,游戏平台
+  - RULE-SET,steam,游戏平台
+  - RULE-SET,category-games-global,游戏平台
+  - DOMAIN,accounts.google.com,节点选择
+  - DOMAIN-SUFFIX,accounts.google.com,节点选择
+  - DOMAIN-SUFFIX,accounts.youtube.com,节点选择
+  - DOMAIN,play.google.com,节点选择
+  - DOMAIN,dl.google.com,节点选择
+  - DOMAIN,dl-ssl.google.com,节点选择
+  - DOMAIN,android.apis.google.com,节点选择
+  - DOMAIN,android.clients.google.com,节点选择
+  - DOMAIN,android.googleapis.com,节点选择
+  - DOMAIN-SUFFIX,googleapis.cn,节点选择
+  - DOMAIN-SUFFIX,gstatic.com,节点选择
+  - DOMAIN-SUFFIX,googleusercontent.com,节点选择
+  - DOMAIN-SUFFIX,gvt1.com,节点选择
+  - DOMAIN-SUFFIX,gvt2.com,节点选择
+  - DOMAIN-SUFFIX,gvt3.com,节点选择
+  - DOMAIN-SUFFIX,ggpht.com,节点选择
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,节点选择
+  - DOMAIN,mtalk.google.com,节点选择
+  - RULE-SET,youtube,节点选择
+  - RULE-SET,google,节点选择
+  - DOMAIN-SUFFIX,github.io,节点选择
+  - DOMAIN,v2rayse.com,节点选择
+  - RULE-SET,github,节点选择
+  - DOMAIN-SUFFIX,displaycatalog.mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,delivery.mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,dl.delivery.mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,prod.do.dsp.mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,do.dsp.mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,windowsupdate.com,微软/苹果服务
+  - DOMAIN-SUFFIX,update.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,download.windowsupdate.com,微软/苹果服务
+  - DOMAIN-SUFFIX,mp.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,wns.windows.com,微软/苹果服务
+  - DOMAIN-SUFFIX,windows.com,微软/苹果服务
+  - DOMAIN-SUFFIX,msedge.net,微软/苹果服务
+  - DOMAIN-SUFFIX,microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,microsoftonline.com,微软/苹果服务
+  - DOMAIN-SUFFIX,msauth.net,微软/苹果服务
+  - DOMAIN-SUFFIX,live.com,微软/苹果服务
+  - DOMAIN-SUFFIX,storecatalogrevocation.storequality.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,img-prod-cms-rt-microsoft-com.akamaized.net,微软/苹果服务
+  - DOMAIN-SUFFIX,img-s-msn-com.akamaized.net,微软/苹果服务
+  - DOMAIN-SUFFIX,manage.devcenter.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,share.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,pipe.aria.microsoft.com,微软/苹果服务
+  - DOMAIN-SUFFIX,api.cdp.microsoft.com,微软/苹果服务
+  - DOMAIN,storeedgefd.dsx.mp.microsoft.com,微软/苹果服务
+  - DOMAIN,livetileedge.dsx.mp.microsoft.com,微软/苹果服务
+  - DOMAIN,licensing.mp.microsoft.com,微软/苹果服务
+  - DOMAIN,tsfe.trafficshaping.dsp.mp.microsoft.com,微软/苹果服务
+  - DOMAIN,adl.windows.com,微软/苹果服务
+  - DOMAIN,ctldl.windowsupdate.com,微软/苹果服务
+  - DOMAIN,definitionupdates.microsoft.com,微软/苹果服务
+  - DOMAIN,msedge.api.cdp.microsoft.com,微软/苹果服务
+  - RULE-SET,microsoft,微软/苹果服务
+  - RULE-SET,telegram,节点选择
+  - RULE-SET,telegramcidr,节点选择,no-resolve
+  - DOMAIN-SUFFIX,x.com,节点选择
+  - DOMAIN-SUFFIX,twitter.com,节点选择
+  - DOMAIN-SUFFIX,t.co,节点选择
+  - DOMAIN-SUFFIX,twimg.com,节点选择
+  - DOMAIN-SUFFIX,facebook.com,节点选择
+  - DOMAIN-SUFFIX,facebook.net,节点选择
+  - DOMAIN-SUFFIX,fbcdn.net,节点选择
+  - DOMAIN-SUFFIX,messenger.com,节点选择
+  - DOMAIN-SUFFIX,instagram.com,节点选择
+  - DOMAIN-SUFFIX,cdninstagram.com,节点选择
+  - DOMAIN-SUFFIX,threads.net,节点选择
+  - DOMAIN-SUFFIX,whatsapp.com,节点选择
+  - DOMAIN-SUFFIX,whatsapp.net,节点选择
+  - RULE-SET,twitter,节点选择
+  - RULE-SET,facebook,节点选择
+  - RULE-SET,netflix,节点选择
+  - RULE-SET,tiktok,节点选择
+  - RULE-SET,spotify,节点选择
+  - RULE-SET,apple,微软/苹果服务
+  - DOMAIN-KEYWORD,midea,DIRECT
+  - DOMAIN-SUFFIX,zalo.me,越南服务
+  - DOMAIN-SUFFIX,zaloapp.com,越南服务
+  - DOMAIN-SUFFIX,grab.com,越南服务
+  - DOMAIN-SUFFIX,gojek.com,越南服务
+  - DOMAIN-SUFFIX,nhaccuatui.com,越南服务
+  - DOMAIN-SUFFIX,vnexpress.net,越南服务
+  - DOMAIN-SUFFIX,zalopay.vn,越南服务
+  - DOMAIN-SUFFIX,shopeefood.vn,越南服务
+  - DOMAIN-SUFFIX,techcombank.com,越南服务
+  - DOMAIN-SUFFIX,vn,越南服务
+  - DOMAIN-SUFFIX,com.vn,越南服务
+  - DOMAIN-SUFFIX,net.vn,越南服务
+  - DOMAIN-SUFFIX,org.vn,越南服务
+  - DOMAIN-SUFFIX,edu.vn,越南服务
+  - DOMAIN-SUFFIX,gov.vn,越南服务
+  - DOMAIN-SUFFIX,biz.vn,越南服务
+  - DOMAIN-SUFFIX,info.vn,越南服务
+  - DOMAIN-SUFFIX,name.vn,越南服务
+  - DOMAIN-SUFFIX,pro.vn,越南服务
+  - DOMAIN-SUFFIX,baomoi.com,越南服务
+  - DOMAIN-SUFFIX,thegioididong.com,越南服务
+  - DOMAIN-SUFFIX,dienmayxanh.com,越南服务
+  - DOMAIN-SUFFIX,bachhoaxanh.com,越南服务
+  - DOMAIN-SUFFIX,gearvn.com,越南服务
+  - DOMAIN-SUFFIX,nguyenkim.com,越南服务
+  - DOMAIN-SUFFIX,hoanghamobile.com,越南服务
+  - DOMAIN-SUFFIX,ahamove.com,越南服务
+  - DOMAIN-SUFFIX,fpt.net,越南服务
+  - DOMAIN-SUFFIX,ghnexpress.com,越南服务
+  - DOMAIN-SUFFIX,vietnamairlines.com,越南服务
+  - DOMAIN-SUFFIX,vietjetair.com,越南服务
+  - DOMAIN-SUFFIX,bambooairways.com,越南服务
+  - DOMAIN-SUFFIX,vexere.com,越南服务
+  - DOMAIN-SUFFIX,traveloka.com,越南服务
+  - DOMAIN-SUFFIX,chotot.com,越南服务
+  - DOMAIN-SUFFIX,muaban.net,越南服务
+  - DOMAIN-SUFFIX,vietnamworks.com,越南服务
+  - GEOIP,VN,越南服务,no-resolve
+  - DOMAIN-SUFFIX,coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,www.coolapk.com,DIRECT
+  - DOMAIN-SUFFIX,m.coolapk.com,DIRECT
+  - DOMAIN-KEYWORD,coolapk,DIRECT
+  - DOMAIN-SUFFIX,aliapp.org,DIRECT
+  - RULE-SET,wechat,DIRECT,no-resolve
+  - RULE-SET,alipay,DIRECT
+  - AND,((NOT,((DOMAIN-SUFFIX,in.th))),(RULE-SET,cn)),DIRECT
+  - GEOIP,CN,DIRECT,no-resolve
+  - RULE-SET,geolocation-!cn,节点选择
+  - MATCH,节点选择
+find-process-mode: "off"

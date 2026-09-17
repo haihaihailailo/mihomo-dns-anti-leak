@@ -125,8 +125,7 @@ async function run(output) {
   requireVerifiedTls();
   const profiles = readProfiles();
   const list = targets(profiles); // 哈希绑定本次实际读取的配置；先验证目标，再联网。
-  const directory = path.resolve(output);
-  fs.mkdirSync(directory); // 不覆盖旧证据，父目录必须存在。
+  const artifact = require("./artifact_lifecycle.cjs").begin("endpoints", output);
   const startedAt = new Date().toISOString();
   const results = await scan(list);
   const report = {
@@ -137,9 +136,10 @@ async function run(output) {
     source: profiles.map(({ file, sha256 }) => ({ file, sha256 })),
     results,
   };
-  fs.writeFileSync(path.join(directory, "report.json"), JSON.stringify(report, null, 2), { flag: "wx" });
+  artifact.put("report.json", JSON.stringify(report, null, 2), { materialize: true });
   const markdown = summary(results);
-  fs.writeFileSync(path.join(directory, "report.md"), markdown, { flag: "wx" });
+  artifact.put("report.md", markdown, { materialize: true });
+  artifact.finish(results.every(r => r.ok) ? "validated" : "failed");
   console.log(markdown);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
   assert(results.every(r => r.ok), "部分端点连续 3 次未通过；查看 report.json / Actions summary，不自动改配置");

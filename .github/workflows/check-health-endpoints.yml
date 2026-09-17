@@ -33,7 +33,7 @@ jobs:
       - name: Validate locally and probe public endpoints
         id: probe
         env:
-          MIHOMO_ENDPOINT_OUTPUT: ${{ runner.temp }}/health-endpoints
+          MIHOMO_ENDPOINT_OUTPUT: ${{ github.workspace }}/.generated/runs/health-endpoints
         run: python3 .github/scripts/validate_health_checks.py
 
       - name: Collect public endpoint diagnostics
@@ -69,8 +69,8 @@ jobs:
           });
           // 明确文件白名单；保留原 Actions summary，不收集任意异常日志。
           const reports = ['report.json', 'report.md'].map(name => {
-            const file = 'health-endpoints/' + name;
-            const data = readRegular(path.join(temp, file));
+            const file = '.generated/runs/health-endpoints/' + name;
+            const data = readRegular(path.join(root, file));
             if (data !== null) fs.writeFileSync(path.join(output, name), data, { flag: 'wx' });
             return { file, status: data === null ? 'missing' : 'present',
               sha256: data === null ? null : hash(data) };
@@ -95,6 +95,6 @@ jobs:
             ${{ runner.temp }}/endpoint-diagnostics/metadata.json
             ${{ runner.temp }}/endpoint-diagnostics/report.json
             ${{ runner.temp }}/endpoint-diagnostics/report.md
-          retention-days: 14
+          retention-days: 7
           if-no-files-found: error
           include-hidden-files: false

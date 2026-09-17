@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "root": ".generated",
+  "budgetBytes": 1610612736,
+  "auditLimitBytes": 67108864,
+  "logMaxBytes": 104857600,
+  "logMaxAgeDays": 7,
+  "sourceBuildMaxBytes": 4194304,
+  "reservations": {
+    "rules": 352321536,
+    "endpoints": 2097152,
+    "runtime": 268435456
+  },
+  "rationale": "1.5 GiB covers two 336 MiB public-rule peaks (78 sources x 4 MiB plus manifests), two 256 MiB isolated-core peaks (current databases about 21 MiB plus bounded rule copies), 100 MiB ordinary logs and 64 MiB immutable audit. Current public snapshot is about 1.8 MiB and eight source outputs below 1 MiB. Source and locked node_modules are reused, not copied. This is an admission/observed-size guard, not an OS disk quota."
+}

@@ -5,6 +5,7 @@ const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const YAML = require("yaml");
 const { renderNativeProfiles } = require("./build_native_profiles.cjs");
+const { renderRouterProfiles } = require("./build_router_profiles.cjs");
 const { consolidateGroups } = require("./consolidate_groups.cjs");
 const { tuneMihomo } = require("./tune_mihomo.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
@@ -178,19 +179,29 @@ function renderProfiles() {
 
 if (require.main === module) {
   const check = process.argv.includes("--check");
-  for (const result of renderProfiles()) {
-    for (const ext of ["yaml", "js"]) {
-      const file = `${result.stem}.${ext}`;
-      if (check) assert.equal(read(file), result[ext], `${file} 已过期；运行 npm run build:profiles`);
-      else fs.writeFileSync(path.join(ROOT, file), result[ext]);
+  const profiles = renderProfiles();
+  const native = renderNativeProfiles();
+  const router = renderRouterProfiles(profiles);
+  const bytes =
+    profiles.reduce((sum, r) => sum + Buffer.byteLength(r.yaml) + Buffer.byteLength(r.js), 0)
+    + [...native, ...router].reduce((sum, r) => sum + Buffer.byteLength(r.content), 0);
+  const produce = () => {
+    for (const result of profiles) {
+      for (const ext of ["yaml", "js"]) {
+        const file = `${result.stem}.${ext}`;
+        if (check) assert.equal(read(file), result[ext], `${file} 已过期；运行 npm run build:profiles`);
+        else fs.writeFileSync(path.join(ROOT, file), result[ext]);
+        console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
+      }
+    }
+    for (const { file, content } of [...native, ...router]) {
+      if (check) assert.equal(read(file), content, `${file} 已过期；运行 npm run build:profiles`);
+      else fs.writeFileSync(path.join(ROOT, file), content);
       console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
     }
-  }
-  for (const { file, content } of renderNativeProfiles()) {
-    if (check) assert.equal(read(file), content, `${file} 已过期；运行 npm run build:profiles`);
-    else fs.writeFileSync(path.join(ROOT, file), content);
-    console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
-  }
+  };
+  if (check) produce();
+  else require("./artifact_lifecycle.cjs").withBuildBudget(bytes, produce);
 }
 
 module.exports = { ROOT, read, parse, evaluate, normalize, renderProfiles };

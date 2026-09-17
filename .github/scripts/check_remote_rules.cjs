@@ -1,12 +1,11 @@
 // 显式联网检查，仅下载配置引用的公开规则；与默认离线入口隔离。
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
 const { createHash } = require("node:crypto");
 const { read, parse } = require("./build_profiles.cjs");
 const { parseShadow } = require("./build_native_profiles.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const { parsePayload, AI_DOMAIN_SOURCES, checkAiDomainPayload } = require("./validate_rule_sources.cjs");
+const lifecycle = require("./artifact_lifecycle.cjs");
 const hash = body => createHash("sha256").update(body).digest("hex");
 const LIMIT = 4194304;
 function sources() {
@@ -101,8 +100,7 @@ async function selfTest() {
 }
 async function run(output) {
   assert(output, "用法：node check_remote_rules.cjs --output-dir <不存在的新目录>");
-  const directory = path.resolve(output);
-  fs.mkdirSync(directory); // 不覆盖旧快照；父目录必须已存在。
+  const run = lifecycle.begin("rules", output);
   const list = sources(); const results = []; const failures = [];
   let next = 0;
   await Promise.all(Array.from({ length: 6 }, async () => {
@@ -112,13 +110,14 @@ async function run(output) {
       try {
         const { body, rules } = await download(source);
         const file = hash(source.url) + "." + source.format;
-        fs.writeFileSync(path.join(directory, file), body, { flag: "wx" });
+        run.put(file, body); // identical public content reuses the registered file, no hardlinks.
         results.push({ ...source, file, sha256: hash(body), bytes: body.length, rules });
       } catch (error) { failures.push({ url: source.url, error: error.message }); }
     }
   }));
   const manifest = { entries: results.sort((a, b) => a.url.localeCompare(b.url)), failures };
-  fs.writeFileSync(path.join(directory, "manifest.json"), JSON.stringify(manifest, null, 2), { flag: "wx" });
+  run.put("manifest.json", JSON.stringify(manifest, null, 2), { materialize: true });
+  run.finish(failures.length ? "failed" : "validated");
   for (const failure of failures) console.error(failure.error + " " + failure.url);
   assert.equal(failures.length, 0, "远程规则检查失败；详情在 manifest.json");
   console.log("公开规则下载/格式：" + results.length + " 个 URL OK；MRS 完整解码须另做内核初始化");
