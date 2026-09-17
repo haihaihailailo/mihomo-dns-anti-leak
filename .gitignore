@@ -8,6 +8,9 @@ Thumbs.db
 node_modules/
 .generated/
 
+# Private local handoff (preserve on disk; never publish)
+/.github/artifact-lifecycle-20260916.md
+
 # Logs and temporary files
 *.log
 *.tmp

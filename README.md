@@ -80,6 +80,22 @@
 - `.github/config/shared.yaml` / `shared.js` / `shared.stoverride` / `shared.conf`：只供维护与生成使用的共同源码，不导入客户端；Mihomo YAML / JS 保持全配置同步，苹果格式按各自语义维护。
 - `.github/scripts/build_profiles.cjs`：统一生成十个入口文件；苹果环境差异在 `build_native_profiles.cjs` 中维护，路由器投影在 `build_router_profiles.cjs` 中维护；`consolidate_groups.cjs` 统一精简最终分组、规则目标和 DNS 策略引用。校验均由唯一离线入口调用。
 
+### 仓库维护导航
+
+| 位置 | 用途 | 维护方式 |
+| --- | --- | --- |
+| 根目录十个公开配置文件 | 客户端订阅和导入入口 | 保留文件名与路径；由生成器更新，不直接手改 |
+| [共同源码](.github/config/) | 各客户端共享配置 | 从这里及生成器维护配置逻辑 |
+| [生成与校验脚本](.github/scripts/) | 环境投影、同步及回归检查 | 通过统一生成命令和唯一验收入口运行 |
+| [GitHub Actions](.github/workflows/) | 源码检查、双内核测试、公开端点检测 | CI 成功不代表设备或业务实测通过 |
+| [手机分应用名单](blacklist/README.md) | 手机名单参考 | 与路由器按域名/IP 分流区分；不自动修改手机 |
+| [生成物管理](.github/ARTIFACTS.md) / [容量策略](.github/artifact-policy.json) | 新测试产物登记、容量与保留规则 | 只管理已登记对象，不接管历史目录 |
+| `package.json` / `package-lock.json` | 生成和测试依赖 | 使用锁定依赖，不提交 `node_modules/` |
+
+本地的 `.generated/`、历史 `*.tmp` 和指定交接记录不属于公开配置，已由忽略规则隔离。**被 Git 忽略不等于可删除**：历史目录可能含恢复文件、客户端私有备份和审计证据，整理前须逐项核验并取得目标级授权。不要移动公开入口来整理目录，以免破坏现有订阅 URL；不要移动历史现场来掩盖占用或长路径问题。
+
+开发时先读 [AGENTS.md](AGENTS.md)，验证方式见下方“同步与验证”；平台验收限制见 [生成物管理文档](.github/ARTIFACTS.md)。
+
 ## 功能
 
 - DNS 防泄露：Mihomo 启用 `respect-rules`，国内域名使用国内 DoH，代理节点域名另走加密启动 DNS，避免递归；国内版的外部 DNS 跟随 `节点选择`，国外版见上表。Stash 使用 `follow-rule` 与独立的代理节点 DNS；Shadowrocket 主、备用 DNS 均使用 DoH，仅国内版强制备用 DoH 经代理。
