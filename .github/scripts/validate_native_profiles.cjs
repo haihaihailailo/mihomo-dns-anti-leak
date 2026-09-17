@@ -108,7 +108,8 @@ for (const { client, environment, file, content, detailedContent } of rendered) 
     assert.equal(config.dns["follow-rule"], true);
     const policies = config.dns["nameserver-policy"];
     const expectedPolicies = Object.fromEntries(Object.entries(stashBase.dns["nameserver-policy"]).map(([key, value]) =>
-      [key, !foreign || ["geosite:cn", "+.alipaylog.com", "+.aliapp.org"].includes(key) ? value : GLOBAL]));
+      [key, !foreign || ["geosite:cn", "+.alipaylog.com", "+.aliapp.org",
+        "aweme.snssdk.com", "is.snssdk.com", "+.getui.com", "+.getui.net", "+.gepush.com", "+.igexin.com"].includes(key) ? value : GLOBAL]));
     assert.deepEqual(policies, expectedPolicies);
     if (foreign) for (const key of ["geosite:anthropic", "geosite:google-gemini", "geosite:github-copilot", "geosite:microsoft", "geosite:google", "geosite:youtube", "geosite:openai", "geosite:github"]) {
       assert(Object.keys(policies).indexOf(key) < Object.keys(policies).indexOf("geosite:cn"), "专属 DNS 必须优先于 cn");
