@@ -305,6 +305,7 @@ rules:
 - 以后修改主配置时，需要同步检查 JS、Stash 和 Shadowrocket 三类版本。
 - 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新十二个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
 - 路由器回归由同一入口调用：检查 YAML 1.1/1.2 的字符串 `off`、进程规则移除、设备/私有字段隔离、完整差异允许范围及生成漂移；CI 另执行 Ruby aliases 解析和两份模板的 Mihomo 加载。不会联网读取私人订阅或修改路由器。
+- GitHub 托管的临时 Ubuntu VM 在隔离内核验收步骤使用 `sudo -n` 运行同一入口，使产物封存时的 `/proc` 占用检查可读取系统进程；只传入 PATH 和三个显式测试路径，不改变仓库 token 权限或本地系统权限。占用、不可读和收尾失败仍阻止通过，不跳过生命周期保护；不将此步骤复制到自托管或生产机器。[GitHub 托管运行器权限](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#administrative-privileges)
 - 远程模块回归逐字段解码并与公共 YAML 全量比较；CI 在唯一入口设置 `OPENCLASH_RUBY_TEST=1`，额外执行真实 POSIX Shell → Ruby 合成覆写两次，检查中文/正则、旧 DNS 清除、节点/端口/认证/IPv6 保留和幂等。无 Shell/Ruby 的本地只完成静态部分，会明确报告未运行原生链路，不等同于设备实测。
 - CI 对两地入口新增全对象 YAML/JS 对比、生成漂移检查、引用/循环检查、默认出口、DNS、回国隔离、空组保护和客户端 TUN/IPv6 保留测试，并分别运行 Mihomo 配置加载。测试数据为合成节点，不访问订阅或切换本机网络。
 - CI 对四个苹果地区版验证生成漂移、原生格式结构、默认出口、DNS、回国隔离、引用/循环和规则/测速保留，并检查 Stash 的替换标记。Shadowrocket 的结构解析器不是其内核；不会把 Mihomo 加载成功当作苹果客户端实测。

@@ -435,7 +435,14 @@ jobs:
           MIHOMO_TEST_BIN: ${{ github.workspace }}/mihomo
           MIHOMO_RULE_CACHE: ${{ github.workspace }}/.generated/runs/rules-check
           MIHOMO_TEST_OUTPUT: ${{ github.workspace }}/.generated/runs/core-check
-        run: python3 .github/scripts/validate_health_checks.py
+        # Hosted ephemeral VM only: /proc occupancy inspection must see root-owned processes.
+        # Keep the canonical runner and all fail-closed checks; pass only its three explicit inputs.
+        run: >-
+          sudo -n env "PATH=$PATH"
+          "MIHOMO_TEST_BIN=$MIHOMO_TEST_BIN"
+          "MIHOMO_RULE_CACHE=$MIHOMO_RULE_CACHE"
+          "MIHOMO_TEST_OUTPUT=$MIHOMO_TEST_OUTPUT"
+          python3 .github/scripts/validate_health_checks.py
 
       - name: Test config load
         id: load

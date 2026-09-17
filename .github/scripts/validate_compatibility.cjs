@@ -26,7 +26,8 @@ function checkMatrix(job) {
   assert(download.run.includes('"Mihomo Meta $resolved_tag "*'));
   assert(!download["continue-on-error"]);
   const regression = job.steps.find(step => step.env?.MIHOMO_TEST_BIN);
-  assert.equal(regression?.run, "python3 .github/scripts/validate_health_checks.py");
+  assert.equal(job["runs-on"], "ubuntu-latest", "特权验收仅用于 GitHub 临时托管 VM");
+  assert.equal(regression?.run, 'sudo -n env "PATH=$PATH" "MIHOMO_TEST_BIN=$MIHOMO_TEST_BIN" "MIHOMO_RULE_CACHE=$MIHOMO_RULE_CACHE" "MIHOMO_TEST_OUTPUT=$MIHOMO_TEST_OUTPUT" python3 .github/scripts/validate_health_checks.py');
   assert(regression.env.MIHOMO_RULE_CACHE && !regression["continue-on-error"]);
   const load = job.steps.find(step => step.name === "Test config load");
   assert(load && !load["continue-on-error"]);
@@ -87,6 +88,8 @@ for (const mutate of [
   draft => { draft.strategy.matrix.mihomo = ["latest"]; },
   draft => { draft.strategy["fail-fast"] = true; },
   draft => { draft["continue-on-error"] = true; },
+  draft => { draft["runs-on"] = "self-hosted"; },
+  draft => { draft.steps.find(step => step.env?.MIHOMO_TEST_BIN).run = "true"; },
   draft => { draft.steps.find(step => step.env?.MIHOMO_RELEASE).env.MIHOMO_RELEASE = "latest"; },
   draft => { const step = draft.steps.find(step => step.env?.MIHOMO_RELEASE); step.run = step.run.replace("sha256sum --check -", "true"); },
 ]) {
@@ -103,4 +106,4 @@ for (const file of ["validate-config.yml", "validate-health-checks.yml"]) {
     ".github/scripts/validate_compatibility.cjs", ".github/dependabot.yml",
   ]) assert(config.on[event].paths.includes(entry), "依赖/兼容性回归修改不可漏检");
 }
-console.log("YAML " + version + " 锁定/alias、双内核与共同 DNS 的 CI 契约、npm 更新覆盖、8 个负向控制 OK");
+console.log("YAML " + version + " 锁定/alias、双内核与共同 DNS 的 CI 契约、npm 更新覆盖、10 个负向控制 OK");
