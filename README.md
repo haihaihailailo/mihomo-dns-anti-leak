@@ -156,12 +156,16 @@
 
 ### JavaScript 覆写
 
-适合支持 JavaScript override 的 Clash Party / Mihomo Party 客户端。
+适合支持 `main(config)` JavaScript override 的 Clash Party / Mihomo Party，以及提供 JS 覆写入口的 Clash Mi 版本；需核对客户端最终生效配置。
 
 1. 按所在地复制 `防DNS泄露-国内版.js` 或 `防DNS泄露-国外版.js` 的内容，只选一个，不再叠加 YAML 版本。
 2. 在客户端中新建 JavaScript 覆写。
 3. 确认入口函数为 `main(config)`，并返回修改后的 `config`。
 4. 更新订阅后检查 DNS、TUN、Sniffer、策略组和规则是否生效。
+
+国内版和国外版 JS 已集成节点域名别名转换：每次读取当前订阅的 `hosts`，将支持的 SS 节点 `server` 改为精确域名别名，不固定 IP、不逐节点配置；名称、端口、认证、UDP、混淆 host 和分组引用保持原值。仅支持普通 SS 和明确指定 `plugin-opts.host` 的 `obfs/http` SS；其他协议、TLS、通配符及 `proxy-providers` 内部节点不转换，IP 映射由内核处理。没有匹配项时保持原样；循环/非法目标等会抛出覆写错误，修正订阅或回退原入口后再连接，不声称客户端必然阻止使用旧配置。此功能不主动开启节点 UDP，也不保证改善延迟或修复 Telegram 媒体。
+
+从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；客户端自己的 DNS/TUN 末层覆写仍需核对。[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)。重新连接后，在最终配置中检查节点 `server` 是否等于本次订阅的别名目标，其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
 
 ### Stash 覆写
 
@@ -296,6 +300,12 @@ rules:
 - 回退：停用当前入口，恢复导入前的客户端备份或重新导入更新前的对应地区版。导入前备份客户端配置与手选策略，不直接修改客户端生成的运行配置。
 
 ### 同步与验证
+
+- JS 节点别名逻辑由 `.github/scripts/node_server_aliases.cjs` 作为自包含函数嵌入两地公开 JS，复用路由器 Ruby 库的转换边界；YAML / OpenClash CONF / Stash / Shadowrocket 公共数据保持不变，客户端无需 Node.js。使用 `python .github/scripts/validate_health_checks.py --check-node-aliases` 可执行有界只读定向检查，包括生成一致性、现有配置回归及两份真实 JS 的别名、字段保留、更新、幂等和错误原子性；默认完整入口也运行相同回归。定向模式不替代完整生命周期验收，也不是手机实测。
+- 可选的 OpenClash 节点别名适配库位于 `.github/scripts/openclash_node_aliases.rb`：把当前配置 `hosts` 的精确域名别名应用到普通 SS 节点的 `server`，保留名称、端口、认证、UDP、策略组及原始订阅。它不是公共模板的默认行为，也不自动安装到设备。
+- 设备接入时，将该库放在本地 custom 目录，在既有自定义覆写的 UDP 修复之后调用 `OpenClashNodeAliases.rewrite(Value.fetch('proxies'), Value.fetch('hosts', {}))` 并赋回 `Value['proxies']`；必须限定目标配置，先备份、校验候选，再加载。订阅更新时从本次 hosts 重新转换，不固定解析 IP。无需逐节点维护映射；没有匹配的节点原样保留。
+- 该库只支持普通 SS，以及显式指定混淆域名的 `obfs/http` SS，匹配精确 ASCII 域名；混淆 host 原样保留。不展开 `proxy-providers`、通配符或其他协议，不修改 TLS/SNI。IP 映射及最终落到 hosts IP 的别名链由内核继续处理。循环、非法目标、重复规范化键或过长链抛出异常，整批不赋值；OpenClash 记录覆写错误并保留转换前节点，不承诺因此阻止插件启动。它解决别名应用差异，不保证入口更快或消除超时。
+- 同一唯一验证入口会在 Ruby 可用时运行内存内合成回归，覆盖更新映射、幂等、字段保留、循环/非法值拒绝与部分失败无副作用。没有 Ruby 的本机明确报告 NOT RUN；设备验收须复用该夹具，并核对运行配置和真实连接。部署备份只留在设备，私有配置不进入 Git。
 
 - 十二个公开配置和四份共同源码均有中文注释，说明字段用途、单位、DNS、策略组和逐条分流。`config_comments.cjs` 复用锁定的 YAML AST 在原行前插入说明，保留锚点、`#!replace`、规则顺序及原注释；生成器会自动补齐公开入口的说明。路由器 CONF 为每条赋值命令提供注释，编码正文的逐项说明见同名 YAML。
 - 仅修改注释时，可通过唯一入口执行 `python .github/scripts/validate_health_checks.py --check-comments <修改前的完整提交SHA>`：只读比较 16 份配置的有效内容、DNS 键顺序、规则顺序和 JS 合成执行结果，并复用配置静态回归；不会生成或清理测试产物。该模式不能代替功能修改的完整验收，也不代表内核或设备实测通过。默认不带参数的完整入口继续保留生命周期前置检查，并新增注释覆盖/生成一致性检查。

@@ -8,6 +8,19 @@ import re
 import subprocess
 import sys
 
+# 功能定向检查复用唯一入口和有界只读回归，不生成/清理生命周期夹具。
+# 完整入口仍必须通过下方生命周期前置检查，此模式不代表完整 CI 或手机通过。
+if "--check-node-aliases" in sys.argv:
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: validate_health_checks.py --check-node-aliases")
+    for script in ("validate_config_comments.cjs", "validate_profiles.cjs"):
+        subprocess.run(
+            ["node", "--max-old-space-size=192", str(Path(__file__).with_name(script))],
+            check=True, timeout=60,
+        )
+    print("Node alias and profile read-only checks PASS; full lifecycle/device checks not included")
+    raise SystemExit(0)
+
 # 注释改动的定向入口只读文件、执行有界合成检查，不创建/封存/清理测试产物。
 # 完整验收仍走下方原流程，保留生命周期前置检查；此模式不宣称完整 CI 通过。
 if "--check-comments" in sys.argv:

@@ -7,6 +7,17 @@ const { spawnSync } = require('node:child_process');
 const clone = value => JSON.parse(JSON.stringify(value));
 
 function run() {
+  // 复用唯一测试入口；无 Ruby 的 Windows 主机明确报告未运行，设备/CI 可跑同一夹具。
+  const rubyVersion = spawnSync('ruby', ['--version'], { encoding: 'utf8', timeout: 3000 });
+  if (rubyVersion.status === 0) {
+    const aliases = spawnSync('ruby', [require('node:path').join(__dirname, 'test_openclash_node_aliases.rb')],
+      { encoding: 'utf8', timeout: 5000, maxBuffer: 128 * 1024 });
+    assert.equal(aliases.status, 0, aliases.error?.message || aliases.stderr);
+    process.stdout.write(aliases.stdout);
+  } else {
+    assert.notEqual(process.env.OPENCLASH_RUBY_TEST, '1', 'Required Ruby runtime is unavailable');
+    console.log('Node alias native Ruby checks NOT RUN (Ruby unavailable)');
+  }
   const sources = renderProfiles();
   for (const result of renderRouterProfiles(sources)) {
     const source = sources.find(p => p.environment === result.environment).config;
