@@ -17,6 +17,10 @@ function checkTuning(actual, before) {
   for (const source of before["proxy-groups"]) {
     const expected = clone(source);
     if (source.type === "url-test") Object.assign(expected, { lazy: true, tolerance: 100 });
+    if (source.type === "url-test" && source["include-all"] && source.name !== "中国-自动") {
+      const base = (source["exclude-filter"] || "").replace(/^\(\?i\)/, "");
+      expected["exclude-filter"] = "(?i)(?:" + (base ? base + "|" : "") + "^【花云】)";
+    }
     if (source.name === "AI") expected.proxies = [
       ...NAMES, "美国节点", "日本节点", "新加坡节点", "节点选择", "DIRECT",
     ];
@@ -24,9 +28,11 @@ function checkTuning(actual, before) {
   }
   for (const region of REGIONS) {
     const group = groups[region + "-AI-自动"];
+    const baseExclude = old[region + "-自动"]["exclude-filter"].replace(/^\(\?i\)/, "");
     assert.deepEqual(group, { ...old[region + "-自动"], name: region + "-AI-自动",
       url: "https://auth.openai.com/favicon.ico", "expected-status": 200, timeout: 10000,
-      lazy: true, hidden: true, tolerance: 100 }, "AI 必须独立测速同地区叶节点：" + region);
+      lazy: true, hidden: true, tolerance: 100,
+      "exclude-filter": "(?i)(?:" + baseExclude + "|^【(?!花云】)[^】]+】)" }, "AI 必须独立测速同地区叶节点：" + region);
     assert.equal(group["include-all"], true);
     assert.equal(group["empty-fallback"], "REJECT");
     assert(!group.proxies, "不能嵌套普通地区自动组");
@@ -34,6 +40,10 @@ function checkTuning(actual, before) {
     const exclude = new RegExp(group["exclude-filter"].replace(/^\(\?i\)/, ""), "i");
     const matches = name => regex.test(name) && !exclude.test(name);
     for (const sample of REGIONS) assert.equal(matches(sample + " 01"), sample === region);
+    assert(matches("【花云】 " + region + " 01"), "AI 应接收花云同地区节点");
+    for (const source of ["赔钱", "火箭", "自建泰国", "新增来源"]) {
+      assert(!matches("【" + source + "】 " + region + " 01"), "AI 不应混入其他带来源前缀的节点");
+    }
     for (const sample of ["香港 HK01", "台湾01", "越南01", "中国01", "美国01 回国", "香港港广专线3_回国",
       "[SSR]港沪专线3_回国", "IEPL回国", "CN2 专线", "Traffic: 100 GB"]) {
       assert(!matches(sample), "AI 组误收其他地区/回国/提示节点：" + region + " " + sample);
@@ -41,6 +51,16 @@ function checkTuning(actual, before) {
   }
   assert.equal(groups.AI.proxies[0], "美国-AI-自动");
   assert.deepEqual(actual["proxy-groups"].slice(-3).map(group => group.name), NAMES);
+  for (const group of actual["proxy-groups"].filter(g => g.type === "url-test" && !NAMES.includes(g.name) && g.name !== "中国-自动")) {
+    const excluded = new RegExp(group["exclude-filter"].replace(/^\(\?i\)/, ""), "i");
+    for (const country of REGIONS) {
+      assert(excluded.test("【花云】 " + country + " 01"), "日常自动组应避开花云流量");
+      for (const source of ["赔钱", "火箭", "自建泰国"]) {
+        assert(!excluded.test("【" + source + "】 " + country + " 01"), "来源过滤不可屏蔽其他正常地区节点");
+      }
+      assert(!excluded.test(country + " 01"), "无前缀旧订阅保留原行为");
+    }
+  }
 
   const policy = actual.dns["nameserver-policy"];
   const oldPolicy = before.dns["nameserver-policy"];
@@ -87,12 +107,14 @@ function checkMihomoTuning(actual, before) {
     value => { value["proxy-groups"].find(g => g.name === "美国-AI-自动").hidden = false; },
     value => { value["proxy-groups"].find(g => g.name === "自动选择").lazy = false; },
     value => { value["proxy-groups"].find(g => g.name === "AI").proxies.push("香港节点"); },
+    value => { value["proxy-groups"].find(g => g.name === "香港-自动")["exclude-filter"] = "(?i)(回国)"; },
+    value => { value["proxy-groups"].find(g => g.name === "美国-AI-自动")["exclude-filter"] = "(?i)(回国)"; },
   ];
   for (const mutate of mutations) {
     const broken = clone(actual); mutate(broken);
     assert.throws(() => checkTuning(broken, before), "负向控制应捕获调优退化");
   }
-  console.log("Mihomo 调优：3 个隐藏地区 AI 组、排除香港候选、叶节点隔离、Gemini 专属 DNS、测速范围、幂等与 9 个负向控制 OK");
+  console.log("Mihomo 调优：3 个隐藏地区 AI 组、来源流量分配、无前缀兼容、叶节点隔离、Gemini DNS、幂等与 11 个负向控制 OK");
 }
 
 module.exports = { checkMihomoTuning };

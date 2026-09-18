@@ -345,3 +345,4 @@ require("./validate_ssh_direct.cjs").run();
 require("./validate_service_ownership.cjs").run();
 require("./validate_router_profiles.cjs").run();
 require("./validate_node_server_aliases.cjs").run();
+require("./validate_substore_aliases.cjs").run();
