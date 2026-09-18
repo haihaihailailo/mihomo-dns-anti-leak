@@ -44,6 +44,10 @@ if "--check-node-aliases" in sys.argv:
             ["node", "--max-old-space-size=192", str(Path(__file__).with_name(script))],
             check=True, timeout=60,
         )
+    subprocess.run(
+        ["node", "--max-old-space-size=192", str(Path(__file__).with_name("check_health_endpoints.cjs")), "--self-test"],
+        check=True, timeout=15,
+    )
     print("Node alias and profile read-only checks PASS; full lifecycle/device checks not included")
     raise SystemExit(0)
 

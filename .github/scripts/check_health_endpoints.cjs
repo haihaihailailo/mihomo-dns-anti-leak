@@ -11,6 +11,7 @@ const ALLOWED = new Set([
   "https://cp.cloudflare.com/generate_204",
   "https://www.google.com.vn/generate_204",
   "https://auth.openai.com/favicon.ico",
+  "https://telegram.org/favicon.ico",
   "https://cdn.cloudflare.steamstatic.com/favicon.ico",
   "https://www.microsoft.com/favicon.ico",
   "https://p.bstarstatic.com/fe-static/deps/bilibili_tv.ico?v=1",
