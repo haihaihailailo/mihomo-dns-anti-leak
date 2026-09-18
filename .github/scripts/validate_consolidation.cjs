@@ -4,7 +4,7 @@ const clone = value => JSON.parse(JSON.stringify(value));
 
 function checkConsolidation(actual, detailed, environment, client) {
   const domestic = environment === "国内";
-  const merged = ["漏网之鱼", "GitHub", "YouTube", "Netflix", "谷歌服务", "电报消息", "Meta / X", "TikTok", "Spotify"];
+  const merged = ["漏网之鱼", "GitHub", "YouTube", "Netflix", "谷歌服务", "Meta / X", "TikTok", "Spotify"];
   const deleted = ["韩国节点", "韩国-自动", ...(domestic ? ["中国节点", "中国-自动"] : [])];
   function expectedTarget(name) {
     if (merged.includes(name)) return "节点选择";
@@ -14,11 +14,11 @@ function checkConsolidation(actual, detailed, environment, client) {
   }
   const regionNames = ["香港", "台湾", "日本", "新加坡", "美国", "越南", ...(domestic ? [] : ["中国"])];
   const names = ["节点选择", "越南服务", ...(domestic ? [] : ["国内服务"]),
-    "AI", "游戏平台", "微软/苹果服务", "哔哩哔哩港澳台", "广告过滤", "全部节点", "自动选择",
+    "AI", "电报消息", "游戏平台", "微软/苹果服务", "哔哩哔哩港澳台", "广告过滤", "全部节点", "自动选择",
     ...regionNames.flatMap(region => [region + "节点", region + "-自动"])];
   const groups = actual["proxy-groups"];
   const map = Object.fromEntries(groups.map(group => [group.name, group]));
-  assert.equal(groups.length, domestic ? 21 : 24);
+  assert.equal(groups.length, domestic ? 22 : 25);
   assert.deepEqual(groups.map(group => group.name).sort(), names.sort(), "公开入口组集合不符合精简方案");
   const old = Object.fromEntries(detailed["proxy-groups"].map(group => [group.name, group]));
   const expected = clone(detailed);
@@ -61,6 +61,12 @@ function checkConsolidation(actual, detailed, environment, client) {
     assert.equal(map[name].proxies[0], "DIRECT", name + " 应默认直连");
   }
   assert.equal(map["游戏平台"].proxies[0], "节点选择");
+  assert.equal(map["电报消息"].proxies[0], "新加坡-自动", "Telegram 两地均须独立且默认新加坡");
+  assert(map["电报消息"].proxies.includes("香港-自动"), "保留香港手动备选");
+  assert(actual.rules.some(rule => /telegram[^,]*,电报消息(?:,|$)/i.test(rule)), "Telegram 专属规则不得回到通用组");
+  if (actual.dns?.["nameserver-policy"]?.["rule-set:telegram"]) {
+    assert(actual.dns["nameserver-policy"]["rule-set:telegram"].every(server => server.endsWith("#电报消息")));
+  }
   for (const group of groups) {
     assert.equal(new Set(group.proxies || []).size, (group.proxies || []).length, "重复候选");
     if (group["policy-select-name"]) assert(group.proxies.includes(group["policy-select-name"]), "手选默认引用悬空");

@@ -76,7 +76,8 @@ function checkRoutes(config, client, domestic) {
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com", "p01.icloud.com"], SYSTEM],
     [["chatgpt.com", "api.openai.com", "auth0.openai.com", "claude.ai", "gemini.google.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"],
     [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
-    [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
+    [["telegram.org"], "电报消息"],
+    [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     assert.equal(route(host), owner, host + " 未进入 " + owner);
     if (client === "mihomo") assert.equal(route(host, "Code.exe"), owner, "通用工具兜底遮挡 " + host);
@@ -108,7 +109,8 @@ function checkDns(config, domestic) {
     [["cdn.steamchina.com", "www.wegame.com", "assets.xboxlive.com", "store.steampowered.com"], "游戏平台"],
     [["www.microsoft.com", "outlook.office.com", "download.windowsupdate.com", "www.apple.com"], SYSTEM],
     [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
-    [["github.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "telegram.org", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"],
+    [["telegram.org"], "电报消息"],
+    [["github.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"],
     [["api.openai.com", "api.githubcopilot.com", "copilot.microsoft.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com", ...EXTRA_AI_HOSTS], "AI"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     const servers = firstDns(config, host);
@@ -119,6 +121,10 @@ function checkDns(config, domestic) {
 }
 function negativeControls(config, domestic) {
   const mutate = fn => { const bad = structuredClone(config); fn(bad); assert.throws(() => checkRoutes(bad, "mihomo", domestic)); };
+  mutate(c => { c.rules = c.rules.map(r => r === "RULE-SET,telegram,电报消息" ? "RULE-SET,telegram,节点选择" : r); });
+  const badTelegramDns = structuredClone(config);
+  badTelegramDns.dns["nameserver-policy"]["rule-set:telegram"] = ["https://1.1.1.1/dns-query#节点选择", "https://8.8.8.8/dns-query#节点选择"];
+  assert.throws(() => checkDns(badTelegramDns, domestic));
   mutate(c => { c.rules = c.rules.map(r => r === "PROCESS-NAME,tv.danmaku.bili," + BILI ? "PROCESS-NAME,tv.danmaku.bili,DIRECT" : r); });
   mutate(c => { c.rules = c.rules.filter(r => r !== "RULE-SET,bilibili," + BILI); });
   mutate(c => { c.rules = c.rules.map(r => r === "RULE-SET,steam-cn,游戏平台" ? "RULE-SET,steam-cn,DIRECT" : r); });
@@ -223,7 +229,7 @@ function run() {
     badCopilot.rules = badCopilot.rules.filter(rule => !rule.includes("/github-copilot.list,AI"));
     assert.throws(() => checkRoutes(badCopilot, "shadowrocket", domestic));
   }
-  console.log("六套入口业务归属：B站/游戏/微软苹果/AI、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及13类负向控制 OK");
+  console.log("六套入口业务归属：B站/游戏/微软苹果/AI/Telegram、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及负向控制 OK");
   console.log("in.th 临时隔离：六套入口、两个集合、DNS、整应用与具体游戏优先、误分类复现负例 OK（非原生客户端实测）");
 }
 module.exports = { run, MEMBERS };

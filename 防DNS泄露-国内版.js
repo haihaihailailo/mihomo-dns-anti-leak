@@ -3089,7 +3089,7 @@ function consolidateGroups(config, domestic) {
     // 配置说明：业务分类「漏网之鱼」的公共配置项。
     "漏网之鱼": "节点选择", "GitHub": "节点选择", "YouTube": "节点选择",
     // 配置说明：业务分类「Netflix」的公共配置项。
-    "Netflix": "节点选择", "谷歌服务": "节点选择", "电报消息": "节点选择",
+    "Netflix": "节点选择", "谷歌服务": "节点选择",
     // 配置说明：业务分类「Meta / X」的公共配置项。
     "Meta / X": "节点选择", "TikTok": "节点选择", "Spotify": "节点选择",
     // 配置说明：业务分类「微软服务」的公共配置项。
@@ -3239,6 +3239,16 @@ function applyNodeServerAliases(config) {
     if (own(mappings, name)) fail("duplicate normalized host");
     mappings[name] = config.hosts[key];
   }
+  // 花云直订阅曾把全部节点标成 udp:false。仅识别已核对的入口域名关系，
+  // 不按节点名称猜服务商，也不强制开启其他机场或其他协议的 UDP。
+  const flowerServers = Object.create(null);
+  for (const source of Object.keys(mappings)) {
+    const destination = domain(mappings[source]);
+    if (source.endsWith(".aws-agent.com") && destination && destination.endsWith(".apt-agent.dev")) {
+      flowerServers[source] = true;
+      flowerServers[destination] = true; // 兼容重复运行时已经替换的入口。
+    }
+  }
   function target(start) {
     let current = start;
     const visited = Object.create(null);
@@ -3265,9 +3275,14 @@ function applyNodeServerAliases(config) {
     if (!record(proxy)) fail("invalid proxy entry");
     if (!supported(proxy)) return proxy;
     const original = domain(proxy.server);
-    if (!original || !own(mappings, original)) return proxy;
-    const destination = target(original);
-    return destination === original ? proxy : { ...proxy, server: destination };
+    if (!original) return proxy;
+    const destination = own(mappings, original) ? target(original) : original;
+    let next = destination === original ? proxy : { ...proxy, server: destination };
+    // 限定花云当前 obfs/http 类型；只放开 UDP，不启用 UOT、TFO、MPTCP 或 smux。
+    if (proxy.plugin === "obfs" && own(flowerServers, original) && proxy.udp !== true) {
+      next = { ...next, udp: true };
+    }
+    return next;
   });
   config.proxies = proxies;
   return config;

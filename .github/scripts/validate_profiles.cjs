@@ -225,7 +225,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
     const group = restored["proxy-groups"][i];
     const original = base["proxy-groups"][i];
     assert.equal(group.name, original.name);
-    if (environment === "国外" && ["节点选择", "GitHub", "电报消息"].includes(group.name)) {
+    if (environment === "国外" && ["节点选择", "GitHub"].includes(group.name)) {
       assert.equal(group.proxies[0], "DIRECT");
       assert.deepEqual([...group.proxies].sort(), [...original.proxies].sort());
       group.proxies = clone(original.proxies);
@@ -271,7 +271,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
     assert.deepEqual(config.dns["default-nameserver"], ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]);
     assert.deepEqual(config.dns.fallback, []);
     assert.equal(config.dns["fallback-filter"].geoip, false);
-    for (const name of ["节点选择", "漏网之鱼", "GitHub", "YouTube", "谷歌服务", "电报消息", "Netflix", "Meta / X", "游戏平台", "TikTok", "Spotify", "微软服务"]) {
+    for (const name of ["节点选择", "漏网之鱼", "GitHub", "YouTube", "谷歌服务", "Netflix", "Meta / X", "游戏平台", "TikTok", "Spotify", "微软服务"]) {
       assert.equal(firstExit(groups, name), "DIRECT", `${name} 国外新配置未默认直连`);
     }
     for (const key of ["rule-set:cn", "rule-set:wechat", "rule-set:alipay", "aliapp.org", ".aliapp.org", "yhglobal.com", ".yhglobal.com"]) {

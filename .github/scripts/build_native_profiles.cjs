@@ -12,7 +12,7 @@ const read = file => fs.readFileSync(path.join(ROOT, file), "utf8").replace(/\r\
 const parse = text => YAML.parse(text, { merge: true, uniqueKeys: true, maxAliasCount: 1000 });
 const CN = ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"];
 const GLOBAL = ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"];
-const FOREIGN_DIRECT = ["节点选择", "GitHub", "电报消息"];
+const FOREIGN_DIRECT = ["节点选择", "GitHub"];
 
 function replaceOnce(text, pattern, replacement) {
   let count = 0;

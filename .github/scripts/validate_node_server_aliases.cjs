@@ -98,6 +98,34 @@ function run() {
   check("继承键不参与匹配", () => {
     assert.equal(server(input({ hosts: Object.create(hosts) })), base.server);
   });
+  const flower = { ...obfs, server: "entry.aws-agent.com" };
+  const flowerHosts = { "entry.aws-agent.com": "relay.apt-agent.dev" };
+  check("仅花云 SS HTTP 混淆自动启用 UDP", () => {
+    for (const udp of [false, undefined, true]) {
+      const config = { proxies: [{ ...flower, udp }], hosts: flowerHosts };
+      const before = clone(config.proxies);
+      const output = rewrite(config);
+      assert.equal(output.proxies[0].udp, true);
+      assert.equal(output.proxies[0].server, "relay.apt-agent.dev");
+      assert.deepEqual(clone(output.proxies), [{ ...before[0], udp: true, server: "relay.apt-agent.dev" }]);
+      assert.deepEqual(clone(rewrite(output)), clone(output));
+    }
+  });
+  for (const [proxy, mapping] of [
+    [flower, {}], [obfs, hosts], [{ ...flower, plugin: undefined }, flowerHosts],
+    [{ ...flower, type: "trojan" }, flowerHosts],
+    [{ ...flower, server: "entry.aws-agent.com.evil.test" }, { "entry.aws-agent.com.evil.test": "relay.apt-agent.dev" }],
+    [flower, { "entry.aws-agent.com": "relay.apt-agent.dev.evil.test" }],
+  ]) check("其他来源/协议/相似域名的 UDP 保留", () => {
+    assert.equal(rewrite({ proxies: [proxy], hosts: mapping }).proxies[0].udp, false);
+  });
+  check("花云坏映射不留下部分 UDP 修复", () => {
+    const config = { proxies: [flower, { ...flower, server: "bad.aws-agent.com" }],
+      hosts: { ...flowerHosts, "bad.aws-agent.com": "bad.aws-agent.com" } };
+    const before = clone(config);
+    assert.throws(() => rewrite(config), /cyclic mapping/);
+    assert.deepEqual(config, before);
+  });
 
   // 测真实生成入口：基线仅移除别名调用，完整比较其余 DNS/分流/节点/设备数据。
   for (const region of ["国内", "国外"]) {
@@ -140,6 +168,7 @@ function run() {
     const modern = runner(code);
     const legacy = runner("Object.hasOwn = undefined;\n" + code);
     for (const sample of [{}, input(), input({ proxies: [obfs] }),
+      { proxies: [flower], hosts: flowerHosts },
       input({ tun: { enable: false, mtu: 1400, "include-package": ["org.example.app"] }, mode: "rule", ipv6: false })]) {
       check(`${region} 缺少 Object.hasOwn 时完整 JS 兼容`, () => {
         const expected = clone(modern(clone(sample)));

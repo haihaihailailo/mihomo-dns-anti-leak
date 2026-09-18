@@ -3,7 +3,7 @@
 function consolidateGroups(config, domestic) {
   const aliases = {
     "漏网之鱼": "节点选择", "GitHub": "节点选择", "YouTube": "节点选择",
-    "Netflix": "节点选择", "谷歌服务": "节点选择", "电报消息": "节点选择",
+    "Netflix": "节点选择", "谷歌服务": "节点选择",
     "Meta / X": "节点选择", "TikTok": "节点选择", "Spotify": "节点选择",
     "微软服务": "微软/苹果服务", "苹果服务": "微软/苹果服务", "全局直连": "DIRECT",
   };

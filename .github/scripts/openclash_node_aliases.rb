@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# 可选的 OpenClash 本地覆写库：只返回节点副本，不写文件、不查 DNS、不执行外部命令。
-# 接在订阅/公共覆写及 UDP 修复之后；原始订阅保留，下一次更新重新读取 hosts。
+# OpenClash 远程覆写内置库：只返回节点副本，不写文件、不查 DNS、不执行外部命令。
+# 原始订阅保留；每次根据当前 hosts 转换，并仅为已确认的花云 SS 开启 UDP。
 module OpenClashNodeAliases
   class InvalidMapping < StandardError; end
 
@@ -62,14 +62,23 @@ module OpenClashNodeAliases
       raise InvalidMapping, 'node aliases: duplicate normalized host' if mappings.key?(name)
       mappings[name] = value
     end
+    flower_servers = {}
+    mappings.each do |source, value|
+      destination = domain(value)
+      if source.end_with?('.aws-agent.com') && destination && destination.end_with?('.apt-agent.dev')
+        flower_servers[source] = flower_servers[destination] = true
+      end
+    end
     # 全部计算成功后才由调用者赋值；后面的坏映射不会留下前面部分修改的节点。
     proxies.map do |proxy|
       raise InvalidMapping, 'node aliases: invalid proxy entry' unless proxy.is_a?(Hash)
       next proxy.dup unless supported?(proxy)
       original = domain(proxy['server'])
-      next proxy.dup unless original && mappings.key?(original)
-      destination = target(original, mappings)
-      destination == original ? proxy.dup : proxy.merge('server' => destination)
+      next proxy.dup unless original
+      destination = mappings.key?(original) ? target(original, mappings) : original
+      result = destination == original ? proxy.dup : proxy.merge('server' => destination)
+      result['udp'] = true if proxy['plugin'] == 'obfs' && flower_servers[original]
+      result
     end
   end
 end

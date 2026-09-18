@@ -280,6 +280,29 @@ proxy-groups: #!replace
       - 节点选择
       - DIRECT
   # 配置说明：当前策略组或覆写的显示名称。
+  - name: 电报消息
+    # 配置说明：对象类型：select 手选，url-test 自动测速，http 从远端下载规则。
+    type: select
+    # 配置说明：定期测速或规则更新的间隔，单位秒，取决于所属对象。
+    interval: -1
+    # 配置说明：候选策略/节点列表；手选组首次默认取首项，已有保存选择可能优先。
+    proxies:
+      - 新加坡-自动
+      - 自动选择
+      - 节点选择
+      - 香港-自动
+      - 香港节点
+      - 台湾-自动
+      - 台湾节点
+      - 日本-自动
+      - 日本节点
+      - 新加坡节点
+      - 美国-自动
+      - 美国节点
+      - 越南-自动
+      - 越南节点
+      - DIRECT
+  # 配置说明：当前策略组或覆写的显示名称。
   - name: 游戏平台
     # 配置说明：对象类型：select 手选，url-test 自动测速，http 从远端下载规则。
     type: select
@@ -1096,10 +1119,10 @@ rules: #!replace
   - RULE-SET,github,节点选择
   # 配置说明：命中规则集合 microsoft → 交给「微软/苹果服务」策略。
   - RULE-SET,microsoft,微软/苹果服务
-  # 配置说明：命中规则集合 telegram → 交给「节点选择」策略。
-  - RULE-SET,telegram,节点选择
-  # 配置说明：命中规则集合 telegramcidr → 交给「节点选择」策略。no-resolve：不为本条 IP 匹配额外解析域名。
-  - RULE-SET,telegramcidr,节点选择,no-resolve
+  # 配置说明：命中规则集合 telegram → 交给「电报消息」策略。
+  - RULE-SET,telegram,电报消息
+  # 配置说明：命中规则集合 telegramcidr → 交给「电报消息」策略。no-resolve：不为本条 IP 匹配额外解析域名。
+  - RULE-SET,telegramcidr,电报消息,no-resolve
   # 配置说明：根域名 x.com 及其子域 → 交给「节点选择」策略。
   - DOMAIN-SUFFIX,x.com,节点选择
   # 配置说明：根域名 twitter.com 及其子域 → 交给「节点选择」策略。

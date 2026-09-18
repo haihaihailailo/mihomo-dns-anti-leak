@@ -141,7 +141,8 @@ function environmentSettings(base, environment) {
       "nameserver-policy": serviceDnsPolicies(base, orderedPolicies, true),
     },
     // 其他普通业务组原本跟随节点选择；AI 保持原有美国自动首选。
-    defaults: { "节点选择": "DIRECT", "GitHub": "DIRECT", "电报消息": "DIRECT" },
+    // Telegram 在两地均独立并保留共同源码的新加坡自动首选。
+    defaults: { "节点选择": "DIRECT", "GitHub": "DIRECT" },
     lazyAutomatic: true,
   };
 }

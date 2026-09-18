@@ -1,5 +1,7 @@
 // OpenClash 公共模板：复用已完成环境投影/精简/调优的 Mihomo 配置。
 const YAML = require('yaml');
+const fs = require('node:fs');
+const path = require('node:path');
 const { MARK, fieldComment, annotateYaml } = require('./config_comments.cjs');
 
 const CLIENT_KEYS = [
@@ -40,6 +42,11 @@ function renderRouterProfiles(profiles) {
 }
 
 function renderRouterOverrides(profiles) {
+  // 只嵌入仓库内经回归验证的固定 Ruby 源码，绝不把订阅字符串当代码执行。
+  // 独立 Module 避免与设备旧本地库重名；一次赋值保留其他节点字段和功能开关。
+  const nodeLibrary = fs.readFileSync(path.join(__dirname, 'openclash_node_aliases.rb'), 'utf8').replace(/\r\n/g, '\n');
+  const code = Buffer.from(nodeLibrary, 'utf8').toString('base64');
+  const adaptNodes = `(lambda { |scope| scope.module_eval('${code}'.unpack1('m0').force_encoding('UTF-8')); scope.const_get(:OpenClashNodeAliases).rewrite(Value.fetch('proxies', []), Value.fetch('hosts', {})) }).call(Module.new)`;
   return profiles.map(({ environment, config: source }) => {
     const config = routerConfig(source);
     // OpenClash v0.47.156 [Overwrite] + ruby_edit. Avoid its [YAML] eval/echo
@@ -57,10 +64,12 @@ function renderRouterOverrides(profiles) {
     const content = [
       `# OpenClash 路由器${environment}版远程覆写；自动生成，请勿手改。`,
       '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、IPv6 由 OpenClash 管理。',
-      '# Base64 是公开 JSON 的转义载体，不是加密；勿向本文件添加订阅或凭据。',
+      '# Base64 承载公开 JSON 和仓库内固定 Ruby 适配源码，不是加密；勿添加订阅或凭据。',
       `# 各字段、策略组和逐条规则的明文说明见同目录 防DNS泄露-路由器-${environment}版.yaml。`,
       '# 下方每条命令只写入一个公共字段；不要手动编辑编码正文。',
-      '[Overwrite]', ...lines, '',
+      '[Overwrite]', ...lines,
+      `# ${MARK}使用内置适配库处理当前订阅的 SS 精确别名及限定花云 UDP；保留 TFO/MPTCP/UOT/smux，源码见 .github/scripts/openclash_node_aliases.rb。`,
+      `ruby_edit "$CONFIG_FILE" "['proxies']" "${adaptNodes}"`, '',
     ].join('\n');
     // OpenClash assembles Ruby in a single command argument; retain ample headroom.
     if (Buffer.byteLength(content) > 110000) throw new Error('OpenClash module exceeds command budget');

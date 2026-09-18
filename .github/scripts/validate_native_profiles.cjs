@@ -8,7 +8,7 @@ const { checkConsolidation } = require("./validate_consolidation.cjs");
 const clone = value => JSON.parse(JSON.stringify(value));
 const CN = ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"];
 const GLOBAL = ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"];
-const changedDefaults = ["节点选择", "GitHub", "电报消息"];
+const changedDefaults = ["节点选择", "GitHub"];
 const builtin = new Set(["DIRECT", "REJECT", "REJECT-DROP", "PROXY", "PASS"]);
 const stashBaseText = read(".github/config/shared.stoverride");
 const stashBase = parse(stashBaseText);
@@ -51,7 +51,7 @@ function checkDefaults(groups, foreign) {
   assert.equal(groups.AI.proxies[0], "美国-自动", "保留 AI 的美国自动首选");
   assert.equal(groups["节点选择"].proxies[0], foreign ? "DIRECT" : "自动选择");
   assert.equal(groups.GitHub.proxies[0], foreign ? "DIRECT" : "香港-自动");
-  assert.equal(groups["电报消息"].proxies[0], foreign ? "DIRECT" : "新加坡-自动");
+  assert.equal(groups["电报消息"].proxies[0], "新加坡-自动");
   if (foreign) for (const name of ["漏网之鱼", "YouTube", "谷歌服务", "Netflix", "Spotify", "Meta / X", "游戏平台", "TikTok"]) {
     assert.equal(firstExit(groups, name), "DIRECT", "国外默认未直连：" + name);
   }

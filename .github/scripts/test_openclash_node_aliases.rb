@@ -34,6 +34,28 @@ module OpenClashNodeAliasTests
     end
     obfs = base.merge('plugin' => 'obfs', 'plugin-opts' => { 'mode' => 'http', 'host' => 'cover.example.test' })
     check.call(OpenClashNodeAliases.rewrite([obfs], hosts) == [obfs.merge('server' => 'relay.example.test')])
+    flower = obfs.merge('server'=>'entry.aws-agent.com', 'udp'=>false, 'tfo'=>true,
+                        'mptcp'=>true, 'udp-over-tcp'=>false, 'smux'=>{'enabled'=>false})
+    flower_hosts = {'entry.aws-agent.com'=>'relay.apt-agent.dev'}
+    fixed = OpenClashNodeAliases.rewrite([flower], flower_hosts)
+    check.call(fixed == [flower.merge('server'=>'relay.apt-agent.dev', 'udp'=>true)])
+    check.call(OpenClashNodeAliases.rewrite(fixed, flower_hosts) == fixed)
+    check.call(flower['udp'] == false)
+    [[flower, {}], [obfs.merge('udp'=>false), hosts],
+     [flower.merge('plugin'=>nil), flower_hosts],
+     [flower.merge('type'=>'trojan'), flower_hosts],
+     [flower, {'entry.aws-agent.com'=>'relay.apt-agent.dev.evil.test'}],
+     [flower.merge('server'=>'entry.aws-agent.com.evil.test'),
+      {'entry.aws-agent.com.evil.test'=>'relay.apt-agent.dev'}]].each do |node, mapping|
+      check.call(OpenClashNodeAliases.rewrite([node], mapping)[0]['udp'] == false)
+    end
+    begin
+      OpenClashNodeAliases.rewrite([flower, flower.merge('server'=>'bad.aws-agent.com')],
+        flower_hosts.merge('bad.aws-agent.com'=>'bad.aws-agent.com'))
+      raise 'partial UDP mutation accepted'
+    rescue OpenClashNodeAliases::InvalidMapping
+      check.call(flower['udp'] == false)
+    end
     [obfs.merge('plugin-opts' => { 'mode' => 'tls', 'host' => 'cover.example.test' }),
      obfs.merge('plugin-opts' => { 'mode' => 'http' })].each do |special|
       check.call(OpenClashNodeAliases.rewrite([special], hosts) == [special])

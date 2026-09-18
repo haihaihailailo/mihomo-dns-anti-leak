@@ -14,9 +14,13 @@ function run() {
       { encoding: 'utf8', timeout: 5000, maxBuffer: 128 * 1024 });
     assert.equal(aliases.status, 0, aliases.error?.message || aliases.stderr);
     process.stdout.write(aliases.stdout);
+    const telegram = spawnSync('ruby', [require('node:path').join(__dirname, 'test_openclash_telegram_split.rb')],
+      { encoding: 'utf8', timeout: 5000, maxBuffer: 128 * 1024 });
+    assert.equal(telegram.status, 0, telegram.error?.message || telegram.stderr);
+    process.stdout.write(telegram.stdout);
   } else {
     assert.notEqual(process.env.OPENCLASH_RUBY_TEST, '1', 'Required Ruby runtime is unavailable');
-    console.log('Node alias native Ruby checks NOT RUN (Ruby unavailable)');
+    console.log('Node alias / Telegram native Ruby checks NOT RUN (Ruby unavailable)');
   }
   const sources = renderProfiles();
   for (const result of renderRouterProfiles(sources)) {
@@ -63,10 +67,19 @@ function run() {
     assert.equal(read(result.file), result.content, `${result.file} 生成结果过期`);
     const commands = result.content.split('\n').filter(line => line && !line.startsWith('#') && line !== '[Overwrite]');
     const decoded = {};
+    let nodeAdapterSeen = false;
     for (const line of commands) {
       const match = line.match(/^ruby_edit "\$CONFIG_FILE" "\['([a-z-]+)'\]" "([^"\n]+)"$/);
       assert(match, 'Only deterministic ruby_edit commands are allowed');
       const [, key, expression] = match;
+      if (key === 'proxies') {
+        assert(!nodeAdapterSeen, 'Only one node adapter assignment is allowed');
+        nodeAdapterSeen = true;
+        const code = expression.match(/^\(lambda \{ \|scope\| scope\.module_eval\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\)\); scope\.const_get\(:OpenClashNodeAliases\)\.rewrite\(Value\.fetch\('proxies', \[\]\), Value\.fetch\('hosts', \{\}\)\) \}\)\.call\(Module\.new\)$/);
+        assert(code, 'Only the isolated fixed-source node adapter is allowed');
+        assert.equal(Buffer.from(code[1], 'base64').toString('utf8'), read('.github/scripts/openclash_node_aliases.rb'));
+        continue;
+      }
       assert(!Object.hasOwn(decoded, key), 'Duplicate assignments race in OpenClash');
       const payload = expression.match(/YAML\.safe_load\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\), aliases: true\)/);
       assert(payload);
@@ -74,12 +87,23 @@ function run() {
       decoded[key] = JSON.parse(Buffer.from(payload[1], 'base64').toString('utf8'));
     }
     assert.deepEqual(decoded, result.config, 'Module must contain the complete router projection');
+    assert(nodeAdapterSeen, 'Remote module must carry the portable node adapter');
     const input = { ...clone(synthetic), 'mixed-port': 9876, mode: 'rule',
       dns: { ...clone(synthetic.dns), 'nameserver-policy': { 'old.invalid': 'old-group' },
         'proxy-server-nameserver-policy': { 'old.invalid': 'old-group' } },
       'proxy-groups': [{ name: 'old-group', type: 'select', proxies: ['DIRECT'] }],
+      hosts: { 'entry.aws-agent.com': 'relay.apt-agent.dev', 'plain.example.test': 'relay.example.test' },
+      proxies: [
+        { name: 'synthetic flower', type: 'ss', server: 'entry.aws-agent.com', password: 'synthetic-only',
+          plugin: 'obfs', 'plugin-opts': { mode: 'http', host: 'cover.example.test' },
+          udp: false, tfo: true, mptcp: true, 'udp-over-tcp': false, smux: { enabled: false } },
+        { name: 'synthetic plain', type: 'ss', server: 'plain.example.test', udp: false },
+        { name: 'synthetic TLS', type: 'trojan', server: 'plain.example.test', sni: 'plain.example.test', udp: false },
+      ],
       'rule-providers': { old: {} } };
     const expected = { ...clone(input), ...clone(result.config),
+      proxies: [ { ...clone(input.proxies[0]), server: 'relay.apt-agent.dev', udp: true },
+        { ...clone(input.proxies[1]), server: 'relay.example.test' }, clone(input.proxies[2]) ],
       dns: { ...clone(synthetic.dns), ...clone(result.config.dns) } };
     if (process.env.OPENCLASH_RUBY_TEST === '1') {
       // Run actual POSIX shell quoting and Ruby assignment semantics, in memory.
@@ -93,7 +117,7 @@ function run() {
       });
       assert.equal(ruby.status, 0, ruby.error?.message || ruby.stderr);
       assert.deepEqual(JSON.parse(ruby.stdout), expected, 'Ruby merge, Chinese/regex roundtrip and idempotence');
-      console.log(`${result.file}: real sh/Ruby roundtrip, private/device preservation, stale DNS removal OK`);
+      console.log(`${result.file}: real sh/Ruby roundtrip, alias/limited UDP, other node fields/device preservation, stale DNS removal OK`);
     } else {
       console.log(`${result.file}: exact payload/source parity OK; native sh/Ruby NOT RUN (OPENCLASH_RUBY_TEST=1)`);
     }

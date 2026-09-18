@@ -1,5 +1,5 @@
 // 与 OpenClash Ruby 适配库共用转换边界；函数整体嵌入公开 JS，手机无需 Node.js。
-// 不查 DNS、不下载订阅、不写文件，只按当前订阅的精确 hosts 别名改节点 server。
+// 不查 DNS、不下载订阅、不写文件；转换 server，并对已确认的花云 SS 开启 UDP。
 function applyNodeServerAliases(config) {
   const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -33,6 +33,16 @@ function applyNodeServerAliases(config) {
     if (own(mappings, name)) fail("duplicate normalized host");
     mappings[name] = config.hosts[key];
   }
+  // 花云直订阅曾把全部节点标成 udp:false。仅识别已核对的入口域名关系，
+  // 不按节点名称猜服务商，也不强制开启其他机场或其他协议的 UDP。
+  const flowerServers = Object.create(null);
+  for (const source of Object.keys(mappings)) {
+    const destination = domain(mappings[source]);
+    if (source.endsWith(".aws-agent.com") && destination && destination.endsWith(".apt-agent.dev")) {
+      flowerServers[source] = true;
+      flowerServers[destination] = true; // 兼容重复运行时已经替换的入口。
+    }
+  }
   function target(start) {
     let current = start;
     const visited = Object.create(null);
@@ -59,9 +69,14 @@ function applyNodeServerAliases(config) {
     if (!record(proxy)) fail("invalid proxy entry");
     if (!supported(proxy)) return proxy;
     const original = domain(proxy.server);
-    if (!original || !own(mappings, original)) return proxy;
-    const destination = target(original);
-    return destination === original ? proxy : { ...proxy, server: destination };
+    if (!original) return proxy;
+    const destination = own(mappings, original) ? target(original) : original;
+    let next = destination === original ? proxy : { ...proxy, server: destination };
+    // 限定花云当前 obfs/http 类型；只放开 UDP，不启用 UOT、TFO、MPTCP 或 smux。
+    if (proxy.plugin === "obfs" && own(flowerServers, original) && proxy.udp !== true) {
+      next = { ...next, udp: true };
+    }
+    return next;
   });
   config.proxies = proxies;
   return config;

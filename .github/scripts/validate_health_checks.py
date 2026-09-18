@@ -8,11 +8,37 @@ import re
 import subprocess
 import sys
 
+def check_probe_tools():
+    """只编译通用诊断工具并验证显式启用门禁，不访问订阅、不启动内核。"""
+    worker = Path(__file__).with_name("probe_subscription_capabilities.py")
+    compile(worker.read_text(encoding="utf-8"), str(worker), "exec")
+    wrapper = str(Path(__file__).with_name("probe_subscription_capabilities.cjs"))
+    subprocess.run(["node", "--check", wrapper], check=True, timeout=10)
+    refused = subprocess.run(
+        ["node", "--max-old-space-size=192", wrapper], capture_output=True, text=True,
+        timeout=10, env={**os.environ, "SUBSCRIPTION_PROBE_OPT_IN": "0"},
+    )
+    if refused.returncode == 0 or "diagnostic did not complete" not in refused.stderr:
+        raise SystemExit("Subscription probe must refuse without explicit opt-in")
+    print("Subscription probe syntax and no-opt-in refusal PASS; no network probes run")
+
+# 公网能力诊断必须显式启用；只读本地订阅，独立内核有 Windows Job Object 资源保护。
+if "--probe-subscriptions" in sys.argv:
+    if len(sys.argv) != 2 or os.environ.get("SUBSCRIPTION_PROBE_OPT_IN") != "1":
+        raise SystemExit("Explicit SUBSCRIPTION_PROBE_OPT_IN=1 required")
+    subprocess.run(
+        ["node", "--max-old-space-size=192", str(Path(__file__).with_name("probe_subscription_capabilities.cjs"))],
+        check=True, timeout=510,
+        env={**os.environ, "SUBSCRIPTION_PROBE_PYTHON": sys.executable},
+    )
+    raise SystemExit(0)
+
 # 功能定向检查复用唯一入口和有界只读回归，不生成/清理生命周期夹具。
 # 完整入口仍必须通过下方生命周期前置检查，此模式不代表完整 CI 或手机通过。
 if "--check-node-aliases" in sys.argv:
     if len(sys.argv) != 2:
         raise SystemExit("Usage: validate_health_checks.py --check-node-aliases")
+    check_probe_tools()
     for script in ("validate_config_comments.cjs", "validate_profiles.cjs"):
         subprocess.run(
             ["node", "--max-old-space-size=192", str(Path(__file__).with_name(script))],
@@ -547,6 +573,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             )
 
 
+check_probe_tools()
 subprocess.run(
     ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_config_comments.cjs"))],
     check=True, timeout=60,

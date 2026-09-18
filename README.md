@@ -23,11 +23,11 @@
 | TUN / 顶层 IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
 | DNS 双栈 fake-ip | 内置 `dns.ipv6: true` 与 IPv6 fake-ip 地址池 | 同左 |
 
-- GitHub、YouTube、Netflix、Google、Telegram、Meta / X、TikTok、Spotify 和漏网流量直接归入 `节点选择`，不再单独设组。GitHub 不再单独首选香港，Telegram 不再单独首选新加坡。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
+- GitHub、YouTube、Netflix、Google、Meta / X、TikTok、Spotify 和漏网流量归入 `节点选择`。Telegram 使用独立的 `电报消息` 组，国内/国外入口均默认 `新加坡-自动`，可单独切换香港或其他地区；Mihomo 的 Telegram 专用 DNS 同步跟随该组。地区接近不保证头像、视频或通话质量，仍须实测。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
 - Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
 - 已知微软域名 DNS 在 Mihomo 国外版使用全球 DoH、跟随 `微软/苹果服务`；原 Google、YouTube、GitHub DNS 策略引用同步改为 `节点选择`。国内域名查询继续交给国内 DNS，这是显式分流，不代表所有 DNS 都经海外节点。
 - **不自动识别所在地，也不自动重置已保存选择。** 上表描述没有选择缓存时的默认值；`profile.store-selected` 会保留旧手选，切换版本后核对节点选择、AI、越南服务、微软/苹果服务，以及国外版的国内服务。尤其回到国内后，不要遗留 `节点选择 = DIRECT`。
-- 境外直连可达性取决于所在地网络，不保证所有国家/网络都能直连 Telegram 等服务；合并业务失败时在 `节点选择` 手动选择可用代理。
+- 境外直连可达性取决于所在地网络；合并业务失败时在 `节点选择` 手动选择可用代理，Telegram 则在 `电报消息` 组单独切换。
 - **Mihomo 国外版中国组只有 REJECT = 没有匹配回国节点**。国内版已删除中国两个组；两版仍不把回国节点纳入全局自动选择，不强迫国内软件走空中国组。
 - 上述 YAML / JS 仅适用于支持本仓库 Mihomo 字段的客户端；ClashMi 需内核与覆写合并功能支持，并核对实际生效配置。Stash / Shadowrocket 使用下方各自的原生格式，不混用 Mihomo 文件。
 
@@ -38,7 +38,7 @@
 | Stash | [stash-国内版.stoverride](stash-国内版.stoverride) | [stash-国外版.stoverride](stash-国外版.stoverride) |
 | Shadowrocket | [shadowrocket-国内版.conf](shadowrocket-国内版.conf) | [shadowrocket-国外版.conf](shadowrocket-国外版.conf) |
 
-- 六套入口保留同一业务分流骨架：Stash / Shadowrocket 国内版 21 组、国外版 24 组，AI 仍首选 `美国-自动`；Mihomo 另加 3 个隐藏地区 AI 组，总计 24 / 27 组，可见数量不变。节点选择在国内首选自动选择、国外首选 DIRECT；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。韩国两个组均删除。
+- 六套入口保留同一业务分流骨架：Stash / Shadowrocket 国内版 22 组、国外版 25 组，AI 仍首选 `美国-自动`；Mihomo 另加 3 个隐藏地区 AI 组，总计 25 / 28 组。相较合并 Telegram 的版本增加一个可见的 `电报消息` 组。节点选择在国内首选自动选择、国外首选 DIRECT；越南服务、微软/苹果服务及国外版国内服务默认 DIRECT。韩国两个组均删除。
 - Stash 国内版使用国内 DoH 启动/节点解析；国外版改用 Cloudflare / Google DoH，并调整微软等服务 DNS，专属 geosite 策略优先于通用 cn。两版保留 `follow-rule`、独立节点解析和 `#!replace`；国外版仅将全局自动组改为懒测速，其他测速参数不变。[Stash DNS](https://stash.wiki/en/features/dns-server)、[覆写合并语义](https://stash.wiki/en/configuration/override)。
 - Shadowrocket 国内版保留国内主 DNS 和经代理的备用 DNS，节点解析只使用国内 IP 型 DoH；国外版主、备用、节点 DNS 改为境外 DoH，不强制让备用 DNS 依赖默认代理。两版继续禁用系统 DNS 回退，保留现有 IPv6 和隧道旁路设置，不新增未验证的 Mihomo 字段。
 - **DNS 出口不能跨客户端等同。** Stash 使用自身的 `follow-rule`，Shadowrocket 保留自身 DNS 逻辑；不承诺像 Mihomo 两地版 AI / 国外版回国策略一样，将已知域名 DNS 逐项绑定到同名业务组。AI 请求走 AI 组不等于所有相关 DNS 都走同一出口。
@@ -54,7 +54,8 @@
 
 - 两种格式由同一 Mihomo 地区配置生成，不另维护 JS。YAML 是**不含节点的公共模板**，须在本地副本加入 `proxies` 或 `proxy-providers` 后导入；不要用公共 YAML URL 更新覆盖私人节点文件。
 - 希望“机场订阅独立更新、公共规则跟随仓库”时，使用 `.conf` **覆写模块**：机场链接仅加入 OpenClash 的“配置订阅”，模块的 GitHub Raw 链接加入“覆写模块 → 订阅链接 → http”，仅绑定目标机场配置。国内/国外只启用一个；不要将模块当机场 YAML 导入。先下载校验，再启用，保留旧配置供回退。
-- 模块复用 [OpenClash v0.47.156 ruby_edit](https://github.com/vernesong/OpenClash/blob/v0.47.156/luci-app-openclash/root/usr/share/openclash/ruby.sh) 的 `[Overwrite]` 接口，整段替换公共策略组、规则集、规则和 DNS 策略，不残留机场旧规则引用；保留订阅节点及设备字段。DNS 仅保留本地 `listen`、`ipv6`、`fake-ip-range6`，其余按公共模板替换。公共 JSON 使用 Base64 避免 Shell/Ruby 二次转义损坏中文、正则和 `$`，这不是加密，也不含私有订阅。修改应通过生成器，不手改编码内容。
+- 模块复用 [OpenClash v0.47.156 ruby_edit](https://github.com/vernesong/OpenClash/blob/v0.47.156/luci-app-openclash/root/usr/share/openclash/ruby.sh) 的 `[Overwrite]` 接口，整段替换公共策略组、规则集、规则和 DNS 策略，不残留机场旧规则引用；保留设备字段，并对订阅节点执行下述限定适配。DNS 仅保留本地 `listen`、`ipv6`、`fake-ip-range6`，其余按公共模板替换。Base64 承载公共 JSON 及仓库固定 Ruby 源码，避免 Shell/Ruby 二次转义损坏；这不是加密，也不含私有订阅。修改应通过生成器，不手改编码内容。
+- 两份 CONF 已内置 SS 精确 hosts 别名适配及限定花云 UDP 修复，无需换路由器后另装 Ruby 文件。代码在独立 Module 中加载，只执行仓库固定源码；订阅的 hosts/节点始终按数据处理。TFO、MPTCP、UOT、smux 等其他字段保持输入值。纯 YAML 无法执行此动态适配，使用 Sub-Store 已处理输出或选择 CONF 模块。
 - 远程模块属于可执行覆写，更新前应审查来源和变更；可将 Raw URL 中的 `main` 换为已验证的完整 commit SHA 固定版本，回退时停用该模块并恢复原配置。静态/合成验证不代表所有 OpenClash 版本兼容；更新后须核对最终生效配置。
 - 移除全部 `PROCESS-*` 规则及桌面 TUN 块，明确使用 `find-process-mode: "off"`（引号不可省略，兼容 OpenClash 的 YAML 1.1 处理）。路由器无法识别远端手机包名，因此 NVIDIA/AMD 等整进程直连不再适用，只保留已有精确域名规则；不承诺整个应用的未知域名都被覆盖。[Mihomo 进程匹配模式](https://wiki.metacubex.one/config/general/)
 - OpenClash 本地负责运行模式、DNS 监听、TUN/透明转发、防火墙、端口、认证、接管设备及启动设置。使用分流应选择规则模式；不向公共文件写网卡名、IP 白名单、密钥、订阅 URL 或节点密码。公共模板不指定 `dns.listen`、顶层 `ipv6`、`dns.ipv6` 或 IPv6 fake-ip 池。
@@ -163,9 +164,11 @@
 3. 确认入口函数为 `main(config)`，并返回修改后的 `config`。
 4. 更新订阅后检查 DNS、TUN、Sniffer、策略组和规则是否生效。
 
-国内版和国外版 JS 已集成节点域名别名转换：每次读取当前订阅的 `hosts`，将支持的 SS 节点 `server` 改为精确域名别名，不固定 IP、不逐节点配置；名称、端口、认证、UDP、混淆 host 和分组引用保持原值。仅支持普通 SS 和明确指定 `plugin-opts.host` 的 `obfs/http` SS；其他协议、TLS、通配符及 `proxy-providers` 内部节点不转换，IP 映射由内核处理。没有匹配项时保持原样；循环/非法目标等会抛出覆写错误，修正订阅或回退原入口后再连接，不声称客户端必然阻止使用旧配置。此功能不主动开启节点 UDP，也不保证改善延迟或修复 Telegram 媒体。
+国内版和国外版 JS 已集成节点域名别名转换：每次读取当前订阅的 `hosts`，将支持的 SS 节点 `server` 改为精确域名别名，不固定 IP、不逐节点配置；名称、端口、认证、混淆 host 和分组引用保持原值。仅支持普通 SS 和明确指定 `plugin-opts.host` 的 `obfs/http` SS；其他协议、TLS、通配符及 `proxy-providers` 内部节点不转换，IP 映射由内核处理。没有匹配项时保持原样；循环/非法目标等会抛出覆写错误，修正订阅或回退原入口后再连接，不声称客户端必然阻止使用旧配置。
 
-从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；客户端自己的 DNS/TUN 末层覆写仍需核对。[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)。重新连接后，在最终配置中检查节点 `server` 是否等于本次订阅的别名目标，其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
+花云直订阅曾将 SS 节点全部标为 `udp: false`。JS 和 OpenClash CONF 仅对订阅 `hosts` 中存在 `.aws-agent.com` → `.apt-agent.dev` 精确域名关系的 `obfs/http` SS 节点（含已转换的目标域名）设为 `udp: true`；其他节点的 UDP 原样保留。该识别不依赖节点名字，也不启用 UOT、TFO、MPTCP、smux 或顶层 IPv6。供应商将来更换域名关系时须重新核对，不能保证自动识别；没有该关系的输入不强制启用。UDP 开关与实际双向连通性分别验证，域名转换也不保证改善延迟或修复 Telegram 媒体。
+
+从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；客户端自己的 DNS/TUN 末层覆写仍需核对。[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)。重新连接后，在最终配置中检查节点 `server` 是否等于本次订阅的别名目标，并核对上述花云节点的 `udp: true`；其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
 
 Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a function`：旧 JS 调用了部分引擎没有的 `Object.hasOwn`。两地入口已统一使用兼容的 `Object.prototype.hasOwnProperty.call`，同时修复 AI DNS 中的同类调用，不修改全局 JS 对象。遇到旧错误时先更新客户端中的远程 **JS 覆写文件**，仅更新机场订阅不会替换缓存的覆写脚本。离线回归会禁用该 API，比较两地完整输出、节点别名、设备字段及幂等，并逐一恢复四处旧调用确认测试能检出；这不等于手机实机验收。[兼容写法说明](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn#description)。
 
@@ -303,9 +306,13 @@ rules:
 
 ### 同步与验证
 
-- JS 节点别名逻辑由 `.github/scripts/node_server_aliases.cjs` 作为自包含函数嵌入两地公开 JS，复用路由器 Ruby 库的转换边界；YAML / OpenClash CONF / Stash / Shadowrocket 公共数据保持不变，客户端无需 Node.js。使用 `python .github/scripts/validate_health_checks.py --check-node-aliases` 可执行有界只读定向检查，包括生成一致性、现有配置回归及两份真实 JS 的别名、字段保留、更新、幂等和错误原子性；默认完整入口也运行相同回归。定向模式不替代完整生命周期验收，也不是手机实测。
-- 可选的 OpenClash 节点别名适配库位于 `.github/scripts/openclash_node_aliases.rb`：把当前配置 `hosts` 的精确域名别名应用到普通 SS 节点的 `server`，保留名称、端口、认证、UDP、策略组及原始订阅。它不是公共模板的默认行为，也不自动安装到设备。
-- 设备接入时，将该库放在本地 custom 目录，在既有自定义覆写的 UDP 修复之后调用 `OpenClashNodeAliases.rewrite(Value.fetch('proxies'), Value.fetch('hosts', {}))` 并赋回 `Value['proxies']`；必须限定目标配置，先备份、校验候选，再加载。订阅更新时从本次 hosts 重新转换，不固定解析 IP。无需逐节点维护映射；没有匹配的节点原样保留。
+- JS 节点别名逻辑由 `.github/scripts/node_server_aliases.cjs` 作为自包含函数嵌入两地公开 JS，OpenClash CONF 内嵌 `.github/scripts/openclash_node_aliases.rb` 的等价适配；客户端无需 Node.js，也不依赖额外本地 Ruby 文件。YAML / Stash / Shadowrocket 不执行动态节点适配。使用 `python .github/scripts/validate_health_checks.py --check-node-aliases` 可执行有界只读定向检查，包括生成一致性、现有配置回归及两份真实 JS 的别名、字段保留、更新、幂等和错误原子性；默认完整入口也运行相同回归。定向模式不替代完整生命周期验收，也不是手机实测。
+- 可选的 Windows 公网订阅抽样诊断仍走唯一入口：设置 `SUBSCRIPTION_PROBE_OPT_IN=1`、`SUBSCRIPTION_PROBE_FILES`（最多三个本机 YAML 绝对路径组成的 JSON 数组）、`MIHOMO_TEST_BIN`（已有内核绝对路径），运行 `python .github/scripts/validate_health_checks.py --probe-subscriptions`。每份订阅最多抽样 16 个节点；内核由 Windows Job Object 限制进程数及总内存 512 MiB，8 分钟总期限，单次网络等待 4 秒。仅用 loopback SOCKS/控制 API，无 TUN、系统代理或现有客户端选择变更；真实节点配置通过 stdin 和 API 内存传递，不写文件或命令行。独立 DoH 解析入口以避开系统 fake-ip，默认测试指定公共 DNS 的 UDP 回包及 Cloudflare 的 IPv4/IPv6 HTTPS 响应，REJECT 负向控制和末尾拒绝规则避免直连回退。含节点名称的本地报告只写入受管理的 `.generated/runs/`，不要公开私人报告。此诊断使用本地缓存并注明时间，不刷新订阅，不代表全部节点、手机、QUIC 应用或业务服务通过。
+- 上述诊断设置 `SUBSCRIPTION_PROBE_EXTENSIONS=1` 时改为每种协议/传输抽样一个节点，在隔离副本分别尝试 TFO、sing-mux 和 SS 的 UOT v1/v2；可用 `SUBSCRIPTION_PROBE_PREVIOUS` 引用上一份受管理报告以保留依赖。功能测试不会写回客户端：TFO 打开后能接通也可能是普通 TCP 回退，不是协商成功或加速的证明；MPTCP 不在此 Windows 诊断中验证。服务端不兼容的 UOT/复用不得仅凭内核接受配置就启用。
+- 可用 `SUBSCRIPTION_PROBE_NAMES` 传入最多八个精确节点名组成的 JSON 数组以补充抽样；每份订阅总样本仍不能超过 16 个。工具不固化某个机场的节点名、地址或凭据，默认离线验收只检查语法和未显式启用时的拒绝行为。
+- OpenClash 节点适配库把当前配置 `hosts` 的精确域名别名应用到普通 SS 的 `server`，仅为已确认域名关系的花云 `obfs/http` SS 开启 UDP；保留名称、端口、认证、其他功能开关、策略组及原始订阅。两份远程 CONF 自动携带该源码，每次更新重新读取当前 hosts，不固定解析 IP，也不逐节点维护映射。
+- 已有设备可以继续保留旧本地补丁；新 CONF 不依赖它们。若要移除旧补丁，须先备份并验证最终配置等价，不能直接删掉包含其他修复的整份自定义覆写。旧设备的 Telegram 适配库属于兼容入口，通用配置现已直接包含独立组。
+- `.github/scripts/openclash_telegram_split.rb` 是旧版远程模板的可选本地适配：将 Telegram 两条规则、专用 DNS 恢复到独立的 `电报消息`，默认 `新加坡-自动`。必须在既有覆写完成之后调用 `OpenClashTelegramSplit.apply`，仅用于具有所需地区组的模板；先备份并验证候选，库本身不部署、不重启、不修改节点。已含相同独立组时幂等；遇到未知组、规则或 DNS 结构则拒绝赋值。
 - 该库只支持普通 SS，以及显式指定混淆域名的 `obfs/http` SS，匹配精确 ASCII 域名；混淆 host 原样保留。不展开 `proxy-providers`、通配符或其他协议，不修改 TLS/SNI。IP 映射及最终落到 hosts IP 的别名链由内核继续处理。循环、非法目标、重复规范化键或过长链抛出异常，整批不赋值；OpenClash 记录覆写错误并保留转换前节点，不承诺因此阻止插件启动。它解决别名应用差异，不保证入口更快或消除超时。
 - 同一唯一验证入口会在 Ruby 可用时运行内存内合成回归，覆盖更新映射、幂等、字段保留、循环/非法值拒绝与部分失败无副作用。没有 Ruby 的本机明确报告 NOT RUN；设备验收须复用该夹具，并核对运行配置和真实连接。部署备份只留在设备，私有配置不进入 Git。
 
@@ -317,6 +324,7 @@ rules:
 - `.github/config/shared.stoverride` 维护 Stash 公共规则与原生语法；IPv6 跟随 Stash 自身设置。
 - `.github/config/shared.conf` 维护 Shadowrocket 公共规则与原生语法；地区组筛选和测速端点与公共配置保持语义同步。
 - 以后修改主配置时，需要同步检查 JS、Stash 和 Shadowrocket 三类版本。
+- 换设备时只需重新导入私人订阅/Sub-Store 输出和对应公开入口：手机/电脑推荐 JS，OpenClash 使用 CONF。更新机场订阅不会自动刷新缓存的远程覆写，应分别更新。首次核对 `电报消息 → 新加坡-自动`；已有选择缓存按客户端保留。Sub-Store 的逐节点 TFO/MPTCP 结果随私人订阅输出传递，公共配置保留这些字段，不携带私人服务器名单或过期的测试白名单。
 - 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新十二个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
 - 路由器回归由同一入口调用：检查 YAML 1.1/1.2 的字符串 `off`、进程规则移除、设备/私有字段隔离、完整差异允许范围及生成漂移；CI 另执行 Ruby aliases 解析和两份模板的 Mihomo 加载。不会联网读取私人订阅或修改路由器。
 - GitHub 托管的临时 Ubuntu VM 在隔离内核验收步骤使用 `sudo -n` 运行同一入口，使产物封存时的 `/proc` 占用检查可读取系统进程；只传入 PATH 和三个显式测试路径，不改变仓库 token 权限或本地系统权限。占用、不可读和收尾失败仍阻止通过，不跳过生命周期保护；不将此步骤复制到自托管或生产机器。[GitHub 托管运行器权限](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#administrative-privileges)
@@ -327,7 +335,7 @@ rules:
 - CI 会检查 `unified-delay`、`profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。
 - CI 每天自动运行一次，用于尽早发现 Mihomo 最新版本、远程规则集或下载链路变化导致的问题。
 - 内核 CI 分别测试最低支持的 `v1.19.27` 和官方 `latest` 正式版，两组都运行配置加载、隔离 DNS/AI 分组及公开规则快照初始化。关闭矩阵 fail-fast，避免一组失败遮住另一组结果；两组都必须通过，不自动提高最低支持版本。下载后先核对官方资产 SHA-256，再检查实际二进制版本。
-- 独立的 `Check public health-check endpoints` workflow 每天 04:50（UTC+8）检查两个 Mihomo 公开 YAML 的全部测速 URL（按 URL / 预期状态 / 超时去重，当前 14 个），也可手动运行。它不在 push / PR 上执行公网探测，不影响普通配置 CI；只检测主分支，发布后才会生效。GitHub 定时任务可能延迟，并非精确计时器。
+- 独立的 `Check public health-check endpoints` workflow 每天 04:50（UTC+8）检查两个 Mihomo 公开 YAML 的全部测速 URL（按 URL / 预期状态 / 超时去重，包括 Telegram），也可手动运行。它不在 push / PR 上执行公网探测，不影响普通配置 CI；只检测主分支，发布后才会生效。GitHub 定时任务可能延迟，并非精确计时器。
 - 端点探测按 [Mihomo URLTest 实现](https://github.com/MetaCubeX/mihomo/blob/v1.19.30/adapter/adapter.go) 使用 HEAD、不跟随重定向，严格核对配置的预期状态，保留 TLS 验证。每个 URL 最多尝试 3 次、间隔 1.5 秒、单次按配置超时（上限 10 秒）、并发上限 4；不会把 302 登录跳转或 403 算成功。中途恢复标记为 RECOVERED，连续失败使独立 workflow 失败，并在 Actions summary / 日志列出受影响的组。
 - 探测只访问代码白名单内的公开地址，不读取机场订阅、节点凭据或本机控制器，不自动替换测速 URL / 切节点。本地 JSON / Markdown 报告带配置 SHA-256；默认离线入口只跑合成回归。需要显式实测时，设置 `MIHOMO_ENDPOINT_OUTPUT` 为仓库内 `.generated/runs/<本次唯一名称>` 的绝对路径，再运行同一个 `python .github/scripts/validate_health_checks.py`；目标必须不存在，已有报告不会覆盖。
 - **公网探测只是执行机器的网络视角。** GitHub 机房可能被端点限流或地域限制；本地进程也可能经过当前代理/TUN。失败需结合客户端连接复核，成功不代表手机/电脑节点可用、AI 解锁、聊天流式响应正常或无 DNS 泄露。这项检查不复刻 Mihomo 的节点传输和 unified-delay 延迟测量。
@@ -352,7 +360,7 @@ rules:
 | 地区手动组 | 香港、台湾、日本、新加坡、美国、越南 | 国内版六组 + 中国 |
 | 国内服务 / 中国两个组 | 删除；保留国内规则并改为 DIRECT | 保留，国内服务默认 DIRECT |
 
-- 普通业务合并进 `节点选择`：漏网之鱼、GitHub、YouTube、Netflix、谷歌服务、电报消息、Meta / X、TikTok、Spotify。合并后不能再给这些业务分别选择国家。
+- 普通业务合并进 `节点选择`：漏网之鱼、GitHub、YouTube、Netflix、谷歌服务、Meta / X、TikTok、Spotify。`电报消息` 独立，默认新加坡自动，可单独选择地区。
 - 保持独立：AI、游戏平台、越南服务、哔哩哔哩港澳台、广告过滤、全部节点；微软与苹果合并为 `微软/苹果服务`。
 - Mihomo AI 内部提供美国、日本、新加坡三个隐藏 AI 自动组，默认美国，不新增可见业务组或跨国家 AI 自动池。
 - 韩国手动、自动组均删除；韩国订阅节点不删除。Shadowrocket 的单项包装组 `全局直连` 删除，使用内建 DIRECT。
