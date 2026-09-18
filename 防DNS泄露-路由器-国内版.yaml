@@ -1851,7 +1851,7 @@ proxy-groups:
     # 配置说明：界面图标地址，不参与规则匹配。
     icon: https://flagcdn.com/w320/vn.png
     # 配置说明：从候选中排除匹配此正则的节点。
-    exclude-filter: (?i)(?:(回国|港广|港沪|港深|沪港|深港|广中)|^【花云】)
+    exclude-filter: (?i)(回国|港广|港沪|港深|沪港|深港|广中)
   # 配置说明：当前策略组或覆写的显示名称。
   - name: 美国-AI-自动
     # 配置说明：对象类型：select 手选，url-test 自动测速，http 从远端下载规则。

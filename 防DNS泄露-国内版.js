@@ -3157,7 +3157,7 @@ function tuneMihomo(config) {
   const regions = ["美国", "日本", "新加坡"];
   const aiNames = new Set(regions.map(region => region + "-AI-自动"));
   // Sub-Store 的来源前缀用于分配流量；无前缀的普通订阅保持原来的候选范围。
-  // 只约束自动组，手动列表继续允许用户选择任一来源；中国回国组保持原语义。
+  // 手动列表允许任一来源；回国组不改。越南目前只有花云供给，避免专属服务空组。
   const dailyExclude = "^【花云】";
   const aiExclude = "^【(?!花云】)[^】]+】";
   function originalExclude(value) {
@@ -3197,7 +3197,12 @@ function tuneMihomo(config) {
   config["proxy-groups"] = [...groups.filter(group => !aiNames.has(group.name)
     && group.name !== "香港-AI-自动"), ...automatic];
   for (const group of config["proxy-groups"]) {
-    if (group.type !== "url-test" || !group["include-all"] || group.name === "中国-自动") continue;
+    if (group.type !== "url-test" || !group["include-all"]) continue;
+    if (["中国-自动", "越南-自动"].includes(group.name)) {
+      // 允许已带来源过滤的旧输入重复应用时撤销这一项，不留下空组。
+      if (group["exclude-filter"]) group["exclude-filter"] = originalExclude(group["exclude-filter"]);
+      continue;
+    }
     group["exclude-filter"] = sourceExclude(group["exclude-filter"],
       aiNames.has(group.name) ? aiExclude : dailyExclude);
   }

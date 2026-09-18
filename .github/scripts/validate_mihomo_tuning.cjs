@@ -17,7 +17,7 @@ function checkTuning(actual, before) {
   for (const source of before["proxy-groups"]) {
     const expected = clone(source);
     if (source.type === "url-test") Object.assign(expected, { lazy: true, tolerance: 100 });
-    if (source.type === "url-test" && source["include-all"] && source.name !== "中国-自动") {
+    if (source.type === "url-test" && source["include-all"] && !["中国-自动", "越南-自动"].includes(source.name)) {
       const base = (source["exclude-filter"] || "").replace(/^\(\?i\)/, "");
       expected["exclude-filter"] = "(?i)(?:" + (base ? base + "|" : "") + "^【花云】)";
     }
@@ -51,7 +51,7 @@ function checkTuning(actual, before) {
   }
   assert.equal(groups.AI.proxies[0], "美国-AI-自动");
   assert.deepEqual(actual["proxy-groups"].slice(-3).map(group => group.name), NAMES);
-  for (const group of actual["proxy-groups"].filter(g => g.type === "url-test" && !NAMES.includes(g.name) && g.name !== "中国-自动")) {
+  for (const group of actual["proxy-groups"].filter(g => g.type === "url-test" && !NAMES.includes(g.name) && !["中国-自动", "越南-自动"].includes(g.name))) {
     const excluded = new RegExp(group["exclude-filter"].replace(/^\(\?i\)/, ""), "i");
     for (const country of REGIONS) {
       assert(excluded.test("【花云】 " + country + " 01"), "日常自动组应避开花云流量");
