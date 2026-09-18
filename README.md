@@ -167,6 +167,8 @@
 
 从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；客户端自己的 DNS/TUN 末层覆写仍需核对。[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)。重新连接后，在最终配置中检查节点 `server` 是否等于本次订阅的别名目标，其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
 
+Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a function`：旧 JS 调用了部分引擎没有的 `Object.hasOwn`。两地入口已统一使用兼容的 `Object.prototype.hasOwnProperty.call`，同时修复 AI DNS 中的同类调用，不修改全局 JS 对象。遇到旧错误时先更新客户端中的远程 **JS 覆写文件**，仅更新机场订阅不会替换缓存的覆写脚本。离线回归会禁用该 API，比较两地完整输出、节点别名、设备字段及幂等，并逐一恢复四处旧调用确认测试能检出；这不等于手机实机验收。[兼容写法说明](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn#description)。
+
 ### Stash 覆写
 
 适合 Stash iOS/tvOS 3.6+ 或 macOS 4.3+；这些版本支持加密启动 DNS 与独立的代理节点 DNS。

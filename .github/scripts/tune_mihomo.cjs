@@ -32,7 +32,8 @@ function tuneMihomo(config) {
   const policies = config.dns["nameserver-policy"];
   for (const name of ["openai", "anthropic", "google-gemini", "github-copilot"]) {
     const key = "rule-set:" + name;
-    if (!Object.hasOwn(policies, key)) throw new Error("缺少 AI DNS 来源：" + key);
+    // 与分组投影保持一致，避免手机端缺少 Object.hasOwn 时在此处再次报错。
+    if (!Object.prototype.hasOwnProperty.call(policies, key)) throw new Error("缺少 AI DNS 来源：" + key);
     policies[key] = [...servers];
   }
   const explicit = {};
@@ -48,7 +49,7 @@ function tuneMihomo(config) {
   config.dns["nameserver-policy"] = Object.fromEntries([
     ...Object.entries(policies).filter(([key]) => key === "rule-set:private"),
     ...Object.entries(explicit),
-    ...Object.entries(policies).filter(([key]) => key !== "rule-set:private" && !Object.hasOwn(explicit, key)),
+    ...Object.entries(policies).filter(([key]) => key !== "rule-set:private" && !Object.prototype.hasOwnProperty.call(explicit, key)),
   ]);
   return config;
 }

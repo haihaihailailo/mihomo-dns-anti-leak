@@ -133,7 +133,33 @@ function run() {
       assert.deepEqual(broken, before);
     });
   }
-  console.log(`JS node alias synthetic checks: ${checks} PASS (no phone/runtime validation)`);
+  // Clash Mi 报错行位于 Object.hasOwn 调用。模拟缺少该 API，而不改宿主 Node 环境。
+  // 跑完整公开入口，防止只修复分组后又在 AI DNS 的下一处调用报错。
+  for (const region of ["国内", "国外"]) {
+    const code = read(`防DNS泄露-${region}版.js`);
+    const modern = runner(code);
+    const legacy = runner("Object.hasOwn = undefined;\n" + code);
+    for (const sample of [{}, input(), input({ proxies: [obfs] }),
+      input({ tun: { enable: false, mtu: 1400, "include-package": ["org.example.app"] }, mode: "rule", ipv6: false })]) {
+      check(`${region} 缺少 Object.hasOwn 时完整 JS 兼容`, () => {
+        const expected = clone(modern(clone(sample)));
+        const actual = legacy(clone(sample));
+        assert.deepEqual(clone(actual), expected);
+        assert.deepEqual(clone(legacy(actual)), expected, "兼容运行仍须幂等");
+      });
+    }
+    // 各自恢复四处旧调用，必须都能被缺少 API 的环境检出。
+    for (const args of ["aliases, name", "aliases, group.name", "policies, key", "explicit, key"]) {
+      check(`${region} 旧 API 负向控制 ${args}`, () => {
+        const safe = `Object.prototype.hasOwnProperty.call(${args})`;
+        assert(code.includes(safe), "缺少兼容调用");
+        const broken = code.replace(safe, `Object.hasOwn(${args})`);
+        assert.deepEqual(clone(runner(broken)({})), clone(modern({})));
+        assert.throws(() => runner("Object.hasOwn = undefined;\n" + broken)({}), /not a function/);
+      });
+    }
+  }
+  console.log(`JS node alias and runtime compatibility checks: ${checks} PASS (no phone/runtime validation)`);
 }
 
 module.exports = { run };

@@ -3291,7 +3291,8 @@ function consolidateGroups(config, domestic) {
   if (domestic) aliases["国内服务"] = "DIRECT";
   const removed = new Set(["韩国节点", "韩国-自动",
     ...(domestic ? ["中国节点", "中国-自动"] : [])]);
-  const target = name => Object.hasOwn(aliases, name) ? aliases[name] : name;
+  // 手机端 JS 引擎可能没有 Object.hasOwn；借用原型方法也能正确处理无原型对象。
+  const target = name => Object.prototype.hasOwnProperty.call(aliases, name) ? aliases[name] : name;
   const original = config["proxy-groups"];
   const systems = original.find(group => group.name === "微软服务")
     || original.find(group => group.name === "微软/苹果服务");
@@ -3299,7 +3300,7 @@ function consolidateGroups(config, domestic) {
   const apple = original.find(group => group.name === "苹果服务");
   config["proxy-groups"] = original.flatMap(group => {
     if (removed.has(group.name)) return [];
-    if (Object.hasOwn(aliases, group.name) && group !== systems) return [];
+    if (Object.prototype.hasOwnProperty.call(aliases, group.name) && group !== systems) return [];
     const result = { ...group, name: target(group.name) };
     if (group.proxies) {
       const members = group === systems
@@ -3375,7 +3376,8 @@ function tuneMihomo(config) {
   const policies = config.dns["nameserver-policy"];
   for (const name of ["openai", "anthropic", "google-gemini", "github-copilot"]) {
     const key = "rule-set:" + name;
-    if (!Object.hasOwn(policies, key)) throw new Error("缺少 AI DNS 来源：" + key);
+    // 与分组投影保持一致，避免手机端缺少 Object.hasOwn 时在此处再次报错。
+    if (!Object.prototype.hasOwnProperty.call(policies, key)) throw new Error("缺少 AI DNS 来源：" + key);
     policies[key] = [...servers];
   }
   const explicit = {};
@@ -3391,7 +3393,7 @@ function tuneMihomo(config) {
   config.dns["nameserver-policy"] = Object.fromEntries([
     ...Object.entries(policies).filter(([key]) => key === "rule-set:private"),
     ...Object.entries(explicit),
-    ...Object.entries(policies).filter(([key]) => key !== "rule-set:private" && !Object.hasOwn(explicit, key)),
+    ...Object.entries(policies).filter(([key]) => key !== "rule-set:private" && !Object.prototype.hasOwnProperty.call(explicit, key)),
   ]);
   return config;
 }
