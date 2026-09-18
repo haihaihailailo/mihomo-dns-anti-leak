@@ -6,13 +6,12 @@ function tuneMihomo(config) {
   if (!ai || ai.type !== "select") throw new Error("缺少 AI 手选入口");
   const regions = ["美国", "日本", "新加坡"];
   const aiNames = new Set(regions.map(region => region + "-AI-自动"));
-  // Sub-Store 的来源前缀用于分配流量；无前缀的普通订阅保持原来的候选范围。
-  // 手动列表允许任一来源；回国组不改。越南目前只有花云供给，避免专属服务空组。
-  const dailyExclude = "^【花云】";
-  const aiExclude = "^【(?!花云】)[^】]+】";
+  // 来源前缀只用于识别订阅，不限制普通组或 AI 组的候选。
+  // 兼容已应用旧版“花云专供 AI”的输入，只撤销本仓库生成的来源排除项。
+  const legacySourceExcludes = ["^【花云】", "^【(?!花云】)[^】]+】"];
   function originalExclude(value) {
     if (!value) return "";
-    for (const marker of [dailyExclude, aiExclude]) {
+    for (const marker of legacySourceExcludes) {
       if (value === "(?i)(?:" + marker + ")") return "";
       const tail = "|" + marker + ")";
       if (value.startsWith("(?i)(?:") && value.endsWith(tail)) {
@@ -20,10 +19,6 @@ function tuneMihomo(config) {
       }
     }
     return value;
-  }
-  function sourceExclude(value, marker) {
-    const base = originalExclude(value).replace(/^\(\?i\)/, "");
-    return "(?i)(?:" + (base ? base + "|" : "") + marker + ")";
   }
   // 闲置时减少探测；只提高切换容差，保留既有间隔、超时和测速 URL。
   for (const group of groups) if (group.type === "url-test") {
@@ -47,13 +42,10 @@ function tuneMihomo(config) {
     && group.name !== "香港-AI-自动"), ...automatic];
   for (const group of config["proxy-groups"]) {
     if (group.type !== "url-test" || !group["include-all"]) continue;
-    if (["中国-自动", "越南-自动"].includes(group.name)) {
-      // 允许已带来源过滤的旧输入重复应用时撤销这一项，不留下空组。
-      if (group["exclude-filter"]) group["exclude-filter"] = originalExclude(group["exclude-filter"]);
-      continue;
-    }
-    group["exclude-filter"] = sourceExclude(group["exclude-filter"],
-      aiNames.has(group.name) ? aiExclude : dailyExclude);
+    if (!group["exclude-filter"]) continue;
+    const exclude = originalExclude(group["exclude-filter"]);
+    if (exclude) group["exclude-filter"] = exclude;
+    else delete group["exclude-filter"];
   }
 
   // 已知 AI 域名解析与业务连接都跟随 AI；节点域名解析仍独立 DIRECT，避免递归。
