@@ -3,6 +3,8 @@ name: Validate Clash config
 on:
   push:
     paths:
+      - "maintenance/**"
+      - ".github/scripts/test_openclash_maintenance.rb"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
       - ".github/scripts/config_comments.cjs"
@@ -49,6 +51,8 @@ on:
       - ".github/workflows/validate-config.yml"
   pull_request:
     paths:
+      - "maintenance/**"
+      - ".github/scripts/test_openclash_maintenance.rb"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
       - ".github/scripts/config_comments.cjs"

@@ -7,6 +7,26 @@ import os
 import re
 import subprocess
 import sys
+import shutil
+
+def check_maintenance():
+    """Bounded, memory-only Ruby fixtures; no router calls or generated files."""
+    ruby = shutil.which("ruby")
+    if ruby is None:
+        if os.environ.get("CI") == "true" or os.environ.get("OPENCLASH_RUBY_TEST") == "1":
+            raise SystemExit("Ruby required for maintenance validation in CI")
+        print("OpenClash maintenance Ruby checks NOT RUN: Ruby unavailable")
+        return
+    subprocess.run(
+        [ruby, str(Path(__file__).with_name("test_openclash_maintenance.rb"))],
+        check=True, timeout=15,
+    )
+
+if "--check-maintenance" in sys.argv:
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: validate_health_checks.py --check-maintenance")
+    check_maintenance()
+    raise SystemExit(0)
 
 def check_probe_tools():
     """只编译通用诊断工具并验证显式启用门禁，不访问订阅、不启动内核。"""
@@ -578,6 +598,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
 
 
 check_probe_tools()
+check_maintenance()
 subprocess.run(
     ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_config_comments.cjs"))],
     check=True, timeout=60,
