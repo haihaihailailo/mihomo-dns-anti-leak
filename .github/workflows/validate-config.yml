@@ -5,6 +5,7 @@ on:
     paths:
       - "maintenance/**"
       - ".github/scripts/test_openclash_maintenance.rb"
+      - ".github/scripts/test_sub_store_flow.cjs"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
       - ".github/scripts/config_comments.cjs"
@@ -53,6 +54,7 @@ on:
     paths:
       - "maintenance/**"
       - ".github/scripts/test_openclash_maintenance.rb"
+      - ".github/scripts/test_sub_store_flow.cjs"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
       - ".github/scripts/config_comments.cjs"

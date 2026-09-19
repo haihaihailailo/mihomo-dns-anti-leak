@@ -11,6 +11,10 @@ import shutil
 
 def check_maintenance():
     """Bounded, memory-only Ruby fixtures; no router calls or generated files."""
+    subprocess.run(
+        ["node", "--max-old-space-size=64", str(Path(__file__).with_name("test_sub_store_flow.cjs"))],
+        check=True, timeout=15,
+    )
     ruby = shutil.which("ruby")
     if ruby is None:
         if os.environ.get("CI") == "true" or os.environ.get("OPENCLASH_RUBY_TEST") == "1":

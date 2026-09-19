@@ -12,6 +12,23 @@
 
 对有临时下载开关的供应商，先开启开关再更新。关闭时的拒绝或旧缓存不等于所有来源失败；不要循环重试、泄露 URL token 或关闭证书验证。
 
+### 获取失败时保留最后成功额度
+
+原版 sum.js 会跳过取不到额度的来源，可能把合计总量显示成较小值。[sub-store-flow-fallback.js](sub-store-flow-fallback.js) 使用 Sub-Store 原生 `scriptResourceCache` 补充一个指定来源的有界回退；[prepare-sub-store-flow.cjs](prepare-sub-store-flow.cjs) 将它插入经审查的原始脚本，只从 stdin 读取并向 stdout 输出候选，不联网、不部署、不自动下载第三方源码。
+
+```sh
+node maintenance/prepare-sub-store-flow.cjs REVIEWED_SHA256 SOURCE_NAME CACHE_SLOT < reviewed-sum.js > candidate.js
+```
+
+- 已验证的原始 sum.js SHA256 见上文。输入限制 64 KiB，哈希、布局、来源名和缓存槽必须匹配；非零退出时不可安装输出文件。第三方脚本不在本仓库镜像。
+- 适用 Sub-Store Node 后端 2.39.8；依赖 `require('crypto')`、原生 flowUtils 和两种缓存接口。每个安装只使用一个明确的固定缓存槽，不共用其他脚本的槽。默认最多 7 天、额度字符串最多 4096 字符；失败不延长旧值寿命，正常刷新替换旧值，地址/请求头指纹变化、数据非法、订阅过期或缓存超时均拒绝回退。
+- 保留单条订阅的原生 headers/flowHeaders 参数。缓存键与原生后端的 UA、规范化请求头和 URL 对齐；后端默认 UA 和缓存结构改变后必须复核。原生缓存 time 是到期时刻，辅助代码按当时配置的 TTL 推算采集时间；修改 TTL 前应刷新，不把推算时间当作供应商时间戳。
+- 固定响应头 `x-substore-flower-flow-state` 与 `x-substore-flower-flow-observed-at` 保留已部署兼容性；`available` 表示原生读取可用，也可能来自其尚有效缓存；`stale` 表示本辅助逻辑用了旧值；`unavailable` 表示没有可用的回退。旧值另有 plan-name 提示和不含订阅地址的日志。OpenClash 0.47.156 的额度卡片未展示这些附加字段，因此显示的合计不一定全部实时。
+- 候选应先在内存中验证，再备份精确组合及相关缓存，通过原生 API 只更新 process；比较其他字段、节点数量、导出响应和持久化汇总。不要直接覆盖运行中的数据库。回退仅恢复原处理脚本，缓存可保留到其有界到期，不得为了回退清空其他脚本缓存。
+- 合成检查由唯一入口 `python .github/scripts/validate_health_checks.py --check-maintenance` 运行，覆盖成功替换、失败回退、过期不续命、请求头转发、指纹漂移及无关来源隔离；不能替代上游开窗实测。
+
+专用反向隧道的监听端口存在，不代表代理出口正常。排查时分别核对隧道 TLS、来源允许列表、curl 与原生客户端的代理行为；不因宿主机被来源限制拒绝而放宽访问范围。Fake-IP 模式下长期进程可能保留核心重启前的地址，需要验证后再决定是否重连或排除相应域名。
+
 ## 清除提示条目
 
 组合中用名称排除过滤删除到期/流量信息条目，允许前置 `【来源】`，英文大小写不敏感；这不是修改或删除原始单条订阅。示例正则的 English 部分用于名称过滤的“排除”模式：
