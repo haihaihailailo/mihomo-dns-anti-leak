@@ -30,6 +30,16 @@
 
 此仓库不提供无人值守安装器。候选生成工具、配置和步骤可复用；设备上的一次性准备脚本及备份不作为通用部署程序发布。每次 OpenClash 更新后检查原清空代码是否回归、轮转配置是否存在以及历史是否继续生成。
 
+可在现有 `/etc/openclash/custom/openclash_custom_overwrite.sh` 的最终 `exit 0` 前加入下面的只读提示。它由既有配置加载过程调用，不另建 cron，也不会给未知升级版本自动打补丁。先确认本机仍使用本目录所述轮转路径，保留原覆写逻辑，并通过 `sh -n` 检查。
+
+```sh
+if ! grep -Fq '/usr/sbin/logrotate -s /tmp/openclash-logrotate.status /etc/openclash/custom/openclash-logrotate.conf' /usr/share/openclash/openclash_watchdog.sh || [ ! -r /etc/openclash/custom/openclash-logrotate.conf ]; then
+  LOG_OUT "Warning: maintenance log rotation is missing; review the installed OpenClash version before restoring the patch."
+fi
+```
+
+该提示检测调用文本与配置存在性，不能代替 logrotate 实际执行验证；自定义覆写文件本身被替换时，提示也可能丢失。升级后仍需检查恢复材料。
+
 候选工具的内存内合成验证使用唯一入口 `python .github/scripts/validate_health_checks.py --check-maintenance`，完整入口与 CI 也会运行。无 Ruby 的本机报告 NOT RUN，CI 必须有 Ruby；不访问设备、不生成测试目录，也不代替实际轮转验收。
 
 ## 本地设置参考
