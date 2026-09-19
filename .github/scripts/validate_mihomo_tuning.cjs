@@ -16,6 +16,9 @@ function checkTuning(actual, before) {
     before["proxy-groups"].filter(group => !group.hidden).map(group => group.name), "不增加可见分组");
   for (const source of before["proxy-groups"]) {
     const expected = clone(source);
+    if (typeof expected.filter === "string") expected.filter = expected.filter.replace(
+      "^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)",
+      "^(?![ ]*(?:【[^】]+】[ ]*)*(?:Traffic|Expire|Expiry|Expiration)");
     if (source.type === "url-test") Object.assign(expected, { lazy: true, tolerance: 100 });
     if (source.name === "AI") expected.proxies = [
       ...NAMES, "美国节点", "日本节点", "新加坡节点", "节点选择", "DIRECT",
@@ -43,6 +46,13 @@ function checkTuning(actual, before) {
     }
   }
   assert.equal(groups.AI.proxies[0], "美国-AI-自动");
+  for (const name of ["全部节点", "自动选择"]) {
+    const filter = new RegExp(groups[name].filter.replace(/^\(\?i\)/, ""), "i");
+    for (const info of ["Expire: 2099-01-01", "【花云】 Expire: 2099-01-01", "【新增来源】 Traffic: 2 GB", "【火箭】 expiry：2099"]) {
+      assert(!filter.test(info), "不得把套餐提示当作节点：" + name + " " + info);
+    }
+    assert(filter.test("【新增来源】 美国 IEPL 01"), "必须保留正常来源节点");
+  }
   assert.deepEqual(actual["proxy-groups"].slice(-3).map(group => group.name), NAMES);
   for (const group of actual["proxy-groups"].filter(g => g.type === "url-test" && !NAMES.includes(g.name) && g.name !== "中国-自动")) {
     const excluded = new RegExp((group["exclude-filter"] || "(?!)").replace(/^\(\?i\)/, ""), "i");

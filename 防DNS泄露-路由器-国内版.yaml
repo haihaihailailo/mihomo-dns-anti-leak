@@ -11,7 +11,7 @@ profile:
   # 配置说明：持久化虚拟 IP 与域名的映射。
   store-fake-ip: true
 # 配置说明：允许内核自动更新 GEO 数据。
-geo-auto-update: true
+geo-auto-update: false
 # 配置说明：GEO 数据更新间隔，单位小时。
 geo-update-interval: 24
 # 配置说明：并发尝试域名解析得到的目标地址，缩短连接等待。
@@ -1527,7 +1527,7 @@ proxy-groups:
     # 配置说明：候选为空时使用此策略；REJECT 表示拒绝，避免静默改为直连。
     empty-fallback: REJECT
     # 配置说明：按节点名称正则筛选候选；名称匹配不能证明节点真实出口地区。
-    filter: (?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$
+    filter: (?i)^(?![ ]*(?:【[^】]+】[ ]*)*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群)).*$
     # 配置说明：组内为测速端点，规则提供器内为下载地址；端点可达不代表业务解锁。
     url: https://connectivitycheck.gstatic.com/generate_204
     # 配置说明：测速成功所需的 HTTP 状态码。
@@ -1559,7 +1559,7 @@ proxy-groups:
     # 配置说明：Mihomo/Stash 此处超时单位为毫秒；超时不等于所有业务均不可用。
     timeout: 10000
     # 配置说明：按节点名称正则筛选候选；名称匹配不能证明节点真实出口地区。
-    filter: (?i)^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))(?!(?:.*(?:回国|港广|港沪|港深|沪港|深港|广中)|(?!.*(?:广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$)|广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$)|广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$)|广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$)|广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$)|广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$)|越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$)|澳门|澳門|Macao|Macau|🇲🇴|(^|[^A-Z])MO([^A-Z]|$)|(^|[^A-Z])MFM([^A-Z]|$))).*(?:中国|上海|北京|广州|深圳|江苏|浙江|🇨🇳|(^|[^A-Z])China([^A-Z]|$)|(^|[^A-Z])CN(?!2(?:[^0-9]|$))([^A-Z]|$)))).*$
+    filter: (?i)^(?![ ]*(?:【[^】]+】[ ]*)*(?:Traffic|Expire|Expiry|Expiration)[ ]*[:：])(?!.*(?:官网|套餐|流量|异常|剩余|到期|过期|更新|联系|群))(?!(?:.*(?:回国|港广|港沪|港深|沪港|深港|广中)|(?!.*(?:广港|香港|Hong ?Kong|🇭🇰|(^|[^A-Z])HK([^A-Z]|$)|(^|[^A-Z])HKG([^A-Z]|$)|广台|台湾|台灣|Tai ?Wan|Taiwan|🇹🇼|(^|[^A-Z])TW([^A-Z]|$)|(^|[^A-Z])TWN([^A-Z]|$)|(^|[^A-Z])TPE([^A-Z]|$)|广日|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|Japan|🇯🇵|(^|[^A-Z])JP([^A-Z]|$)|(^|[^A-Z])NRT([^A-Z]|$)|(^|[^A-Z])HND([^A-Z]|$)|(^|[^A-Z])KIX([^A-Z]|$)|广新|新加坡|坡县|狮城|Singapore|🇸🇬|(^|[^A-Z])SG([^A-Z]|$)|(^|[^A-Z])SGP([^A-Z]|$)|(^|[^A-Z])SIN([^A-Z]|$)|广美|美国|纽约|波特兰|达拉斯|俄勒|凤凰城|费利蒙|洛杉|圣何塞|圣克拉|西雅|芝加|United ?States|🇺🇸|(^|[^A-Z])US([^A-Z]|$)|(^|[^A-Z])USA([^A-Z]|$)|广韩|韩国|韓國|首尔|春川|Korea|🇰🇷|(^|[^A-Z])KR([^A-Z]|$)|(^|[^A-Z])ICN([^A-Z]|$)|(^|[^A-Z])SEL([^A-Z]|$)|越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$)|澳门|澳門|Macao|Macau|🇲🇴|(^|[^A-Z])MO([^A-Z]|$)|(^|[^A-Z])MFM([^A-Z]|$))).*(?:中国|上海|北京|广州|深圳|江苏|浙江|🇨🇳|(^|[^A-Z])China([^A-Z]|$)|(^|[^A-Z])CN(?!2(?:[^0-9]|$))([^A-Z]|$)))).*$
     # 配置说明：界面图标地址，不参与规则匹配。
     icon: https://testingcf.jsdelivr.net/gh/clash-verge-rev/clash-verge-rev.github.io@main/docs/assets/icons/speed.svg
   # 配置说明：当前策略组或覆写的显示名称。
@@ -2440,6 +2440,24 @@ rule-providers:
     url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-!cn.mrs
     # 配置说明：规则缓存相对路径；不同格式和来源应避免共用缓存。
     path: ./ruleset/metacubex/category-games-global.mrs
+  # 配置说明：规则集合 geoip-vn；路由与 DNS 中引用该名称，下载内容随上游更新。
+  geoip-vn:
+    # 配置说明：对象类型：select 手选，url-test 自动测速，http 从远端下载规则。
+    type: http
+    # 配置说明：集合语义：domain 域名、ipcidr 网段、classical 完整规则。
+    behavior: ipcidr
+    # 配置说明：规则文件编码格式，须与远端内容一致。
+    format: mrs
+    # 配置说明：定期测速或规则更新的间隔，单位秒，取决于所属对象。
+    interval: 86400
+    # 配置说明：规则下载大小上限，单位字节。
+    size-limit: 4194304
+    # 配置说明：下载该规则集合时使用的出站策略。
+    proxy: 节点选择
+    # 配置说明：组内为测速端点，规则提供器内为下载地址；端点可达不代表业务解锁。
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/vn.mrs
+    # 配置说明：规则缓存相对路径；不同格式和来源应避免共用缓存。
+    path: ./ruleset/metacubex/geoip-vn.mrs
 # 配置说明：自上而下匹配，首次有效命中决定策略；具体例外应放在通用兜底之前。
 rules:
   # 配置说明：目标 IPv4 网段 0.0.0.0/8 → 直连。no-resolve：不为本条 IP 匹配额外解析域名。
@@ -2810,8 +2828,8 @@ rules:
   - DOMAIN-SUFFIX,muaban.net,越南服务
   # 配置说明：根域名 vietnamworks.com 及其子域 → 交给「越南服务」策略。
   - DOMAIN-SUFFIX,vietnamworks.com,越南服务
-  # 配置说明：目标 IP 属于 GeoIP VN → 交给「越南服务」策略。no-resolve：不为本条 IP 匹配额外解析域名。
-  - GEOIP,VN,越南服务,no-resolve
+  # 配置说明：命中规则集合 geoip-vn → 交给「越南服务」策略。no-resolve：不为本条 IP 匹配额外解析域名。
+  - RULE-SET,geoip-vn,越南服务,no-resolve
   # 配置说明：根域名 coolapk.com 及其子域 → 直连。
   - DOMAIN-SUFFIX,coolapk.com,DIRECT
   # 配置说明：根域名 www.coolapk.com 及其子域 → 直连。

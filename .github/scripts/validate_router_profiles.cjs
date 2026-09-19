@@ -39,11 +39,21 @@ function run() {
     for (const key of ['listen', 'ipv6', 'fake-ip-range6']) assert(!Object.hasOwn(config.dns, key));
     assert(source.rules.some(rule => rule.startsWith('PROCESS-')), '缺少进程规则正向样本');
     assert(!config.rules.some(rule => /PROCESS-/.test(rule)));
-    assert.deepEqual(config.rules, source.rules.filter(rule => !rule.startsWith('PROCESS-')),
+    assert.deepEqual(config.rules, source.rules.filter(rule => !rule.startsWith('PROCESS-'))
+      .map(rule => rule.replace(/^GEOIP,VN,/, 'RULE-SET,geoip-vn,')),
       '当前非进程规则的内容/顺序不得改变；新增逻辑进程规则须单独审查');
     // 全对象差异允许列表：包括策略组、测速、规则集、DNS 策略在内，其余完全不变。
     const restored = clone(config);
     delete restored['find-process-mode'];
+    assert.equal(config['geo-auto-update'], false, '路由器 GEO 更新必须交给 OpenClash');
+    assert(config.rules.includes('RULE-SET,geoip-vn,越南服务,no-resolve'));
+    assert(!config.rules.some(rule => rule.startsWith('GEOIP,VN,')), '不能依赖只含 CN 的设备库识别越南');
+    assert.equal(config['rule-providers']['geoip-vn'].behavior, 'ipcidr');
+    assert.equal(config['rule-providers']['geoip-vn'].format, 'mrs');
+    assert.equal(config['rule-providers']['geoip-vn'].url,
+      'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/vn.mrs');
+    restored['geo-auto-update'] = source['geo-auto-update'];
+    restored['rule-providers'] = clone(source['rule-providers']);
     restored.rules = clone(source.rules);
     restored.dns = clone(source.dns);
     if (Object.hasOwn(source, 'tun')) restored.tun = clone(source.tun);
@@ -60,7 +70,7 @@ function run() {
     rules: ['PROCESS-NAME,test.exe,DIRECT', 'AND,((PROCESS-NAME,test.exe),(NETWORK,TCP)),DIRECT',
       'DOMAIN,example.org,DIRECT', 'MATCH,REJECT'] };
   const before = clone(synthetic);
-  assert.deepEqual(routerConfig(synthetic), { dns: {}, 'find-process-mode': 'off',
+  assert.deepEqual(routerConfig(synthetic), { dns: {}, 'find-process-mode': 'off', 'geo-auto-update': false,
     rules: ['DOMAIN,example.org,DIRECT', 'MATCH,REJECT'] });
   assert.deepEqual(synthetic, before);
   for (const result of renderRouterOverrides(sources)) {

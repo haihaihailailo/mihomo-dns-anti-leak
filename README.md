@@ -308,6 +308,9 @@ rules:
 
 ### 同步与验证
 
+- 路由器模板关闭内核 GEO 自动更新，由 OpenClash 统一调度；设备应保留正在使用的 Country.mmdb 和中国 IP 列表更新。越南 IP 分流使用 MetaCubeX 的独立 `geoip-vn` MRS，兼容仅含 CN 的 Lite MMDB，保持原规则位置和 `no-resolve`。
+- Mihomo 普通自动组和全部节点组会识别带 `【来源】` 前缀的英文流量/到期提示，防止这些占位条目参与自动测速；正常来源节点及回国隔离规则保持不变。Sub-Store 的组合过滤也应排除这些提示。
+
 - JS 节点别名逻辑由 `.github/scripts/node_server_aliases.cjs` 作为自包含函数嵌入两地公开 JS，OpenClash CONF 内嵌 `.github/scripts/openclash_node_aliases.rb` 的等价适配；客户端无需 Node.js，也不依赖额外本地 Ruby 文件。YAML / Stash / Shadowrocket 不执行动态节点适配。使用 `python .github/scripts/validate_health_checks.py --check-node-aliases` 可执行有界只读定向检查，包括生成一致性、现有配置回归及两份真实 JS 的别名、字段保留、更新、幂等和错误原子性；默认完整入口也运行相同回归。定向模式不替代完整生命周期验收，也不是手机实测。
 - 可选的 Windows 公网订阅抽样诊断仍走唯一入口：设置 `SUBSCRIPTION_PROBE_OPT_IN=1`、`SUBSCRIPTION_PROBE_FILES`（最多三个本机 YAML 绝对路径组成的 JSON 数组）、`MIHOMO_TEST_BIN`（已有内核绝对路径），运行 `python .github/scripts/validate_health_checks.py --probe-subscriptions`。每份订阅最多抽样 16 个节点；内核由 Windows Job Object 限制进程数及总内存 512 MiB，8 分钟总期限，单次网络等待 4 秒。仅用 loopback SOCKS/控制 API，无 TUN、系统代理或现有客户端选择变更；真实节点配置通过 stdin 和 API 内存传递，不写文件或命令行。独立 DoH 解析入口以避开系统 fake-ip，默认测试指定公共 DNS 的 UDP 回包及 Cloudflare 的 IPv4/IPv6 HTTPS 响应，REJECT 负向控制和末尾拒绝规则避免直连回退。含节点名称的本地报告只写入受管理的 `.generated/runs/`，不要公开私人报告。此诊断使用本地缓存并注明时间，不刷新订阅，不代表全部节点、手机、QUIC 应用或业务服务通过。
 - 上述诊断设置 `SUBSCRIPTION_PROBE_EXTENSIONS=1` 时改为每种协议/传输抽样一个节点，在隔离副本分别尝试 TFO、sing-mux 和 SS 的 UOT v1/v2；可用 `SUBSCRIPTION_PROBE_PREVIOUS` 引用上一份受管理报告以保留依赖。功能测试不会写回客户端：TFO 打开后能接通也可能是普通 TCP 回退，不是协商成功或加速的证明；MPTCP 不在此 Windows 诊断中验证。服务端不兼容的 UOT/复用不得仅凭内核接受配置就启用。

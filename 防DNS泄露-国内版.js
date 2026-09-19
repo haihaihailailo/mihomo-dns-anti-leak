@@ -3152,6 +3152,12 @@ function consolidateGroups(config, domestic) {
 // 配置说明：添加 Mihomo 专属 AI 分组和 DNS 调优；不修改订阅节点。
 function tuneMihomo(config) {
   const groups = config["proxy-groups"];
+  // Sub-Store 加来源前缀后，英文套餐提示仍须排除；保留所有真实来源节点。
+  for (const group of groups) {
+    if (typeof group.filter === "string") group.filter = group.filter.replace(
+      "^(?![ ]*(?:Traffic|Expire|Expiry|Expiration)",
+      "^(?![ ]*(?:【[^】]+】[ ]*)*(?:Traffic|Expire|Expiry|Expiration)");
+  }
   const ai = groups.find(group => group.name === "AI");
   if (!ai || ai.type !== "select") throw new Error("缺少 AI 手选入口");
   const regions = ["美国", "日本", "新加坡"];

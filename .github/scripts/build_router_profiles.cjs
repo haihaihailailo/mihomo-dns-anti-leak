@@ -19,7 +19,20 @@ function routerConfig(source) {
   const config = JSON.parse(JSON.stringify(source));
   for (const key of CLIENT_KEYS) delete config[key];
   config['find-process-mode'] = 'off';
+  // GEO 数据更新由 OpenClash 管理，避免插件与内核重复调度。
+  config['geo-auto-update'] = false;
   config.rules = config.rules.filter(rule => !isProcessRule(rule));
+  // CN Lite MMDB 不含越南；使用独立的小型 IP 规则集，不要求替换设备数据库。
+  if (config.rules.some(rule => /^(GEOIP,VN,|RULE-SET,geoip-vn,)/.test(rule))) {
+    config['rule-providers'] ||= {};
+    config['rule-providers']['geoip-vn'] = {
+      type: 'http', behavior: 'ipcidr', format: 'mrs', interval: 86400,
+      'size-limit': 4194304, proxy: '节点选择',
+      url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/vn.mrs',
+      path: './ruleset/metacubex/geoip-vn.mrs',
+    };
+    config.rules = config.rules.map(rule => rule.replace(/^GEOIP,VN,/, 'RULE-SET,geoip-vn,'));
+  }
   // 本地 OpenClash 负责 DNS 监听和 IPv6 接管，不能沿用桌面双栈地址池。
   for (const key of ['listen', 'ipv6', 'fake-ip-range6']) delete config.dns[key];
   return config;
