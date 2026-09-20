@@ -21,8 +21,9 @@
 | 已知国内域名 DNS | 国内 DoH | 国内 DoH 跟随国内服务；切回国时也经所选出口查询 |
 | 默认 DNS 兜底 | 保留国内 GeoIP 判断与经节点选择的外部 DNS | 不使用 CN GeoIP 兜底；默认 DNS 跟随节点选择（首选 DIRECT） |
 | TUN / 顶层 IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
-| DNS 双栈 fake-ip | 内置 `dns.ipv6: true` 与 IPv6 fake-ip 地址池 | 同左 |
+| DNS 双栈 fake-ip | 静态 YAML 默认 `dns.ipv6: true`；JS 覆写在客户端提供显式 IPv6 状态时跟随客户端，IPv6 fake-ip 地址池仍由仓库固定 | 同左 |
 
+- **为什么 JS 不再强制 `dns.ipv6: true`：** ClashMi 会把 UI 的 IPv6 开关同步到顶层 `ipv6` / `dns.ipv6`，但旧 JS 覆写随后再次写入共享默认值，导致 UI 关闭后运行时 DNS IPv6 仍保持开启。现在 JS 优先跟随客户端顶层 `ipv6`，顶层缺省时再采用显式 `dns.ipv6`；两者都未提供才使用仓库默认 `true`。固定的 `fake-ip-range6` 继续保留，避免订阅旧地址池污染；当 `dns.ipv6=false` 时它不参与 AAAA fake-ip。静态 YAML 无法读取客户端 UI 的运行时状态，因此仍保持双栈默认，使用 YAML 时应以客户端最终合并后的运行配置为准。
 - GitHub、YouTube、Netflix、Google、Meta / X、TikTok、Spotify 和漏网流量归入 `节点选择`。Telegram 使用独立的 `电报消息` 组，国内/国外入口均默认 `新加坡-自动`，可单独切换香港或其他地区；Mihomo 的 Telegram 专用 DNS 同步跟随该组。地区接近不保证头像、视频或通话质量，仍须实测。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
 - Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
 - 已知微软域名 DNS 在 Mihomo 国外版使用全球 DoH、跟随 `微软/苹果服务`；原 Google、YouTube、GitHub DNS 策略引用同步改为 `节点选择`。国内域名查询继续交给国内 DNS，这是显式分流，不代表所有 DNS 都经海外节点。
