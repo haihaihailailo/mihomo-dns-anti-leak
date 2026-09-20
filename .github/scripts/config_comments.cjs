@@ -35,7 +35,6 @@ const FIELDS = {
   ipv6: '当前作用域的 IPv6 开关；DNS 与系统接管开关不能混为一谈。',
   'prefer-h3': '是否优先使用 HTTP/3 连接 DoH 服务器。',
   'respect-rules': 'DNS 上游连接遵循路由规则；节点域名须有独立解析器以避免递归。',
-  'follow-rule': 'Stash 原生 DNS 跟随规则选路，不使用 Mihomo 的 #策略组语法。',
   'use-system-hosts': '是否使用系统 hosts 中的映射。',
   'cache-algorithm': 'DNS 缓存淘汰算法。',
   'enhanced-mode': '增强解析模式；fake-ip 返回虚拟地址，再由内核关联真实域名。',
@@ -79,15 +78,6 @@ const FIELDS = {
   path: '规则缓存相对路径；不同格式和来源应避免共用缓存。',
   rules: '自上而下匹配，首次有效命中决定策略；具体例外应放在通用兜底之前。',
   '<<': '合并 YAML 锚点模板，当前对象显式字段覆盖模板中的同名字段。',
-  'bypass-system': '采用 Shadowrocket 的系统旁路行为；不等同于业务规则全部直连。',
-  'skip-proxy': '这些地址或主机不经过系统代理，TUN 接管另行判断。',
-  'bypass-tun': '这些目标网段绕过 Shadowrocket TUN。',
-  'dns-server': 'Shadowrocket 主解析器列表。',
-  'fallback-dns-server': 'Shadowrocket 备用解析器；#proxy 表示经代理建立解析连接。',
-  'proxy-dns-server': 'Shadowrocket 专门解析代理节点域名的解析器。',
-  'prefer-ipv6': '双栈解析结果中是否优先尝试 IPv6 地址。',
-  'dns-fallback-system': '是否允许回退系统 DNS；false 禁止此项回退。',
-  'update-url': '配置更新地址；留空表示本文件不指定自动更新源。',
 };
 
 function dnsComment(key) {
@@ -160,26 +150,6 @@ function annotateYaml(text) {
   return text;
 }
 
-function groupComment(name, body) {
-  const type = body.split(',')[0].trim();
-  return '策略组「' + name + '」：' + (type === 'url-test' ? '按测速选择候选，interval 为秒、tolerance 为毫秒。'
-    : '手动选择候选，policy-select-name 指定初始首选；保存选择可能优先。')
-    + 'policy-regex-filter 按节点名称筛选；timeout 为秒，测速不证明解锁。';
-}
-function annotateShadow(text) {
-  let section = '';
-  return text.replace(/\r\n/g, '\n').split('\n').map((line, index, lines) => {
-    if (/^\[.*\]$/.test(line)) section = line;
-    if (!line.trim() || line.trim().startsWith('#') || line.startsWith('[')) return line;
-    if (lines[index - 1]?.startsWith('# ' + MARK)) return line;
-    const [key, ...rest] = line.split('=');
-    const note = section === '[Rule]' ? ruleComment(line.trim())
-      : section === '[Proxy Group]' ? groupComment(key.trim(), rest.join('=').trim())
-      : fieldComment(key.trim());
-    return note ? '# ' + MARK + note + '\n' + line : line;
-  }).join('\n');
-}
-
 // 规则文本改为带行间 JS 注释的字符串数组；join 后的 RULES_TEXT 字节保持不变。
 function annotateJs(text) {
   text = text.replace(/\r\n/g, '\n').replace(/const RULES_TEXT = `([\s\S]*?)`;/, (_, body) =>
@@ -211,4 +181,4 @@ function annotateJs(text) {
   }).join('\n');
 }
 
-module.exports = { MARK, FIELDS, fieldComment, ruleComment, annotateYaml, annotateShadow, annotateJs };
+module.exports = { MARK, FIELDS, fieldComment, ruleComment, annotateYaml, annotateJs };

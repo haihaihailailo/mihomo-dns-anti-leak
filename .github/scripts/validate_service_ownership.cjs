@@ -1,7 +1,6 @@
 // 唯一离线入口调用；代表性规则集是合成重叠样本，不冒充实时上游或客户端实测。
 const assert = require("node:assert/strict");
 const { read, parse, evaluate } = require("./build_profiles.cjs");
-const { parseShadow } = require("./build_native_profiles.cjs");
 const { SHARED_AI_HOSTS } = require("./validate_rule_sources.cjs");
 const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const BILI = "哔哩哔哩港澳台";
@@ -159,10 +158,7 @@ function checkAppDnsBoundary(config) {
   }
 }
 function checkInThBoundary(config, client, domestic) {
-  const sources = client === "shadowrocket" ? [
-    "DOMAIN-SET,https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games-cn.list",
-    "DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/China/China_Domain.list",
-  ] : ["RULE-SET,category-games-cn", "RULE-SET,cn"];
+  const sources = ["RULE-SET,category-games-cn", "RULE-SET,cn"];
   const guards = sources.map((source, i) => "AND,((NOT,((DOMAIN-SUFFIX,in.th))),(" + source + ")),"
     + (i === 0 ? "游戏平台" : domestic ? "DIRECT" : "国内服务"));
   assert.deepEqual(config.rules.filter(rule => rule.includes("in.th")), guards, "仅隔离两个过宽集合，不能增加全后缀强制出口");
@@ -191,10 +187,6 @@ function checkInThBoundary(config, client, domestic) {
     const keys = Object.keys(config.dns["nameserver-policy"]);
     assert(keys.indexOf(".steampowered.com") >= 0 && keys.indexOf(".steampowered.com") < keys.indexOf("in.th"), "具体游戏 DNS 须先于公共后缀隔离");
     assert(keys.indexOf(".in.th") < keys.indexOf("rule-set:category-games-cn"));
-  } else if (client === "stash") {
-    // Stash 文档优先级是 exact > wildcard > geosite，不能套用 Mihomo 的有序模型。
-    assert.deepEqual(config.dns["nameserver-policy"]["+.in.th"], ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"]);
-    assert.equal(config.dns["follow-rule"], true);
   }
 }
 function run() {
@@ -215,21 +207,8 @@ function run() {
       checkInThBoundary(variant, "mihomo", domestic);
     }
     negativeControls(config, domestic);
-    const stash = parse(read("stash-" + environment + "版.stoverride"));
-    checkRoutes(stash, "stash", domestic);
-    checkInThBoundary(stash, "stash", domestic);
-    const keys = Object.keys(stash.dns["nameserver-policy"]);
-    for (const name of ["bilibili", "biliintl", "steam@cn", "category-games-cn", "steam", "category-games-!cn", "apple"]) {
-      assert(keys.indexOf("geosite:" + name) >= 0 && keys.indexOf("geosite:" + name) < keys.indexOf("geosite:cn"));
-    }
-    const shadow = parseShadow(read("shadowrocket-" + environment + "版.conf"));
-    checkRoutes(shadow, "shadowrocket", domestic);
-    checkInThBoundary(shadow, "shadowrocket", domestic);
-    const badCopilot = structuredClone(shadow);
-    badCopilot.rules = badCopilot.rules.filter(rule => !rule.includes("/github-copilot.list,AI"));
-    assert.throws(() => checkRoutes(badCopilot, "shadowrocket", domestic));
   }
-  console.log("六套入口业务归属：B站/游戏/微软苹果/AI/Telegram、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及负向控制 OK");
-  console.log("in.th 临时隔离：六套入口、两个集合、DNS、整应用与具体游戏优先、误分类复现负例 OK（非原生客户端实测）");
+  console.log("Mihomo 两地 YAML/JS 入口业务归属：B站/游戏/微软苹果/AI/Telegram、共享服务边界、Copilot网页/包名/DNS、越南地域DNS后置、App与DNS交叉边界、例外及负向控制 OK");
+  console.log("in.th 临时隔离：Mihomo 两地 YAML/JS 入口、两个集合、DNS、整应用与具体游戏优先、误分类复现负例 OK（非原生客户端实测）");
 }
 module.exports = { run, MEMBERS };

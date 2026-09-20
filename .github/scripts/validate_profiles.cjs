@@ -313,32 +313,17 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
   console.log(`${stem}: 全配置同步、差异范围、DNS/分流、回国隔离、空组保护、客户端保留 OK`);
 }
 
-// 原生客户端另做解析与域名规则回归，不能把 Mihomo 能加载当作它们的实机通过。
+// 保留内部共同源码的引用、驱动规则与客户端字段回归。
 const main = parse(read(".github/config/shared.yaml"));
-const stash = parse(read(".github/config/shared.stoverride"));
 checkReferences(main);
 checkDriverRouting(main);
 checkDeviceBoundary(read(".github/config/shared.js"), main);
 checkSharedFakeIp(read(".github/config/shared.js"), main, "shared.js");
 checkTunSelectors(read(".github/config/shared.js"), main, "shared.js");
-checkReferences(stash, { sparkle: false });
-const shadowRules = read(".github/config/shared.conf").split("[Rule]")[1].split("\n")
-  .map(line => line.trim()).filter(line => line && !line.startsWith("#"));
-for (const rule of driverRules) {
-  assert.equal(stash.rules.filter(item => item === rule).length, 1);
-  const [type, domain] = rule.split(",");
-  assert.equal(stash.dns["nameserver-policy"][type === "DOMAIN-SUFFIX" ? `+.${domain}` : domain], "https://223.5.5.5/dns-query");
-  assert.equal(read(".github/config/shared.conf").split("\n").filter(line => line.trim() === rule).length, 1);
-  for (const rules of [stash.rules, shadowRules]) {
-    const ads = rules.findIndex(item => item.startsWith("RULE-SET,") && item.endsWith(",广告过滤"));
-    assert(ads >= 0 && rules.indexOf(rule) > ads && rules.indexOf(rule) < rules.indexOf("GEOIP,VN,越南服务,no-resolve"), "原生客户端驱动规则不得被国家 IP 规则抢先匹配");
-  }
-}
 for (const file of [".github/config/shared.js", "防DNS泄露-国内版.js", "防DNS泄露-国外版.js"]) {
   new (require("node:vm").Script)(read(file), { filename: file });
 }
-console.log("内部共同源码 / Stash 引用、驱动精确直连、三个 JS 语法、旧入口移除 OK");
-require("./validate_native_profiles.cjs");
+console.log("内部共同源码引用、驱动精确直连、三个 JS 语法、旧入口移除 OK");
 require("./validate_rule_sources.cjs").run();
 require("./validate_priority.cjs").run();
 require("./validate_ssh_direct.cjs").run();

@@ -3,19 +3,20 @@
 const assert = require('node:assert/strict');
 const { execFileSync } = require('node:child_process');
 const { ROOT, read, parse, evaluate, renderProfiles } = require('./build_profiles.cjs');
-const { renderNativeProfiles, parseShadow } = require('./build_native_profiles.cjs');
 const { renderRouterProfiles, renderRouterOverrides } = require('./build_router_profiles.cjs');
-const { annotateYaml, annotateJs, annotateShadow, MARK } = require('./config_comments.cjs');
+const { annotateYaml, annotateJs, MARK } = require('./config_comments.cjs');
 const profiles = renderProfiles();
 const outputs = [...profiles.flatMap(p => [{ file: p.stem + '.yaml', content: p.yaml }, { file: p.stem + '.js', content: p.js }]),
-  ...renderNativeProfiles(), ...renderRouterProfiles(profiles), ...renderRouterOverrides(profiles)];
-assert.equal(outputs.length, 12);
+  ...renderRouterProfiles(profiles), ...renderRouterOverrides(profiles)];
+assert.equal(outputs.length, 8);
+for (const retired of ["stash-国内版.stoverride", "stash-国外版.stoverride", "shadowrocket-国内版.conf", "shadowrocket-国外版.conf", ".github/config/shared.stoverride", ".github/config/shared.conf", ".github/scripts/build_native_profiles.cjs", ".github/scripts/validate_native_profiles.cjs"]) {
+  assert(!require('node:fs').existsSync(require('node:path').join(ROOT, retired)), retired + ' 已退役，不得重新生成');
+}
 for (const { file, content } of outputs) assert.equal(read(file), content, file + ' 注释生成结果过期');
-const files = [...['yaml', 'js', 'stoverride', 'conf'].map(ext => '.github/config/shared.' + ext), ...outputs.map(x => x.file)];
+const files = [...['yaml', 'js'].map(ext => '.github/config/shared.' + ext), ...outputs.map(x => x.file)];
 const activeLines = text => text.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
-const parser = file => file.endsWith('.js') ? evaluate : file.endsWith('.conf')
-  ? file.includes('路由器') ? activeLines : parseShadow : parse;
-const annotate = file => file.endsWith('.js') ? annotateJs : file.endsWith('.conf') ? annotateShadow : annotateYaml;
+const parser = file => file.endsWith('.js') ? evaluate : file.endsWith('.conf') ? activeLines : parse;
+const annotate = file => file.endsWith('.js') ? annotateJs : annotateYaml;
 for (const file of files) {
   const text = read(file);
   assert(text.includes(MARK), file + ' 缺少中文注释');
@@ -50,18 +51,18 @@ if (process.env.CONFIG_COMMENTS_BASELINE) {
     const before = git(['show', ref + ':' + file]);
     const after = read(file);
     assert.deepEqual(parser(file)(after), parser(file)(before), file + ' 注释改变了有效配置');
-    if (file.endsWith('.yaml') || file.endsWith('.stoverride')) {
+    if (file.endsWith('.yaml')) {
       // 比较序列化结果也验证所有对象的键顺序，尤其 nameserver-policy。
       assert.equal(JSON.stringify(parse(after)), JSON.stringify(parse(before)), file + ' 配置键顺序改变');
       const markers = text => text.split('\n').filter(line => line.includes('#!replace'));
-      assert.deepEqual(markers(after), markers(before), file + ' Stash 覆写标记改变');
+      assert.deepEqual(markers(after), markers(before), file + ' YAML 特殊标记改变');
     }
     if (file.endsWith('.js')) for (const input of [{}, { tun: { enable: false, mtu: 1400 }, mode: 'rule', ipv6: false }]) {
       assert.equal(JSON.stringify(evaluate(after, input)), JSON.stringify(evaluate(before, input)), file + ' JS 合成输入结果改变');
     }
   }
-  console.log('注释基线 ' + ref + '：16 个配置的有效内容、键/规则顺序及 JS 执行结果完全一致');
+  console.log('注释基线 ' + ref + '：10 个配置的有效内容、键/规则顺序及 JS 执行结果完全一致');
   // 复用已有的只读配置回归；不调用产生文件的生命周期或隔离内核测试。
   require('./validate_profiles.cjs');
 }
-console.log('16 个配置的中文注释覆盖、生成一致性、幂等与字面量/覆写标记保护 OK（只读，无客户端操作）');
+console.log('10 个配置的中文注释覆盖、生成一致性、幂等与字面量/覆写标记保护 OK（只读，无客户端操作）');

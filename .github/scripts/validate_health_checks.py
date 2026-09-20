@@ -215,23 +215,9 @@ REGION_FILTERS = {
     "越南": "(?i)(越南|Vietnam|Ho ?Chi ?Minh|胡志明|河内|Hanoi|🇻🇳|(^|[^A-Z])VN([^A-Z]|$)|(^|[^A-Z])HCM([^A-Z]|$)|(^|[^A-Z])HCMC([^A-Z]|$)|(^|[^A-Z])SGN([^A-Z]|$)|(^|[^A-Z])HAN([^A-Z]|$))",
     "中国": GOOD_CHINA_FILTER,
 }
-PORTABLE_REGION_FILTERS = {
-    region: (
-        pattern
-        if region == "中国"
-        else "(?i)^(?!.*(回国|港广|港沪|港深|沪港|深港|广中)).*"
-        + pattern.removeprefix("(?i)")
-    )
-    for region, pattern in REGION_FILTERS.items()
-}
 REGION_GROUP_FILTERS = {
     group_name: pattern
     for region, pattern in REGION_FILTERS.items()
-    for group_name in (f"{region}节点", f"{region}-自动")
-}
-PORTABLE_REGION_GROUP_FILTERS = {
-    group_name: PORTABLE_REGION_FILTERS[region]
-    for region in REGION_FILTERS
     for group_name in (f"{region}节点", f"{region}-自动")
 }
 EXPECTED_INCLUDE_ALL_GROUPS = {"全部节点", "自动选择", *REGION_GROUP_FILTERS}
@@ -324,16 +310,6 @@ DOMESTIC_RULE_PROVIDERS = {
     "alipay": "rule/Clash/AliPay/AliPay.yaml",
 }
 RULE_PROVIDER_SIZE_LIMIT = 4194304
-SHADOWROCKET_REQUIRED_RULES = (
-    "rule/Shadowrocket/Twitter/Twitter.list,Meta / X",
-    "rule/Shadowrocket/Facebook/Facebook.list,Meta / X",
-    "geo/geosite/steam@cn.list,游戏平台",
-    "geo/geosite/category-games-cn.list)),游戏平台",
-    "geo/geosite/steam.list,游戏平台",
-    "geo/geosite/category-games-!cn.list,游戏平台",
-    "rule/Shadowrocket/WeChat/WeChat.list,国内服务",
-    "rule/Shadowrocket/AliPay/AliPay.list,国内服务",
-)
 GAME_PROVIDER_ROUTES = {
     "steam-cn": ("steam@cn.mrs", "游戏平台"),
     "category-games-cn": ("category-games-cn.mrs", "游戏平台"),
@@ -402,47 +378,13 @@ def first_inline_item(raw: str) -> str:
     return items[0] if items else ""
 
 
-def shadowrocket_group(text: str, name: str) -> str:
-    match = re.search(rf"(?m)^{re.escape(name)}\s*=\s*(.+?)\s*$", text)
-    if not match:
-        fail(f".github/config/shared.conf: policy group {name!r} was not found")
-    return match.group(1)
-
-
-def shadowrocket_regex(group: str) -> str:
-    match = re.search(
-        r"policy-regex-filter\s*=\s*(.+?)(?=,\s*(?:url|interval|tolerance)\s*=|$)",
-        group,
-    )
-    if not match:
-        fail(".github/config/shared.conf: policy-regex-filter was not found")
-    return match.group(1).strip()
-
-
-def shadowrocket_setting(text: str, key: str) -> list[str]:
-    match = re.search(rf"(?m)^{re.escape(key)}\s*=\s*(.+?)\s*$", text)
-    if not match:
-        fail(f".github/config/shared.conf: setting {key!r} was not found")
-    return [item.strip() for item in match.group(1).split(",") if item.strip()]
-
-
-def shadowrocket_select_members(group: str) -> list[str]:
-    parts = [part.strip() for part in group.split(",")]
-    if not parts or parts[0] != "select":
-        fail(".github/config/shared.conf: expected a select policy group")
-    return [part for part in parts[1:] if part and "=" not in part]
-
-
-def check_group_file(filename: str, *, stash: bool) -> None:
+def check_group_file(filename: str) -> None:
     text = Path(filename).read_text(encoding="utf-8")
     telegram_checked = False
     regional_groups_checked: set[str] = set()
     health_groups_checked: set[str] = set()
     include_all_groups_checked: set[str] = set()
-    select_count = 0
-    expected_region_filters = (
-        PORTABLE_REGION_GROUP_FILTERS if stash else REGION_GROUP_FILTERS
-    )
+    expected_region_filters = REGION_GROUP_FILTERS
 
     for block in group_blocks(text):
         group_type = value(block, "type")
@@ -456,19 +398,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
         }
 
         if group_type == "select":
-            select_count += 1
-            if stash:
-                if value(block, "interval") != "-1":
-                    fail(
-                        f"{filename}: Stash select group {name!r} must set interval: -1"
-                    )
-                unexpected = direct_keys - {"interval"}
-                if unexpected:
-                    fail(
-                        f"{filename}: select group {name!r} contains "
-                        f"unexpected health-check keys {sorted(unexpected)}"
-                    )
-            elif name in SELECT_HEALTH_CHECKS:
+            if name in SELECT_HEALTH_CHECKS:
                 health_groups_checked.add(name)
                 expected_url, expected_status = SELECT_HEALTH_CHECKS[name]
                 expected_keys = {"url", "expected-status", "timeout"}
@@ -507,7 +437,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
                     f"{filename}: url-test group {name!r} does not use "
                     f"{expected_url}"
                 )
-            if not stash and value(block, "expected-status") != expected_status:
+            if value(block, "expected-status") != expected_status:
                 fail(
                     f"{filename}: url-test group {name!r} expected-status "
                     f"must be {expected_status}"
@@ -523,7 +453,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
                     f"{expected_lazy}"
                 )
 
-        if not stash and value(block, "include-all") == "true":
+        if value(block, "include-all") == "true":
             include_all_groups_checked.add(name)
             if value(block, "empty-fallback") != "REJECT":
                 fail(f"{filename}: {name} must fail closed with empty-fallback: REJECT")
@@ -561,8 +491,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             if value(block, "filter") != expected_region_filters[name]:
                 fail(f"{filename}: {name} filter is not synchronized")
             if (
-                not stash
-                and not name.startswith("中国")
+                not name.startswith("中国")
                 and value(block, "exclude-filter") != RETURN_TO_CHINA_EXCLUDE_FILTER
             ):
                 fail(f"{filename}: {name} does not exclude return-to-China nodes")
@@ -572,9 +501,7 @@ def check_group_file(filename: str, *, stash: bool) -> None:
     if regional_groups_checked != set(REGION_GROUP_FILTERS):
         missing = sorted(set(REGION_GROUP_FILTERS) - regional_groups_checked)
         fail(f"{filename}: regional policy groups are incomplete: {missing}")
-    expected_health_groups = (
-        set(AUTOMATIC_HEALTH_CHECKS) if stash else set(GROUP_HEALTH_CHECKS)
-    )
+    expected_health_groups = set(GROUP_HEALTH_CHECKS)
     if health_groups_checked != expected_health_groups:
         missing = sorted(expected_health_groups - health_groups_checked)
         extra = sorted(health_groups_checked - expected_health_groups)
@@ -582,23 +509,20 @@ def check_group_file(filename: str, *, stash: bool) -> None:
             f"{filename}: health-check groups differ; "
             f"missing={missing}, extra={extra}"
         )
-    if stash and select_count < 20:
-        fail(f"{filename}: unexpectedly found only {select_count} select groups")
-    if not stash:
-        direct_include_all_groups = EXPECTED_INCLUDE_ALL_GROUPS - {
-            "香港-自动",
-            "台湾-自动",
-            "日本-自动",
-            "新加坡-自动",
-            "美国-自动",
-            "韩国-自动",
-            "越南-自动",
-        }
-        if include_all_groups_checked != direct_include_all_groups:
-            fail(
-                f"{filename}: directly declared include-all groups differ: "
-                f"{sorted(include_all_groups_checked)}"
-            )
+    direct_include_all_groups = EXPECTED_INCLUDE_ALL_GROUPS - {
+        "香港-自动",
+        "台湾-自动",
+        "日本-自动",
+        "新加坡-自动",
+        "美国-自动",
+        "韩国-自动",
+        "越南-自动",
+    }
+    if include_all_groups_checked != direct_include_all_groups:
+        fail(
+            f"{filename}: directly declared include-all groups differ: "
+            f"{sorted(include_all_groups_checked)}"
+        )
 
 
 check_probe_tools()
@@ -617,13 +541,10 @@ subprocess.run(
     env={**os.environ, "MIHOMO_LIFECYCLE_SELFTEST": "1"},
 )
 
-check_group_file(".github/config/shared.yaml", stash=False)
-check_group_file(".github/config/shared.stoverride", stash=True)
+check_group_file(".github/config/shared.yaml")
 
 yaml_text = Path(".github/config/shared.yaml").read_text(encoding="utf-8")
 js_text = Path(".github/config/shared.js").read_text(encoding="utf-8")
-stash_text = Path(".github/config/shared.stoverride").read_text(encoding="utf-8")
-shadowrocket_text = Path(".github/config/shared.conf").read_text(encoding="utf-8")
 
 if "#自动选择" in yaml_text or "#自动选择" in js_text:
     fail("DNS still depends on 自动选择")
@@ -656,17 +577,6 @@ for policy in (
     if policy not in yaml_text or policy not in js_text:
         fail(f"Mihomo domestic DNS policy is missing: {policy}")
 
-for domain in ("+.alipaylog.com", "+.aliapp.org"):
-    if domain not in stash_text:
-        fail(f".github/config/shared.stoverride: domestic DNS policy is missing: {domain}")
-
-if "  follow-rule: true" not in stash_text:
-    fail(".github/config/shared.stoverride: DNS queries do not follow routing rules")
-if "  proxy-server-nameserver: #!replace" not in stash_text:
-    fail(".github/config/shared.stoverride: proxy bootstrap DNS is missing")
-if re.search(r"(?m)^\s+-\s+(?:223\.5\.5\.5|119\.29\.29\.29)\s*$", stash_text):
-    fail(".github/config/shared.stoverride: plaintext bootstrap DNS remains")
-
 expected_size_line = f"    size-limit: {RULE_PROVIDER_SIZE_LIMIT}"
 if yaml_text.count(expected_size_line) != 5:
     fail(".github/config/shared.yaml: rule-provider size limits are incomplete")
@@ -676,8 +586,6 @@ if js_text.count(f'"size-limit": {RULE_PROVIDER_SIZE_LIMIT}') != 4:
 for filename, text in (
     (".github/config/shared.yaml", yaml_text),
     (".github/config/shared.js", js_text),
-    (".github/config/shared.stoverride", stash_text),
-    (".github/config/shared.conf", shadowrocket_text),
 ):
     for keyword in FORBIDDEN_VIETNAM_KEYWORDS:
         if f"DOMAIN-KEYWORD,{keyword},越南服务" in text:
@@ -690,7 +598,6 @@ for filename, text in (
 for filename, text in (
     (".github/config/shared.yaml", yaml_text),
     (".github/config/shared.js", js_text),
-    (".github/config/shared.stoverride", stash_text),
 ):
     for package in FORBIDDEN_BROWSER_PACKAGES:
         if f"PROCESS-NAME,{package},国内服务" in text:
@@ -702,11 +609,7 @@ for filename, text in (
         fail(f"{filename}: safe automatic filter is missing")
     if GOOD_CHINA_FILTER not in text:
         fail(f"{filename}: return-to-China filter is missing")
-    expected_region_filters = (
-        PORTABLE_REGION_GROUP_FILTERS
-        if filename == ".github/config/shared.stoverride"
-        else REGION_GROUP_FILTERS
-    )
+    expected_region_filters = REGION_GROUP_FILTERS
     for group_name, pattern in expected_region_filters.items():
         if pattern not in text:
             fail(f"{filename}: regional filter is missing for {group_name}")
@@ -739,7 +642,6 @@ for package in VIETNAM_APP_PACKAGES:
 for filename, text in (
     (".github/config/shared.yaml", yaml_text),
     (".github/config/shared.js", js_text),
-    (".github/config/shared.stoverride", stash_text),
 ):
     for provider, (source_name, policy) in GAME_PROVIDER_ROUTES.items():
         if source_name not in text:
@@ -820,8 +722,6 @@ for region, proxy_name in REGIONAL_RETURN_SAMPLES.items():
         fail(f"{region} return test fixture is not recognized by its base filter: {proxy_name}")
     if not return_exclude_pattern.search(proxy_name):
         fail(f"regional exclude filter missed return node: {proxy_name}")
-    if re.search(PORTABLE_REGION_FILTERS[region], proxy_name):
-        fail(f"portable {region} filter accepted return node: {proxy_name}")
 
 for region, proxy_names in REGION_CODE_SAMPLES.items():
     pattern = re.compile(REGION_FILTERS[region])
@@ -835,147 +735,6 @@ for proxy_name in NON_REGION_SAMPLES:
     for region, filter_text in REGION_FILTERS.items():
         if re.search(filter_text, proxy_name):
             fail(f"{region} filter accepted embedded-code node: {proxy_name}")
-
-for group_name, (expected_url, _) in GROUP_HEALTH_CHECKS.items():
-    group = shadowrocket_group(shadowrocket_text, group_name)
-    match = re.search(r"(?:^|,)\s*url\s*=\s*([^,\s]+)", group)
-    if not match or match.group(1) != expected_url:
-        fail(
-            f".github/config/shared.conf: group {group_name!r} does not use "
-            f"{expected_url}"
-        )
-    if group_name in SELECT_HEALTH_CHECKS:
-        timeout_match = re.search(r"(?:^|,)\s*timeout\s*=\s*(\d+)", group)
-        if not timeout_match or timeout_match.group(1) != "10":
-            fail(
-                f".github/config/shared.conf: select group {group_name!r} "
-                "timeout must be 10 seconds"
-            )
-
-for group_name, expected_filter in PORTABLE_REGION_GROUP_FILTERS.items():
-    if shadowrocket_regex(shadowrocket_group(shadowrocket_text, group_name)) != expected_filter:
-        fail(f".github/config/shared.conf: {group_name} filter is not synchronized")
-
-shadow_china_pattern = re.compile(
-    shadowrocket_regex(shadowrocket_group(shadowrocket_text, "中国节点"))
-)
-shadow_auto_pattern = re.compile(
-    shadowrocket_regex(shadowrocket_group(shadowrocket_text, "自动选择"))
-)
-for proxy_name in RETURN_TO_CHINA_SAMPLES:
-    if not shadow_china_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: China filter rejected return node: {proxy_name}")
-    if shadow_auto_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: automatic selection accepted return node: {proxy_name}")
-for proxy_name in FOREIGN_SAMPLES:
-    if shadow_china_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: China filter accepted foreign node: {proxy_name}")
-    if not shadow_auto_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: automatic selection rejected foreign node: {proxy_name}")
-for proxy_name, expected_region in FOREIGN_CONTEXT_SAMPLES:
-    if shadow_china_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: China filter accepted foreign-context node: {proxy_name}")
-    if not shadow_auto_pattern.search(proxy_name):
-        fail(
-            ".github/config/shared.conf: automatic selection rejected foreign-context "
-            f"node: {proxy_name}"
-        )
-    if expected_region:
-        region_pattern = re.compile(
-            shadowrocket_regex(
-                shadowrocket_group(shadowrocket_text, f"{expected_region}节点")
-            )
-        )
-        if not region_pattern.search(proxy_name):
-            fail(
-                f".github/config/shared.conf: {expected_region} filter rejected "
-                f"foreign-context node: {proxy_name}"
-            )
-for proxy_name in NON_REGION_SAMPLES:
-    if not shadow_auto_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: automatic selection rejected non-regional node: {proxy_name}")
-
-for region, proxy_name in REGIONAL_RETURN_SAMPLES.items():
-    shadow_region_pattern = re.compile(
-        shadowrocket_regex(shadowrocket_group(shadowrocket_text, f"{region}节点"))
-    )
-    if shadow_region_pattern.search(proxy_name):
-        fail(f".github/config/shared.conf: {region} filter accepted return node: {proxy_name}")
-
-for key in ("dns-server", "fallback-dns-server", "proxy-dns-server"):
-    for server in shadowrocket_setting(shadowrocket_text, key):
-        if not server.startswith(("https://", "tls://", "quic://", "h3://")):
-            fail(f".github/config/shared.conf: {key} contains plaintext DNS: {server}")
-for server in shadowrocket_setting(shadowrocket_text, "fallback-dns-server"):
-    if "#proxy" not in server.lower():
-        fail(f".github/config/shared.conf: fallback DNS is not proxied: {server}")
-
-shadow_rules = shadowrocket_text.split("[Rule]", 1)[-1]
-advertising_rule = (
-    "Filters/AWAvenue-Ads-Rule-Surge-RULE-SET-Only.Ads.list,广告过滤"
-)
-advertising_position = shadow_rules.find(advertising_rule)
-first_service_position = shadow_rules.find("DOMAIN-SUFFIX,chatgpt.com,AI")
-if advertising_position < 0 or first_service_position < 0:
-    fail(".github/config/shared.conf: advertising or service routing rule is missing")
-if advertising_position > first_service_position:
-    fail(".github/config/shared.conf: advertising rule must precede service rules")
-
-for required_rule in SHADOWROCKET_REQUIRED_RULES:
-    if required_rule not in shadow_rules:
-        fail(f".github/config/shared.conf: synchronized service rule is missing: {required_rule}")
-
-shadow_domestic_game_position = shadow_rules.find(
-    "geo/geosite/category-games-cn.list)),游戏平台"
-)
-shadow_overseas_game_position = shadow_rules.find(
-    "DOMAIN-SUFFIX,steampowered.com,游戏平台"
-)
-if not 0 <= shadow_domestic_game_position < shadow_overseas_game_position:
-    fail(".github/config/shared.conf: domestic game rules must precede overseas game rules")
-for obsolete_rule in (
-    "rule/Shadowrocket/Steam/Steam.list,游戏平台",
-    "rule/Shadowrocket/Game/Game.list,游戏平台",
-):
-    if obsolete_rule in shadow_rules:
-        fail(f".github/config/shared.conf: obsolete combined game rule remains: {obsolete_rule}")
-
-wechat_position = shadow_rules.find("rule/Shadowrocket/WeChat/WeChat.list,国内服务")
-alipay_position = shadow_rules.find("rule/Shadowrocket/AliPay/AliPay.list,国内服务")
-china_position = shadow_rules.find("rule/Shadowrocket/China/China_Domain.list)),国内服务")
-if not (0 <= wechat_position < china_position and 0 <= alipay_position < china_position):
-    fail(".github/config/shared.conf: WeChat and AliPay rules must precede the general China list")
-
-yaml_select_members = {}
-for block in group_blocks(yaml_text):
-    members = inline_items(value(block, "proxies"))
-    if members:
-        yaml_select_members[value(block, "name")] = members
-for group_name, expected_members in yaml_select_members.items():
-    actual_members = shadowrocket_select_members(
-        shadowrocket_group(shadowrocket_text, group_name)
-    )
-    if actual_members != expected_members:
-        fail(
-            f".github/config/shared.conf: {group_name} members differ from the main config: "
-            f"{actual_members!r}"
-        )
-
-if "policy-select-name=自动选择" not in shadowrocket_group(
-    shadowrocket_text, "节点选择"
-):
-    fail(".github/config/shared.conf: 节点选择 must default to 自动选择")
-if "policy-select-name=香港-自动" not in shadowrocket_group(
-    shadowrocket_text, "GitHub"
-):
-    fail(".github/config/shared.conf: GitHub must default to 香港-自动")
-
-for group_name in ("国内服务", "越南服务"):
-    if not re.match(
-        r"select\s*,\s*DIRECT(?:\s*,|$)",
-        shadowrocket_group(shadowrocket_text, group_name),
-    ):
-        fail(f".github/config/shared.conf: {group_name} must default to DIRECT")
 
 if '{ name: "电报消息", type: "select", proxies: ["新加坡-自动",' not in js_text:
     fail(".github/config/shared.js: Telegram does not default to 新加坡-自动")

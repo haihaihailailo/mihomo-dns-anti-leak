@@ -38,12 +38,6 @@ on:
       - ".github/scripts/check_health_endpoints.cjs"
       - ".github/workflows/check-health-endpoints.yml"
       - ".github/scripts/validate_mihomo_runtime.cjs"
-      - ".github/config/shared.stoverride"
-      - ".github/config/shared.conf"
-      - "stash-*版.stoverride"
-      - "shadowrocket-*版.conf"
-      - ".github/scripts/build_native_profiles.cjs"
-      - ".github/scripts/validate_native_profiles.cjs"
       - ".github/scripts/consolidate_groups.cjs"
       - ".github/scripts/validate_consolidation.cjs"
       - ".github/scripts/tune_mihomo.cjs"
@@ -87,12 +81,6 @@ on:
       - ".github/scripts/check_health_endpoints.cjs"
       - ".github/workflows/check-health-endpoints.yml"
       - ".github/scripts/validate_mihomo_runtime.cjs"
-      - ".github/config/shared.stoverride"
-      - ".github/config/shared.conf"
-      - "stash-*版.stoverride"
-      - "shadowrocket-*版.conf"
-      - ".github/scripts/build_native_profiles.cjs"
-      - ".github/scripts/validate_native_profiles.cjs"
       - ".github/scripts/consolidate_groups.cjs"
       - ".github/scripts/validate_consolidation.cjs"
       - ".github/scripts/tune_mihomo.cjs"
@@ -129,7 +117,7 @@ jobs:
 
       - name: Parse YAML with aliases enabled
         run: |
-          ruby -e 'require "yaml"; [".github/config/shared.yaml", "防DNS泄露-国内版.yaml", "防DNS泄露-国外版.yaml", ".github/config/shared.stoverride", "stash-国内版.stoverride", "stash-国外版.stoverride"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
+          ruby -e 'require "yaml"; [".github/config/shared.yaml", "防DNS泄露-国内版.yaml", "防DNS泄露-国外版.yaml"].each { |file| YAML.safe_load_file(file, aliases: true); puts "#{file} YAML OK" }'
 
       - name: Check JavaScript syntax
         run: |
@@ -212,7 +200,7 @@ jobs:
           ruby <<'RUBY'
           require "yaml"
 
-          files = [".github/config/shared.yaml", ".github/config/shared.stoverride"]
+          files = [".github/config/shared.yaml"]
           built_in = %w[DIRECT REJECT REJECT-DROP REJECT-TINYGIF PASS COMPATIBLE]
           all_errors = []
 
@@ -283,7 +271,6 @@ jobs:
           require "yaml"
 
           main = YAML.safe_load_file(".github/config/shared.yaml", aliases: true)
-          stash = YAML.safe_load_file(".github/config/shared.stoverride", aliases: true)
           errors = []
 
           encrypted_ip_resolver = lambda do |value|
@@ -346,21 +333,11 @@ jobs:
             errors << "rule-provider #{name} must use a 4 MiB size limit" unless provider["size-limit"] == 4_194_304
           end
 
-          stash_dns = Hash(stash["dns"] || {})
-          errors << "Stash top-level IPv6 must follow client settings" if stash.key?("ipv6")
-          errors << "Stash dns.ipv6 must follow client settings" if stash_dns.key?("ipv6")
-          errors << "Stash DNS must follow routing rules" unless stash_dns["follow-rule"] == true
-          errors << "Stash default-nameserver must use encrypted IP-based resolvers" unless Array(stash_dns["default-nameserver"]).any? && Array(stash_dns["default-nameserver"]).all? { |item| encrypted_ip_resolver.call(item) }
-          errors << "Stash proxy-server-nameserver must use encrypted IP-based resolvers" unless Array(stash_dns["proxy-server-nameserver"]).any? && Array(stash_dns["proxy-server-nameserver"]).all? { |item| encrypted_ip_resolver.call(item) }
-          Hash(stash["rule-providers"] || {}).each do |name, provider|
-            errors << "Stash rule-provider #{name} still uses GitHub Raw" if provider["url"].to_s.include?("raw.githubusercontent.com")
-          end
-
           country_codes = {
             "香港" => "HK", "台湾" => "TW", "日本" => "JP", "新加坡" => "SG",
             "美国" => "US", "韩国" => "KR", "越南" => "VN", "中国" => "CN"
           }
-          [main, stash].each do |config|
+          [main].each do |config|
             group_map = Array(config["proxy-groups"]).to_h { |group| [group["name"], group] }
             country_codes.each do |region, code|
               ["#{region}节点", "#{region}-自动"].each do |name|
@@ -510,7 +487,6 @@ jobs:
             `防DNS泄露-${region}版.yaml`, `防DNS泄露-${region}版.js`,
             `防DNS泄露-路由器-${region}版.yaml`,
             `防DNS泄露-路由器-${region}版.conf`,
-            `stash-${region}版.stoverride`, `shadowrocket-${region}版.conf`,
           ]).map(file => {
             const data = steps.checkout === 'success' ? readRegular(path.join(root, file)) : null;
             return { file, sha256: data === null ? null : hash(data) };

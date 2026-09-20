@@ -580,7 +580,7 @@ async function providerCase(file, manifest) {
       await pause(100);
     }
     assert(ready, "provider 未全部初始化：" + running.logs());
-    console.log(file + "：" + Object.keys(providers).length + " 个公开快照经 Mihomo 完整初始化 OK（不代表 Stash 实机通过）");
+    console.log(file + "：" + Object.keys(providers).length + " 个公开快照经 Mihomo 完整初始化 OK（不代表设备或业务实测通过）");
   } finally { await stop(running); }
 }
 (async () => {
@@ -614,7 +614,6 @@ async function providerCase(file, manifest) {
       const manifest = JSON.parse(lifecycle.readSnapshot(cacheDirectory, "manifest.json").toString("utf8"));
       assert.equal(manifest.failures.length, 0, "不能使用失败的下载快照");
       await providerCase("防DNS泄露-国外版.yaml", manifest);
-      await providerCase("stash-国外版.stoverride", manifest);
       const github = await upstream([203,0,113,30]);
       for (const region of ["国内", "国外"]) {
         await inThRouteCase(region, manifest);

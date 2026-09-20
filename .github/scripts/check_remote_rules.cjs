@@ -2,8 +2,6 @@
 const assert = require("node:assert/strict");
 const { createHash } = require("node:crypto");
 const { read, parse } = require("./build_profiles.cjs");
-const { parseShadow } = require("./build_native_profiles.cjs");
-const { unwrapInThGuard } = require("./in_th_guard.cjs");
 const { parsePayload, AI_DOMAIN_SOURCES, checkAiDomainPayload } = require("./validate_rule_sources.cjs");
 const lifecycle = require("./artifact_lifecycle.cjs");
 const hash = body => createHash("sha256").update(body).digest("hex");
@@ -18,12 +16,8 @@ function sources() {
     result.set(source.url, source);
   }
   for (const region of ["国内", "国外"]) {
-    for (const file of ["防DNS泄露-" + region + "版.yaml", "stash-" + region + "版.stoverride"]) {
+    for (const file of ["防DNS泄露-" + region + "版.yaml"]) {
       for (const { url, behavior, format } of Object.values(parse(read(file))["rule-providers"])) add({ url, behavior, format });
-    }
-    for (const rule of parseShadow(read("shadowrocket-" + region + "版.conf")).rules) {
-      const [type, url] = unwrapInThGuard(rule).split(",");
-      if (["DOMAIN-SET", "RULE-SET"].includes(type)) add({ url, behavior: type === "DOMAIN-SET" ? "domain" : "classical", format: "text" });
     }
   }
   return [...result.values()];

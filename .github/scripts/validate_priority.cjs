@@ -1,7 +1,6 @@
 // 独立合成用例：验证首条匹配，不把离线模型当作客户端实测。
 const assert = require("node:assert/strict");
 const { read, parse, evaluate } = require("./build_profiles.cjs");
-const { parseShadow } = require("./build_native_profiles.cjs");
 const AI = ["openai", "anthropic", "google-gemini", "github-copilot"];
 const GITHUB_DOMAINS = ["github.com", "githubusercontent.com", "githubassets.com", "github.io"];
 const GITHUB_HOSTS = ["github.com", "api.github.com", "raw.githubusercontent.com",
@@ -18,8 +17,7 @@ const FIXTURES = {
   "geolocation-!cn": ["chatgpt.com", "openai.com", "claude.ai", "githubcopilot.com", "google.com", "tampermonkey.net", ...GITHUB_DOMAINS],
 };
 const suffix = (host, domain) => host === domain || host.endsWith("." + domain);
-const ADS_URL = "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET-Only.Ads.list";
-const member = (name, host) => (FIXTURES[name === ADS_URL ? "reject" : name] || []).some(domain => suffix(host, domain));
+const member = (name, host) => (FIXTURES[name] || []).some(domain => suffix(host, domain));
 function firstRoute(config, host, processName) {
   for (const rule of config.rules) {
     const [type, value, target] = rule.split(",");
@@ -261,21 +259,6 @@ function run() {
     const badRoute = structuredClone(config);
     badRoute.rules.unshift("PROCESS-NAME,Code.exe,节点选择");
     assert.throws(() => checkRoutes(badRoute, domestic));
-  }
-  for (const stem of [".github/config/shared", "stash-国内版", "stash-国外版"]) {
-    const config = parse(read(stem + ".stoverride"));
-    checkOrder(config, "geosite:");
-    checkGithub(config, "geosite:");
-    checkDirectSite(config);
-    tampermonkeyRegression(config, stem.includes("国外"), "geosite:");
-    domesticDomainRegression(config, stem.includes("国外"), stem.startsWith(".github/"), "geosite:");
-    assert.deepEqual(config.dns["nameserver-policy"]["+.jspoo.com"],
-      stem.includes("国外") ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"] : "https://223.5.5.5/dns-query");
-  }
-  for (const file of [".github/config/shared.conf", "shadowrocket-国内版.conf", "shadowrocket-国外版.conf"]) {
-    checkDirectSite(parseShadow(read(file)));
-    tampermonkeyRegression(parseShadow(read(file)));
-    domesticDomainRegression(parseShadow(read(file)), file.includes("国外"), file.startsWith(".github/"));
   }
   for (const region of ["国内", "国外"]) {
     domesticDomainRegression(parse(read("防DNS泄露-路由器-" + region + "版.yaml")), region === "国外");

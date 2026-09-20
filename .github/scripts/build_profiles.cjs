@@ -4,7 +4,6 @@ const path = require("node:path");
 const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const YAML = require("yaml");
-const { renderNativeProfiles } = require("./build_native_profiles.cjs");
 const { renderRouterProfiles, renderRouterOverrides } = require("./build_router_profiles.cjs");
 const { consolidateGroups } = require("./consolidate_groups.cjs");
 const { tuneMihomo } = require("./tune_mihomo.cjs");
@@ -184,11 +183,10 @@ function renderProfiles() {
 if (require.main === module) {
   const check = process.argv.includes("--check");
   const profiles = renderProfiles();
-  const native = renderNativeProfiles();
   const router = [...renderRouterProfiles(profiles), ...renderRouterOverrides(profiles)];
   const bytes =
     profiles.reduce((sum, r) => sum + Buffer.byteLength(r.yaml) + Buffer.byteLength(r.js), 0)
-    + [...native, ...router].reduce((sum, r) => sum + Buffer.byteLength(r.content), 0);
+    + router.reduce((sum, r) => sum + Buffer.byteLength(r.content), 0);
   const produce = () => {
     for (const result of profiles) {
       for (const ext of ["yaml", "js"]) {
@@ -198,7 +196,7 @@ if (require.main === module) {
         console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
       }
     }
-    for (const { file, content } of [...native, ...router]) {
+    for (const { file, content } of router) {
       if (check) assert.equal(read(file), content, `${file} 已过期；运行 npm run build:profiles`);
       else fs.writeFileSync(path.join(ROOT, file), content);
       console.log(`${check ? "CHECK" : "GENERATED"} ${file}`);
