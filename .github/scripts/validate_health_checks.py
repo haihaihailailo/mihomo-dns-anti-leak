@@ -756,16 +756,20 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 for (const ipv6 of [true, false]) {
   const input = {mode: "rule", ipv6, "find-process-mode": "off",
     tun: {enable: ipv6, "inet6-address": ["fdfe:dcba:9876::1/126"]},
-    dns: {ipv6, "fake-ip-range6": "fd00:1234::1/64"}};
+    dns: {ipv6: !ipv6, "fake-ip-range6": "fd00:1234::1/64"}};
   const expected = plain(input);
   const result = plain(sandbox.main(input));
   for (const key of ["mode", "ipv6", "find-process-mode"]) assert.equal(result[key], expected[key]);
   for (const section of ["tun"]) {
     for (const key of Object.keys(expected[section])) assert.deepEqual(result[section][key], expected[section][key]);
   }
-  assert.equal(result.dns.ipv6, true);
+  // ClashMi 会把 UI IPv6 开关写入顶层 ipv6；仓库覆写必须跟随该值，
+  // 不能因为共享模板默认 dns.ipv6=true 而把客户端关闭状态重新打开。
+  assert.equal(result.dns.ipv6, ipv6);
   assert.equal(result.dns["fake-ip-range6"], "fdfe:dcba:9876::1/64");
 }
+const dnsOnlyDisabled = sandbox.main({dns: {ipv6: false}});
+assert.equal(dnsOnlyDisabled.dns.ipv6, false);
 const unspecified = sandbox.main({});
 assert.equal(Object.hasOwn(unspecified, "ipv6"), false);
 assert.equal(unspecified.dns.ipv6, true);
