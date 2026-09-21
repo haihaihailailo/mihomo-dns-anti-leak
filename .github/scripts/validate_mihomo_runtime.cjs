@@ -614,6 +614,10 @@ async function providerCase(file, manifest) {
       const manifest = JSON.parse(lifecycle.readSnapshot(cacheDirectory, "manifest.json").toString("utf8"));
       assert.equal(manifest.failures.length, 0, "不能使用失败的下载快照");
       await providerCase("防DNS泄露-国外版.yaml", manifest);
+      // 路由器投影会额外引入 geoip-vn；两地路由器文件都走真实 manifest 初始化，
+      // 防止“普通入口 provider 全通过”掩盖 OpenClash 专属来源损坏或格式漂移。
+      await providerCase("防DNS泄露-路由器-国内版.yaml", manifest);
+      await providerCase("防DNS泄露-路由器-国外版.yaml", manifest);
       const github = await upstream([203,0,113,30]);
       for (const region of ["国内", "国外"]) {
         await inThRouteCase(region, manifest);

@@ -1732,10 +1732,11 @@ function main(config) {
   const next = deepClone(OVERRIDE);
   // 这些 TUN 字段由客户端管理；替换对象时也要保留显式设置。
   // 未设置的字段不补默认值，与 YAML 覆写保持一致。
-  // IPv6 DNS 例外：ClashMi 会把 UI 的 IPv6 开关同步到顶层 ipv6 / dns.ipv6；
-  // 旧逻辑随后固定写回 dns.ipv6=true，导致 UI 已关闭但运行时 AAAA 解析仍开启。
-  // 因此优先采用客户端顶层 ipv6；顶层缺省时再采用显式 dns.ipv6；两者都缺省才保留仓库默认 true。
-  // fake-ip-range6 仍由仓库固定，避免沿用订阅旧地址池；dns.ipv6=false 时该池不会参与 AAAA fake-ip。
+  // IPv6 DNS 保持“能力开启”而不是复制 JS 输入里的开关：
+  // ClashMi 先用订阅内容执行自定义 JS，之后才应用客户端最终补丁；此处看到的 ipv6 / dns.ipv6
+  // 可能只是订阅旧值，并不可靠代表当前 UI。若在这里跟随它，UI 后续开启 IPv6 时可能仍留下 dns.ipv6=false。
+  // Mihomo 的实际 DNS IPv6 还受顶层 ipv6 共同门控，因此公共层固定 dns.ipv6=true，
+  // 让客户端末层的顶层 ipv6 成为最终开关。fake-ip-range6 仍由仓库固定，避免沿用订阅旧地址池。
   for (const [section, keys] of Object.entries({
     // 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
     tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
@@ -1747,12 +1748,6 @@ function main(config) {
       }
     }
   }
-  const clientIpv6 = Object.prototype.hasOwnProperty.call(config, "ipv6") && typeof config.ipv6 === "boolean"
-    ? config.ipv6
-    : config.dns && Object.prototype.hasOwnProperty.call(config.dns, "ipv6") && typeof config.dns.ipv6 === "boolean"
-      ? config.dns.ipv6
-      : undefined;
-  if (clientIpv6 !== undefined) next.dns.ipv6 = clientIpv6;
   Object.assign(config, next);
   return config;
 }

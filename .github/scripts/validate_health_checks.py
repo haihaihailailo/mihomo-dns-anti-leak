@@ -763,13 +763,14 @@ for (const ipv6 of [true, false]) {
   for (const section of ["tun"]) {
     for (const key of Object.keys(expected[section])) assert.deepEqual(result[section][key], expected[section][key]);
   }
-  // ClashMi 会把 UI IPv6 开关写入顶层 ipv6；仓库覆写必须跟随该值，
-  // 不能因为共享模板默认 dns.ipv6=true 而把客户端关闭状态重新打开。
-  assert.equal(result.dns.ipv6, ipv6);
+  // 自定义 JS 看到的是订阅阶段配置，不可靠代表 ClashMi 当前 UI；公共 DNS 能力必须稳定为 true。
+  // Mihomo 实际 DNS IPv6 同时受顶层 ipv6 门控，所以这里另验“最终有效值”，避免只看字段文本误判。
+  assert.equal(result.dns.ipv6, true);
   assert.equal(result.dns["fake-ip-range6"], "fdfe:dcba:9876::1/64");
+  assert.equal(result.ipv6 === true && result.dns.ipv6 === true, ipv6);
 }
 const dnsOnlyDisabled = sandbox.main({dns: {ipv6: false}});
-assert.equal(dnsOnlyDisabled.dns.ipv6, false);
+assert.equal(dnsOnlyDisabled.dns.ipv6, true);
 const unspecified = sandbox.main({});
 assert.equal(Object.hasOwn(unspecified, "ipv6"), false);
 assert.equal(unspecified.dns.ipv6, true);

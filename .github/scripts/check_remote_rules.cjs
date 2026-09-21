@@ -16,9 +16,18 @@ function sources() {
     result.set(source.url, source);
   }
   for (const region of ["国内", "国外"]) {
-    for (const file of ["防DNS泄露-" + region + "版.yaml"]) {
+    // 路由器投影会新增 geoip-vn；必须和手机/桌面 provider 一起下载、哈希和留存，
+    // 不能只靠 mihomo -t 验证“配置能解析”却漏掉它的真实远程载荷。
+    for (const file of ["防DNS泄露-" + region + "版.yaml", "防DNS泄露-路由器-" + region + "版.yaml"]) {
       for (const { url, behavior, format } of Object.values(parse(read(file))["rule-providers"])) add({ url, behavior, format });
     }
+  }
+  const gameMrs = [...result.values()].find(source => source.url.endsWith("/geo/geosite/category-games-cn.mrs"));
+  if (gameMrs) {
+    // MRS 是真实消费源但当前 JS 不直接反解其成员；同仓库同分支的 .list 只作为“成员变化告警伴随源”。
+    // 这样未来新增具体 *.in.th 游戏域时，真实联网检查会报警；MRS 本身仍由隔离 Mihomo 完整初始化，
+    // 不把文本伴随源冒充为二进制内容等价证明。
+    add({ url: gameMrs.url.replace(/\.mrs$/, ".list"), behavior: "domain", format: "text", companionOf: gameMrs.url });
   }
   return [...result.values()];
 }
@@ -26,7 +35,7 @@ function validateBody(body, source) {
   assert(body.length > 0 && body.length <= LIMIT, "规则为空或超过 4 MiB");
   if (source.format === "mrs") {
     assert(body.length > 8 && body.subarray(0, 4).equals(Buffer.from("28b52ffd", "hex")), "MRS 缺少 Zstd 帧头");
-    return null; // 只验证传输容器；完整解码由隔离 Mihomo 初始化检查完成。
+    return null; // 只验证 MRS 传输容器；真实消费语义仍由隔离 Mihomo 初始化，不能用伴随 .list 代替。
   }
   const text = new TextDecoder("utf-8", { fatal: true }).decode(body);
   const payload = parsePayload(text, source.behavior, source.format);
@@ -89,8 +98,11 @@ async function selfTest() {
   assert.equal(validateBody(Buffer.from("+.openai.com\n+.chatgpt.com\no33249.ingest.sentry.io"), aiSource), 3);
   await assert.rejects(() => download(aiSource, async () => new Response("+.openai.com\n+.stripe.com")), /AI 上游误收共享服务/);
   await assert.rejects(() => download(aiSource, async () => new Response("IP-ASN,20473,no-resolve")), /无效纯域名规则/);
-  assert(sources().length > 0);
-  console.log("公开规则下载器：成功、403、HTML、空正文、超限、超时、格式错误及 AI 共享根域/ASN 回流负向控制 OK");
+  const configured = sources();
+  assert(configured.some(item => item.url.endsWith("/geo/geoip/vn.mrs")), "路由器专属 geoip-vn 必须进入远程载荷检查");
+  assert(configured.some(item => item.url.endsWith("/geo/geosite/category-games-cn.list") && item.companionOf),
+    "category-games-cn 的 in.th 成员告警伴随源必须进入真实下载清单");
+  console.log("公开规则下载器：主/路由器来源、in.th 伴随告警、成功/403/HTML/空正文/超限/超时/格式及 AI 负向控制 OK");
 }
 async function run(output) {
   assert(output, "用法：node check_remote_rules.cjs --output-dir <不存在的新目录>");
@@ -109,6 +121,10 @@ async function run(output) {
       } catch (error) { failures.push({ url: source.url, error: error.message }); }
     }
   }));
+  // 伴随源必须和它监看的真实 MRS 一起成功进入同一 manifest；否则不能把“告警检查通过”当成有效证据。
+  for (const item of results.filter(item => item.companionOf)) {
+    assert(results.some(peer => peer.url === item.companionOf), "伴随规则源缺少对应真实 MRS：" + item.companionOf);
+  }
   const manifest = { entries: results.sort((a, b) => a.url.localeCompare(b.url)), failures };
   run.put("manifest.json", JSON.stringify(manifest, null, 2), { materialize: true });
   run.finish(failures.length ? "failed" : "validated");

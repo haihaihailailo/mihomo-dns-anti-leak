@@ -102,18 +102,20 @@ function checkDeviceBoundary(js, source) {
   const result = evaluate(js, input);
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
   for (const key of Object.keys(deviceTun)) assert(!Object.hasOwn(evaluate(js).tun, key), `设备字段不应凭空下发：${key}`);
-  // 顶层 ipv6 代表客户端整机/内核开关，优先于可能残留的旧 dns.ipv6。
-  // ClashMi 会在覆写前同步这两个值；此处用冲突输入防止以后又把 UI 关闭状态写回 true。
-  assert.equal(result.dns.ipv6, true, "顶层 IPv6 开启时 DNS IPv6 应跟随开启");
-  const disabledIpv6 = evaluate(js, { ipv6: false, dns: { ipv6: true } });
-  assert.equal(disabledIpv6.dns.ipv6, false, "客户端关闭 IPv6 后不得被公共 dns.ipv6=true 反向覆盖");
-  const dnsOnlyDisabled = evaluate(js, { dns: { ipv6: false } });
-  assert.equal(dnsOnlyDisabled.dns.ipv6, false, "未提供顶层开关时应尊重显式 dns.ipv6=false");
-  assert.equal(disabledIpv6.dns["fake-ip-range6"], source.dns["fake-ip-range6"],
-    "关闭 DNS IPv6 不应改写仓库固定 fake-ip-range6");
-  const expectedDns = clone(source.dns);
-  expectedDns.ipv6 = true;
-  assert.deepEqual(result.dns, expectedDns, "除客户端 IPv6 状态外不得改变公共 DNS 策略");
+
+  // 自定义 JS 运行在 ClashMi 最终客户端补丁之前；输入里的 IPv6 可能来自机场订阅旧值。
+  // 所以这里故意要求公共 DNS 仍为 ipv6=true，不能把“订阅阶段字段”误当成当前 UI 状态。
+  assert.deepEqual(result.dns, source.dns, "订阅阶段 IPv6 旧值不得覆盖公共 DNS 能力");
+
+  // 模拟 ClashMi 的最后一层：只由客户端顶层 ipv6 决定最终有效 IPv6。
+  // Mihomo 的有效 DNS IPv6 需要顶层 ipv6 与 dns.ipv6 同时为 true；公共层固定能力后，
+  // 无论订阅旧值是什么，UI 最终 false/true 都能得到 false/true，避免反向锁死。
+  const effectiveIpv6 = config => config.ipv6 === true && config.dns?.ipv6 === true;
+  const uiOff = mergeClient(evaluate(js, { ipv6: true, dns: { ipv6: false } }), { ipv6: false });
+  const uiOn = mergeClient(evaluate(js, { ipv6: false, dns: { ipv6: false } }), { ipv6: true });
+  assert.equal(effectiveIpv6(uiOff), false, "客户端最终关闭 IPv6 后有效 DNS IPv6 必须关闭");
+  assert.equal(effectiveIpv6(uiOn), true, "客户端最终开启 IPv6 后不能被订阅旧 dns.ipv6=false 锁死");
+
   assert.deepEqual(evaluate(js, result), result, "携带设备字段时重复覆写不幂等");
   const controlled = { tun: { ...deviceTun, stack: "gvisor", "route-exclude-address": ["192.0.2.0/24"], "dns-hijack": ["any:53", "tcp://any:53"] } };
   const merged = mergeClient(result, controlled);
@@ -127,14 +129,13 @@ function checkDeviceBoundary(js, source) {
   assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));
 }
 function checkSharedFakeIp(js, source, label) {
-  const expectedRange = "fdfe:dcba:9876::1/64";
-  const checkStatic = config => {
+  const expected = { ipv6: true, "fake-ip-range6": "fdfe:dcba:9876::1/64" };
+  const check = config => {
     assert.equal(config.dns["enhanced-mode"], "fake-ip");
     assert.equal(config.dns["fake-ip-range"], "198.18.0.1/16");
-    assert.equal(config.dns.ipv6, true, "静态 YAML / 无客户端状态时保持仓库双栈默认");
-    assert.equal(config.dns["fake-ip-range6"], expectedRange, "IPv6 fake-ip 地址池不得漂移");
+    for (const [key, value] of Object.entries(expected)) assert.equal(config.dns[key], value, `公共 DNS 字段错误：${key}`);
   };
-  checkStatic(source);
+  check(source);
   for (const enabled of [undefined, false, true]) {
     for (const dns of [undefined, {}, { ipv6: false }, { "fake-ip-range6": "" },
       { ipv6: false, "fake-ip-range6": "fd00:1234::1/64" }]) {
@@ -142,28 +143,23 @@ function checkSharedFakeIp(js, source, label) {
       if (enabled !== undefined) Object.assign(input, { ipv6: enabled, tun: { enable: enabled } });
       if (dns !== undefined) input.dns = clone(dns);
       const result = evaluate(js, input);
-      const dnsExplicit = dns && Object.prototype.hasOwnProperty.call(dns, "ipv6") && typeof dns.ipv6 === "boolean";
-      const expectedIpv6 = enabled !== undefined ? enabled : dnsExplicit ? dns.ipv6 : true;
-      assert.equal(result.dns["enhanced-mode"], "fake-ip");
-      assert.equal(result.dns["fake-ip-range"], "198.18.0.1/16");
-      assert.equal(result.dns.ipv6, expectedIpv6, "JS 覆写未跟随客户端显式 IPv6 状态");
-      assert.equal(result.dns["fake-ip-range6"], expectedRange, "客户端旧地址池不得覆盖仓库固定池");
-      const normalizedDns = clone(result.dns);
-      normalizedDns.ipv6 = source.dns.ipv6;
-      assert.deepEqual(normalizedDns, source.dns, "除 dns.ipv6 外不得改变公共 DNS 策略");
+      // 这里验证的是“订阅 → JS”阶段，不是客户端最终 UI 合并；因此旧 dns.ipv6 必须被公共能力值覆盖。
+      check(result);
+      assert.deepEqual(result.dns, source.dns, "输入不能改变其余 DNS 策略");
+      assert.deepEqual(result.dns, mergeClient(input, source).dns, "YAML/JS 对订阅阶段 DNS 的覆写语义不同");
       assert.equal(Object.hasOwn(result, "ipv6"), Object.hasOwn(input, "ipv6"));
       assert.equal(result.ipv6, enabled, "不得强开客户端顶层 IPv6");
       assert.equal(result.tun.enable, enabled, "不得强开客户端 TUN");
-      assert.deepEqual(evaluate(js, result), result, "客户端 IPv6 状态覆写必须幂等");
+      assert.deepEqual(evaluate(js, result), result, "DNS 双栈覆写必须幂等");
     }
   }
-  // 负向控制：静态模板仍须提供双栈默认和固定 IPv6 fake-ip 池。
+  // 负向控制：公共模板若关闭 DNS IPv6、丢失地址池或沿用旧池，必须被检测到。
   for (const patch of [{ ipv6: false }, { "fake-ip-range6": undefined }, { "fake-ip-range6": "fd00:1234::1/64" }]) {
     const broken = clone(source);
     Object.assign(broken.dns, patch);
-    assert.throws(() => checkStatic(broken), { code: "ERR_ASSERTION" });
+    assert.throws(() => check(broken), { code: "ERR_ASSERTION" });
   }
-  console.log(`${label}: 静态 DNS 双栈默认、客户端 IPv6 开关跟随、固定地址池、顶层开关保留、幂等与负向控制 OK`);
+  console.log(`${label}: 公共 DNS 双栈能力、订阅旧值覆盖、客户端最终 IPv6 门控、固定地址池、幂等与负向控制 OK`);
 }
 const driverRules = [
   "DOMAIN-SUFFIX,download.nvidia.com,DIRECT", "DOMAIN-SUFFIX,download.nvidia.cn,DIRECT",
@@ -325,7 +321,8 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
         if (enabled === undefined) assert(!Object.hasOwn(result[section], key));
       }
     }
-    assert.deepEqual(normalize(result.dns), normalize(compact.dns), "DNS 应使用公共值而非客户端输入旧值");
+    // JS 此时只处理订阅阶段数据；客户端最终 IPv6 开关在后续补丁层生效，因此整段 DNS 应保持公共基线。
+    assert.deepEqual(normalize(result.dns), normalize(compact.dns), "DNS 应使用公共值而非订阅输入旧值");
     assert.deepEqual(normalize(evaluate(js, result)), normalize(result), "重复覆写不幂等");
   }
   console.log(`${stem}: 全配置同步、差异范围、DNS/分流、回国隔离、空组保护、客户端保留 OK`);

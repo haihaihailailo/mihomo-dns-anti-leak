@@ -21,9 +21,9 @@
 | 已知国内域名 DNS | 国内 DoH | 国内 DoH 跟随国内服务；切回国时也经所选出口查询 |
 | 默认 DNS 兜底 | 保留国内 GeoIP 判断与经节点选择的外部 DNS | 不使用 CN GeoIP 兜底；默认 DNS 跟随节点选择（首选 DIRECT） |
 | TUN / 顶层 IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
-| DNS 双栈 fake-ip | 静态 YAML 默认 `dns.ipv6: true`；JS 覆写在客户端提供显式 IPv6 状态时跟随客户端，IPv6 fake-ip 地址池仍由仓库固定 | 同左 |
+| DNS 双栈 fake-ip | 公共层保持 `dns.ipv6: true` 与固定 IPv6 fake-ip 地址池；最终是否启用由客户端顶层 `ipv6` 与内核共同门控 | 同左 |
 
-- **为什么 JS 不再强制 `dns.ipv6: true`：** ClashMi 会把 UI 的 IPv6 开关同步到顶层 `ipv6` / `dns.ipv6`，但旧 JS 覆写随后再次写入共享默认值，导致 UI 关闭后运行时 DNS IPv6 仍保持开启。现在 JS 优先跟随客户端顶层 `ipv6`，顶层缺省时再采用显式 `dns.ipv6`；两者都未提供才使用仓库默认 `true`。固定的 `fake-ip-range6` 继续保留，避免订阅旧地址池污染；当 `dns.ipv6=false` 时它不参与 AAAA fake-ip。静态 YAML 无法读取客户端 UI 的运行时状态，因此仍保持双栈默认，使用 YAML 时应以客户端最终合并后的运行配置为准。
+- **为什么 ClashMi 关闭 IPv6 后，运行配置里仍可能看到 `dns.ipv6: true`：** 自定义 JS 是在客户端最终补丁之前对“订阅配置”执行的，JS 输入里的 `ipv6` / `dns.ipv6` 可能是机场旧值，不能可靠代表当前 UI。公共层因此固定保留 DNS IPv6 能力与 `fake-ip-range6`，不再复制订阅阶段的开关；客户端最后写入的顶层 `ipv6` 才是设备侧开关。标准 Mihomo 的实际 DNS IPv6 需要顶层 `ipv6` 与 `dns.ipv6` 同时允许，所以“配置文本中 dns.ipv6=true”本身不等于 AAAA 已实际启用。这样也避免 UI 打开 IPv6 时被订阅遗留的 `dns.ipv6=false` 反向锁死。
 - GitHub、YouTube、Netflix、Google、Meta / X、TikTok、Spotify 和漏网流量归入 `节点选择`。Telegram 使用独立的 `电报消息` 组，国内/国外入口均默认 `新加坡-自动`，可单独切换香港或其他地区；Mihomo 的 Telegram 专用 DNS 同步跟随该组。地区接近不保证头像、视频或通话质量，仍须实测。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
 - Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
 - 已知微软域名 DNS 在 Mihomo 国外版使用全球 DoH、跟随 `微软/苹果服务`；原 Google、YouTube、GitHub DNS 策略引用同步改为 `节点选择`。国内域名查询继续交给国内 DNS，这是显式分流，不代表所有 DNS 都经海外节点。
@@ -207,7 +207,7 @@ Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a fu
 - 新增来源由 `validate_rule_sources.cjs` 检查格式、缓存隔离、AI 优先级和 DNS 同步，并纳入唯一离线验证入口。离线测试不能保证远程源永远可用；上游文件会继续变化，实机仍须核对命中日志。手机 ChatGPT 的 SSL 提示、支付或导航体验不能仅凭更换规则集宣告修复。
 - 上游误分类的临时隔离（2026-09-15）：`category-games-cn` 经 [Tencent 游戏源](https://github.com/v2fly/domain-list-community/blob/5d939545c84e2a534f8e85ba6ffb2b51fa18fb76/data/tencent-games#L20) 收入整个 `in.th` 公共注册后缀，已解码的 `cn.mrs` 也包含它。两地版对国内游戏/国内域名集合使用 AND/NOT 排除该后缀后继续后续匹配，不增加全后缀 DIRECT 或固定节点规则；原有具体业务域名、整应用规则和 GeoIP 条件仍保留，规则源与每日更新不变。这是配置侧隔离，不是上游数据修复。
 - DNS 同步隔离：Mihomo 为 `in.th` 与子域使用通用境外 DoH、解析连接跟随 `节点选择`，优先级低于具体业务域名、高于过宽集合。
-- 隔离范围与回退：当前国内游戏文本集合没有独立登记的 `in.th` 游戏子域。今后若有真实游戏使用该后缀，需要明确域名及对应 DNS 例外，或待上游修正后连同隔离条件一起复核；不能靠整个公共后缀推断游戏归属。公开规则检查会提示此类新增游戏条目。撤销须同时核对路由和 DNS，不能只删其中一层。隔离内核测试只证明 Mihomo 条件匹配，设备仍需实际导入验收。
+- 隔离范围与回退：当前国内游戏文本集合没有独立登记的 `in.th` 游戏子域。今后若有真实游戏使用该后缀，需要明确域名及对应 DNS 例外，或待上游修正后连同隔离条件一起复核；不能靠整个公共后缀推断游戏归属。联网检查会实际下载并初始化 `category-games-cn.mrs`，同时下载同仓库同分支的 `category-games-cn.list` 作为成员变化告警伴随源；后者用于发现新增具体 `*.in.th` 条目，**不冒充 MRS 二进制等价证明**。撤销须同时核对路由和 DNS，不能只删其中一层。隔离内核测试只证明 Mihomo 条件匹配，设备仍需实际导入验收。
 
 ### 首条匹配与优先级
 
