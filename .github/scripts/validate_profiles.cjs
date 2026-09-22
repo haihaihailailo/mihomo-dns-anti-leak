@@ -102,7 +102,7 @@ function mergeClient(base, controlled) {
   return result;
 }
 function checkDeviceBoundary(js, source) {
-  const input = { tun: clone(deviceTun), dns: { ipv6: false }, mode: "rule", ipv6: true,
+  const input = { tun: clone(deviceTun), dns: { listen: "127.0.0.1:7874", ipv6: false }, mode: "rule", ipv6: true,
     "mixed-port": 17890, "unified-delay": false };
   const result = evaluate(js, input);
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
@@ -114,7 +114,11 @@ function checkDeviceBoundary(js, source) {
 
   // 自定义 JS 运行在 ClashMi 最终客户端补丁之前；输入里的 IPv6 可能来自机场订阅旧值。
   // 所以这里故意要求公共 DNS 仍为 ipv6=true，不能把“订阅阶段字段”误当成当前 UI 状态。
-  assert.deepEqual(result.dns, source.dns, "订阅阶段 IPv6 旧值不得覆盖公共 DNS 能力");
+  assert.equal(result.dns.listen, "127.0.0.1:7874", "客户端 DNS 监听地址/端口不得被公共层覆盖");
+  assert(!Object.hasOwn(evaluate(js).dns, "listen"), "客户端未设置 DNS 监听时仓库不得凭空下发");
+  const policyDns = clone(result.dns);
+  delete policyDns.listen;
+  assert.deepEqual(policyDns, source.dns, "订阅阶段 IPv6 旧值不得覆盖公共 DNS 能力");
 
   // 模拟 ClashMi 的最后一层：只由客户端顶层 ipv6 决定最终有效 IPv6。
   // Mihomo 的有效 DNS IPv6 需要顶层 ipv6 与 dns.ipv6 同时为 true；公共层固定能力后，
@@ -150,6 +154,7 @@ function checkMobileDesktopBoundary(js, source, label) {
       name: "手机",
       input: {
         mode: "rule", ipv6: false, "unified-delay": false, "find-process-mode": "always",
+        dns: { listen: "127.0.0.1:1053" },
         tun: {
           enable: true, device: "synthetic-phone", stack: "mips", "auto-route": false,
           "auto-detect-interface": false, "strict-route": false, mtu: 1280,
@@ -164,6 +169,7 @@ function checkMobileDesktopBoundary(js, source, label) {
       input: {
         mode: "rule", ipv6: true, "unified-delay": true, "find-process-mode": "strict",
         "mixed-port": 17890,
+        dns: { listen: "127.0.0.1:7874" },
         tun: {
           enable: true, device: "synthetic-desktop", stack: "mixed", "auto-route": true,
           "auto-detect-interface": true, "strict-route": true, mtu: 1400,
@@ -185,7 +191,10 @@ function checkMobileDesktopBoundary(js, source, label) {
     // DNS 劫持、私网排除、DNS 策略与业务规则仍由仓库统一维护，不能因设备类型分叉。
     assert.deepEqual(result.tun["dns-hijack"], source.tun["dns-hijack"], `${name} DNS 劫持基线变化`);
     assert.deepEqual(result.tun["route-exclude-address"], source.tun["route-exclude-address"], `${name} 私网排除变化`);
-    assert.deepEqual(normalize(result.dns), normalize(source.dns), `${name} DNS 策略不应设备化`);
+    assert.equal(result.dns.listen, expected.dns.listen, `${name} DNS 监听被公共层覆盖`);
+    const policyDns = clone(result.dns);
+    delete policyDns.listen;
+    assert.deepEqual(normalize(policyDns), normalize(source.dns), `${name} DNS 策略不应设备化`);
     assert.deepEqual(normalize(result.rules), normalize(source.rules), `${name} 规则不应设备化`);
     assert.deepEqual(normalize(result["proxy-groups"]), normalize(source["proxy-groups"]), `${name} 策略组不应设备化`);
     assert.deepEqual(normalize(evaluate(js, result)), normalize(result), `${name} 客户端状态重复覆写不幂等`);
@@ -201,6 +210,7 @@ function checkMobileDesktopBoundary(js, source, label) {
     "include-package", "exclude-package", "include-android-user"]) {
     assert(!Object.hasOwn(blank.tun, key), `缺省时不得下发手机/电脑 TUN 字段：${key}`);
   }
+  assert(!Object.hasOwn(blank.dns, "listen"), "缺省时不得下发客户端 DNS 监听地址/端口");
   console.log(`${label}: 手机/电脑共用配置、客户端单值保留、仓库 DNS/规则基线与缺省边界 OK`);
 }
 function checkSharedFakeIp(js, source, label) {
@@ -347,7 +357,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
   if (environment === "国内") {
     const expected = {
       ...base.dns,
-      "default-nameserver": ["https://223.5.5.5/dns-query"],
+      "default-nameserver": ["https://223.5.5.5/dns-query", "https://223.6.6.6/dns-query"],
       "proxy-server-nameserver": ["https://223.5.5.5/dns-query#DIRECT", "https://doh.pub/dns-query#DIRECT"],
       "direct-nameserver": ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"],
       "direct-nameserver-follow-policy": true,
