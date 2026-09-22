@@ -1,5 +1,5 @@
 // 国内使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。
-// 国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN / 顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。
+// 国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。
 const applySharedConfig = (() => {
 /**
  * 文件说明：国内版 / 国外版 JavaScript 覆写的内部共同源码，非独立导入入口。
@@ -137,7 +137,8 @@ const OVERRIDE = {
   },
   // 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
   tun: {
-    // stack / auto-route / auto-detect-interface / strict-route 都是客户端可直接切换的单值设备项，
+    // 以下单值设备项交给客户端直接调整：
+    // stack（网络栈）、auto-route（自动路由）、auto-detect-interface（自动检测出口接口）、strict-route（严格路由）。
     // 公共模板不再固定它们，避免覆盖 Clash Mi 等客户端的系统适配和用户选择。
     // 需要维护具体列表内容的 DNS 劫持与私网排除仍由仓库提供，避免每台设备重复填写。
     // 配置说明：将匹配的 DNS 请求交给内核；any:53 与 tcp://any:53 分别覆盖 UDP/TCP。
