@@ -1738,6 +1738,7 @@ function main(config) {
       "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
       "include-package", "exclude-package", "include-android-user", "include-uid", "exclude-uid", "include-uid-range", "exclude-uid-range"],
     // DNS 监听地址/端口属于本机接管参数；公共 DNS 策略不能固定它。
+    // 配置说明：DNS 解析、缓存、fake-ip 和域名专用解析器设置。
     dns: ["listen"],
   })) {
     for (const key of keys) {
