@@ -46,6 +46,7 @@ function run() {
     const restored = clone(config);
     delete restored['find-process-mode'];
     assert.equal(config['geo-auto-update'], false, '路由器 GEO 更新必须交给 OpenClash');
+    assert(!Object.hasOwn(config, 'geo-update-interval'), '内核 GEO 更新关闭后不得保留无效间隔');
     assert(config.rules.includes('RULE-SET,geoip-vn,越南服务,no-resolve'));
     assert(!config.rules.some(rule => rule.startsWith('GEOIP,VN,')), '不能依赖只含 CN 的设备库识别越南');
     assert.equal(config['rule-providers']['geoip-vn'].behavior, 'ipcidr');
@@ -53,6 +54,7 @@ function run() {
     assert.equal(config['rule-providers']['geoip-vn'].url,
       'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/vn.mrs');
     restored['geo-auto-update'] = source['geo-auto-update'];
+    restored['geo-update-interval'] = source['geo-update-interval'];
     restored['rule-providers'] = clone(source['rule-providers']);
     restored.rules = clone(source.rules);
     restored.dns = clone(source.dns);
@@ -115,6 +117,9 @@ function run() {
       proxies: [ { ...clone(input.proxies[0]), server: 'relay.apt-agent.dev', udp: true },
         { ...clone(input.proxies[1]), server: 'relay.example.test' }, clone(input.proxies[2]) ],
       dns: { ...clone(synthetic.dns), ...clone(result.config.dns) } };
+    assert.equal(expected.dns.listen, '127.0.0.1:9999', 'OpenClash CONF 必须保留设备 DNS 监听');
+    assert.equal(expected.dns.ipv6, true, 'OpenClash CONF 必须保留设备 DNS IPv6 开关');
+    assert.equal(expected.dns['fake-ip-range6'], 'fd00::/64', 'OpenClash CONF 必须保留设备 IPv6 fake-ip 地址池');
     if (process.env.OPENCLASH_RUBY_TEST === '1') {
       // Run actual POSIX shell quoting and Ruby assignment semantics, in memory.
       // Mirrors official ruby_edit's Value$2=$3 contract, not router service logic.
