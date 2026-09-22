@@ -10,8 +10,6 @@ profile:
   store-fake-ip: true
 # 配置说明：允许内核自动更新 GEO 数据。
 geo-auto-update: false
-# 配置说明：GEO 数据更新间隔，单位小时。
-geo-update-interval: 24
 # 配置说明：并发尝试域名解析得到的目标地址，缩短连接等待。
 tcp-concurrent: true
 # 配置说明：从支持的协议提取域名，辅助规则匹配；下面的跳过条件优先。
