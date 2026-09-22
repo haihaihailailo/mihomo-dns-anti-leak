@@ -142,6 +142,67 @@ function checkDeviceBoundary(js, source) {
   const incomplete = mergeClient(result, { tun: { "dns-hijack": ["any:53"] } });
   assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));
 }
+function checkMobileDesktopBoundary(js, source, label) {
+  // 同一地区 JS 同时服务手机和电脑：公共仓库只负责 DNS/规则/列表，
+  // 设备上的单值开关、模式和接口参数必须保留客户端自己的选择。
+  const scenarios = [
+    {
+      name: "手机",
+      input: {
+        mode: "rule", ipv6: false, "unified-delay": false, "find-process-mode": "always",
+        tun: {
+          enable: true, device: "synthetic-phone", stack: "mips", "auto-route": false,
+          "auto-detect-interface": false, "strict-route": false, mtu: 1280,
+          "auto-redirect": false, "inet4-address": ["172.19.0.1/30"], "inet6-address": [],
+          "include-package": ["org.example.mobile"], "exclude-package": ["org.example.bypass"],
+          "include-android-user": [0],
+        },
+      },
+    },
+    {
+      name: "电脑",
+      input: {
+        mode: "rule", ipv6: true, "unified-delay": true, "find-process-mode": "strict",
+        "mixed-port": 17890,
+        tun: {
+          enable: true, device: "synthetic-desktop", stack: "mixed", "auto-route": true,
+          "auto-detect-interface": true, "strict-route": true, mtu: 1400,
+          gso: false, "gso-max-size": 0, "auto-redirect": false,
+          "inet4-address": ["198.18.0.1/30"], "inet6-address": ["fdfe:dcba:9876::1/126"],
+        },
+      },
+    },
+  ];
+  for (const { name, input } of scenarios) {
+    const expected = clone(input);
+    const result = evaluate(js, clone(input));
+    for (const key of ["mode", "ipv6", "unified-delay", "find-process-mode", "mixed-port"]) {
+      assert.deepEqual(result[key], expected[key], `${name}客户端字段变化：${key}`);
+    }
+    for (const [key, value] of Object.entries(expected.tun)) {
+      assert.deepEqual(clone(result.tun[key]), value, `${name} TUN 客户端字段变化：${key}`);
+    }
+    // DNS 劫持、私网排除、DNS 策略与业务规则仍由仓库统一维护，不能因设备类型分叉。
+    assert.deepEqual(result.tun["dns-hijack"], source.tun["dns-hijack"], `${name} DNS 劫持基线变化`);
+    assert.deepEqual(result.tun["route-exclude-address"], source.tun["route-exclude-address"], `${name} 私网排除变化`);
+    assert.deepEqual(normalize(result.dns), normalize(source.dns), `${name} DNS 策略不应设备化`);
+    assert.deepEqual(normalize(result.rules), normalize(source.rules), `${name} 规则不应设备化`);
+    assert.deepEqual(normalize(result["proxy-groups"]), normalize(source["proxy-groups"]), `${name} 策略组不应设备化`);
+    assert.deepEqual(normalize(evaluate(js, result)), normalize(result), `${name} 客户端状态重复覆写不幂等`);
+  }
+
+  // 缺省时仓库不替手机/电脑猜测这些单值设置，防止未来重新固化某个平台默认值。
+  const blank = evaluate(js, {});
+  for (const key of ["mode", "ipv6", "unified-delay", "find-process-mode", "mixed-port"]) {
+    assert(!Object.hasOwn(blank, key), `缺省时不得下发客户端顶层字段：${key}`);
+  }
+  for (const key of ["enable", "device", "stack", "auto-route", "auto-detect-interface", "strict-route",
+    "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
+    "include-package", "exclude-package", "include-android-user"]) {
+    assert(!Object.hasOwn(blank.tun, key), `缺省时不得下发手机/电脑 TUN 字段：${key}`);
+  }
+  console.log(`${label}: 手机/电脑共用配置、客户端单值保留、仓库 DNS/规则基线与缺省边界 OK`);
+}
 function checkSharedFakeIp(js, source, label) {
   const expected = { ipv6: true, "fake-ip-range6": "fdfe:dcba:9876::1/64" };
   const check = config => {
@@ -238,6 +299,7 @@ for (const { environment, stem, yaml, js, base, consolidatedConfig, detailedConf
   checkMihomoTuning(compact, consolidatedConfig);
   checkReferences(compact);
   checkDeviceBoundary(js, compact);
+  checkMobileDesktopBoundary(js, compact, stem);
   checkSharedFakeIp(js, compact, stem);
   checkTunSelectors(js, compact, stem);
   // 原有环境语义测试继续覆盖详细中间配置；公开精简结果另作独立全对象比较。
@@ -347,6 +409,7 @@ const main = parse(read(".github/config/shared.yaml"));
 checkReferences(main);
 checkDriverRouting(main);
 checkDeviceBoundary(read(".github/config/shared.js"), main);
+checkMobileDesktopBoundary(read(".github/config/shared.js"), main, "shared.js");
 checkSharedFakeIp(read(".github/config/shared.js"), main, "shared.js");
 checkTunSelectors(read(".github/config/shared.js"), main, "shared.js");
 for (const file of [".github/config/shared.js", "防DNS泄露-国内版.js", "防DNS泄露-国外版.js"]) {
