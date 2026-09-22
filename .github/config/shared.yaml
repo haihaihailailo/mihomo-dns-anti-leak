@@ -96,18 +96,13 @@ sniffer:
 # TUN 接管系统流量；局域网地址绕过 TUN，微信、支付宝等应用由规则整体分流。
 # 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
 tun:
-  # 配置说明：TUN 网络栈实现，须与客户端和系统兼容。
-  stack: mixed
-  # 配置说明：让客户端为 TUN 自动设置路由。
-  auto-route: true
-  # 配置说明：自动检测用于出站的网络接口。
-  auto-detect-interface: true
+  # stack / auto-route / auto-detect-interface / strict-route 都是客户端可直接切换的单值设备项，
+  # 公共模板不再固定它们，避免覆盖 Clash Mi 等客户端的系统适配和用户选择。
+  # 需要维护具体列表内容的 DNS 劫持与私网排除仍由仓库提供，避免每台设备重复填写。
   # 配置说明：将匹配的 DNS 请求交给内核；any:53 与 tcp://any:53 分别覆盖 UDP/TCP。
   dns-hijack:
     - any:53
     - tcp://any:53
-  # 配置说明：启用严格路由；具体影响依系统和客户端实现。
-  strict-route: true
   # 局域网地址直接绕过 TUN
   # 配置说明：这些目标网段不进入 TUN 接管；此处不是普通策略组分流。
   route-exclude-address:

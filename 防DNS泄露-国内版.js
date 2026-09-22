@@ -137,16 +137,11 @@ const OVERRIDE = {
   },
   // 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
   tun: {
-    // 配置说明：TUN 网络栈实现，须与客户端和系统兼容。
-    stack: "mixed",
-    // 配置说明：让客户端为 TUN 自动设置路由。
-    "auto-route": true,
-    // 配置说明：自动检测用于出站的网络接口。
-    "auto-detect-interface": true,
+    // stack / auto-route / auto-detect-interface / strict-route 都是客户端可直接切换的单值设备项，
+    // 公共模板不再固定它们，避免覆盖 Clash Mi 等客户端的系统适配和用户选择。
+    // 需要维护具体列表内容的 DNS 劫持与私网排除仍由仓库提供，避免每台设备重复填写。
     // 配置说明：将匹配的 DNS 请求交给内核；any:53 与 tcp://any:53 分别覆盖 UDP/TCP。
     "dns-hijack": ["any:53", "tcp://any:53"],
-    // 配置说明：启用严格路由；具体影响依系统和客户端实现。
-    "strict-route": true,
     // 配置说明：这些目标网段不进入 TUN 接管；此处不是普通策略组分流。
     "route-exclude-address": [
       "10.0.0.0/8",
@@ -1739,7 +1734,8 @@ function main(config) {
   // 让客户端末层的顶层 ipv6 成为最终开关。fake-ip-range6 仍由仓库固定，避免沿用订阅旧地址池。
   for (const [section, keys] of Object.entries({
     // 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
-    tun: ["enable", "device", "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
+    tun: ["enable", "device", "stack", "auto-route", "auto-detect-interface", "strict-route",
+      "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
       "include-package", "exclude-package", "include-android-user", "include-uid", "exclude-uid", "include-uid-range", "exclude-uid-range"],
   })) {
     for (const key of keys) {

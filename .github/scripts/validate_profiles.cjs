@@ -13,7 +13,11 @@ for (const file of ["防DNS泄露.yaml", "防DNS泄露.js", "Windows-国内网�
 const clone = value => JSON.parse(JSON.stringify(value));
 const builtins = new Set(["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"]);
 const deviceTun = {
-  enable: true, device: "synthetic-tun", mtu: 1400, gso: false, "gso-max-size": 0,
+  // 这些都是客户端可直接开关/选择的单值设备项；公共模板不得凭空下发，也不得覆盖显式输入。
+  // 尤其 stack 现在包含 mips 等客户端选项，必须由设备侧按平台/实测选择，而不是仓库固定 mixed。
+  enable: true, device: "synthetic-tun", stack: "mips", "auto-route": false,
+  "auto-detect-interface": false, "strict-route": false,
+  mtu: 1400, gso: false, "gso-max-size": 0,
   "auto-redirect": false, "inet4-address": ["198.18.0.1/30"], "inet6-address": [],
 };
 // 客户端自有的应用/用户筛选；仅用合成值，不代表任何设备的实际名单。
@@ -117,13 +121,16 @@ function checkDeviceBoundary(js, source) {
   assert.equal(effectiveIpv6(uiOn), true, "客户端最终开启 IPv6 后不能被订阅旧 dns.ipv6=false 锁死");
 
   assert.deepEqual(evaluate(js, result), result, "携带设备字段时重复覆写不幂等");
-  const controlled = { tun: { ...deviceTun, stack: "gvisor", "route-exclude-address": ["192.0.2.0/24"], "dns-hijack": ["any:53", "tcp://any:53"] } };
+  const controlled = { tun: { ...deviceTun, stack: "gvisor", "strict-route": true,
+    "route-exclude-address": ["192.0.2.0/24"], "dns-hijack": ["any:53", "tcp://any:53"] } };
   const merged = mergeClient(result, controlled);
   for (const [key, value] of Object.entries(controlled.tun)) assert.deepEqual(merged.tun[key], value, `软件末层字段未保留：${key}`);
   assert.deepEqual(merged.dns, result.dns);
   assert.deepEqual(merged.rules, result.rules);
   assert.deepEqual(merged["proxy-groups"], result["proxy-groups"]);
-  assert.equal(merged.tun["strict-route"], source.tun["strict-route"]);
+  // 客户端末层应能把仓库未下发的单值开关/模式改成任意合法值；这里用不同值验证覆盖链路。
+  assert.equal(merged.tun.stack, "gvisor");
+  assert.equal(merged.tun["strict-route"], true);
   // 回归之前的真实问题：后置数组不会自动追加仓库的 TCP 劫持项。
   const incomplete = mergeClient(result, { tun: { "dns-hijack": ["any:53"] } });
   assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));

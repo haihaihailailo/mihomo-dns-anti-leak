@@ -265,8 +265,8 @@ rules:
 - 这不修改云安全组、服务器防火墙、SSH 密钥或系统路由，也不保证动态公网 IP 永远与白名单一致。
 
 - 内部共同源码承载各设备可复用的域名/应用分流、DNS 策略、回国隔离和测速参数；两地入口通过生成器同步共有部分，环境差异不绑定某家机场。
-- 两地 JS 覆写保留输入中显式的 `tun.enable`、`tun.device`、`tun.mtu`、`tun.gso`、`tun.gso-max-size`、`tun.auto-redirect`、`tun.inet4-address`、`tun.inet6-address` 和原有顶层 `mode` / `ipv6`。未设置时不自行添加这些设备参数；`dns.ipv6` / `dns.fake-ip-range6` 则使用上述公共值。这不等于信任订阅里的所有 TUN 字段，也不把 MTU 固定为本机数值。
-- Sparkle 仍会在自定义覆写之后合并软件管理字段。协议栈、MTU 和私人路由排除应在设备侧核对；数组会替换而非自动追加。使用本仓库 DNS 劫持策略时，应确认末层 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探交由仓库管理时，不再开启软件整块 DNS/嗅探接管；不要为调整一个字段覆盖整个 DNS 策略。
+- TUN 按“单值设备控制交客户端、需要维护列表的策略交仓库”划分：`tun.stack`、`tun.auto-route`、`tun.auto-detect-interface`、`tun.strict-route` 不再由公共模板固定，和既有的 `tun.enable`、`tun.device`、`tun.mtu`、`tun.gso`、`tun.gso-max-size`、`tun.auto-redirect`、`tun.inet4-address`、`tun.inet6-address` 一样由客户端/系统决定。两地 JS 会保留输入中这些显式值，缺省时不自行补值；两地 YAML 也不再下发前述四个开关/模式。这样 Clash Mi 可直接选择 `system/gvisor/mixed/mips` 并按平台管理路由，不需要为了切模式修改仓库。需要维护具体内容的 `tun.dns-hijack` 和 `tun.route-exclude-address` 仍由仓库提供。顶层 `mode` / `ipv6` 继续由客户端决定，`dns.ipv6` / `dns.fake-ip-range6` 使用公共能力值。
+- Clash Mi、Sparkle 等会在自定义覆写之后继续合并软件管理字段；客户端末层明确设置的 TUN 单值项应优先。普通数组会替换而非自动追加，因此使用本仓库 DNS 劫持策略时，仍应确认最终 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探的详细规则由仓库管理时，不要为了调整一个开关整块覆盖 DNS / Sniffer 策略。
 - 不下发订阅地址、具体节点选择、代理环境变量、系统代理开关、网卡名、MTU、Windows 路由或其他 VPN 的设置。更换机场后核对所选地区组非空，切换所在地后检查已保存的手选策略。
 - 验证顺序：先检查最终合并配置，再观察连接日志中的命中规则和出口，然后测试实际登录/业务。测速 URL 可达只证明该端点可达，不等于吞吐速度、服务解锁或整个 App 正常。
 - 回退：停用当前入口，恢复导入前的客户端备份或重新导入更新前的对应地区版。导入前备份客户端配置与手选策略，不直接修改客户端生成的运行配置。
