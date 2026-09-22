@@ -1,5 +1,5 @@
 // 国外使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。
-// 国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、统一延迟（unified-delay）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。
+// 手机/电脑共用同一地区入口；国内版 / 国外版只选一套、一个格式，不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、统一延迟（unified-delay）、顶层 IPv6 / 运行模式由各自客户端决定；DNS 双栈 fake-ip 由本配置提供。
 const applySharedConfig = (() => {
 /**
  * 文件说明：国内版 / 国外版 JavaScript 覆写的内部共同源码，非独立导入入口。
