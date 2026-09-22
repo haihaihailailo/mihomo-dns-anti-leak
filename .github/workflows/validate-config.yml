@@ -155,7 +155,7 @@ jobs:
           require "open3"
           require "yaml"
 
-          keys = %w[unified-delay profile geo-auto-update geo-update-interval tcp-concurrent sniffer tun dns proxy-groups rule-providers rules]
+          keys = %w[profile geo-auto-update geo-update-interval tcp-concurrent sniffer tun dns proxy-groups rule-providers rules]
           yaml_config = YAML.safe_load_file(".github/config/shared.yaml", aliases: true)
 
           node_code = <<~'NODE'
@@ -174,6 +174,10 @@ jobs:
             abort "Failed to evaluate .github/config/shared.js"
           end
           js_config = JSON.parse(stdout)
+
+          if yaml_config.key?("unified-delay") || js_config.key?("unified-delay")
+            abort "unified-delay is client-owned and must not be distributed by the shared template"
+          end
 
           normalize = lambda do |value, path = []|
             case value

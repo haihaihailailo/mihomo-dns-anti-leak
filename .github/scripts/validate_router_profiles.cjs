@@ -33,7 +33,7 @@ function run() {
     }
     assert.match(result.content, /^find-process-mode: "off"$/m);
     assert.equal(config['find-process-mode'], 'off');
-    for (const key of ['tun', 'ipv6', 'mode', 'mixed-port', 'proxies', 'proxy-providers', 'secret', 'authentication']) {
+    for (const key of ['tun', 'unified-delay', 'ipv6', 'mode', 'mixed-port', 'proxies', 'proxy-providers', 'secret', 'authentication']) {
       assert(!Object.hasOwn(config, key), `路由器模板不得分发设备/私有字段：${key}`);
     }
     for (const key of ['listen', 'ipv6', 'fake-ip-range6']) assert(!Object.hasOwn(config.dns, key));
@@ -65,7 +65,7 @@ function run() {
     console.log(`${result.file}: YAML 1.1/1.2、设备边界、完整差异、进程移除、生成漂移 OK (${config.rules.length} rules)`);
   }
   const synthetic = { dns: { listen: '127.0.0.1:9999', ipv6: true, 'fake-ip-range6': 'fd00::/64' },
-    tun: { enable: true }, ipv6: true, secret: 'synthetic-only', authentication: ['test:test'],
+    tun: { enable: true }, 'unified-delay': true, ipv6: true, secret: 'synthetic-only', authentication: ['test:test'],
     proxies: [{ name: 'synthetic-only' }], 'proxy-providers': { test: { url: 'https://example.invalid/' } },
     rules: ['PROCESS-NAME,test.exe,DIRECT', 'AND,((PROCESS-NAME,test.exe),(NETWORK,TCP)),DIRECT',
       'DOMAIN,example.org,DIRECT', 'MATCH,REJECT'] };

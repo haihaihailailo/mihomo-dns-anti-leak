@@ -266,6 +266,7 @@ rules:
 
 - 内部共同源码承载各设备可复用的域名/应用分流、DNS 策略、回国隔离和测速参数；两地入口通过生成器同步共有部分，环境差异不绑定某家机场。
 - TUN 按“单值设备控制交客户端、需要维护列表的策略交仓库”划分：`tun.stack`（网络栈）、`tun.auto-route`（自动路由）、`tun.auto-detect-interface`（自动检测出口接口）、`tun.strict-route`（严格路由）不再由公共模板固定，和既有的 `tun.enable`（TUN 开关）、`tun.device`（TUN 设备名）、`tun.mtu`（最大传输单元）、`tun.gso`（通用分段卸载）、`tun.gso-max-size`（GSO 最大块大小）、`tun.auto-redirect`（自动重定向）、`tun.inet4-address`（TUN IPv4 地址）、`tun.inet6-address`（TUN IPv6 地址）一样由客户端/系统决定。两地 JS 会保留输入中这些显式值，缺省时不自行补值；两地 YAML 也不再下发前述四个开关/模式。这样 Clash Mi 可直接选择 `system/gvisor/mixed/mips` 并按平台管理路由，不需要为了切模式修改仓库。需要维护具体内容的 `tun.dns-hijack` 和 `tun.route-exclude-address` 仍由仓库提供。顶层 `mode` / `ipv6` 继续由客户端决定，`dns.ipv6` / `dns.fake-ip-range6` 使用公共能力值。
+- `unified-delay`（统一延迟）同样属于客户端单开关：公共 YAML/JS/OpenClash 模板均不再固定 `true`。Clash Mi 的最终补丁会携带该值，因此用户在客户端选择开/关后应以客户端结果为准；JS 输入显式提供时原值会保留，缺省时由客户端/内核决定。
 - Clash Mi、Sparkle 等会在自定义覆写之后继续合并软件管理字段；客户端末层明确设置的 TUN 单值项应优先。普通数组会替换而非自动追加，因此使用本仓库 DNS 劫持策略时，仍应确认最终 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探的详细规则由仓库管理时，不要为了调整一个开关整块覆盖 DNS / Sniffer 策略。
 - 不下发订阅地址、具体节点选择、代理环境变量、系统代理开关、网卡名、MTU、Windows 路由或其他 VPN 的设置。更换机场后核对所选地区组非空，切换所在地后检查已保存的手选策略。
 - 验证顺序：先检查最终合并配置，再观察连接日志中的命中规则和出口，然后测试实际登录/业务。测速 URL 可达只证明该端点可达，不等于吞吐速度、服务解锁或整个 App 正常。
@@ -299,7 +300,7 @@ rules:
 - 远程模块回归逐字段解码并与公共 YAML 全量比较；CI 在唯一入口设置 `OPENCLASH_RUBY_TEST=1`，额外执行真实 POSIX Shell → Ruby 合成覆写两次，检查中文/正则、旧 DNS 清除、节点/端口/认证/IPv6 保留和幂等。无 Shell/Ruby 的本地只完成静态部分，会明确报告未运行原生链路，不等同于设备实测。
 - CI 对两地入口新增全对象 YAML/JS 对比、生成漂移检查、引用/循环检查、默认出口、DNS、回国隔离、空组保护和客户端 TUN/IPv6 保留测试，并分别运行 Mihomo 配置加载。测试数据为合成节点，不访问订阅或切换本机网络。
 - CI 会自动校验主 YAML 解析、主 JS 语法、主 YAML/JS 全配置同步、规则引用完整性和 mihomo 加载测试。
-- CI 会检查 `unified-delay`、`profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。
+- CI 会明确拒绝公共模板重新下发客户端自有的 `unified-delay`（统一延迟），并检查 `profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。
 - CI 每天自动运行一次，用于尽早发现 Mihomo 最新版本、远程规则集或下载链路变化导致的问题。
 - 内核 CI 分别测试最低支持的 `v1.19.27` 和官方 `latest` 正式版，两组都运行配置加载、隔离 DNS/AI 分组及公开规则快照初始化。关闭矩阵 fail-fast，避免一组失败遮住另一组结果；两组都必须通过，不自动提高最低支持版本。下载后先核对官方资产 SHA-256，再检查实际二进制版本。
 - 独立的 `Check public health-check endpoints` workflow 每天 04:50（UTC+8）检查两个 Mihomo 公开 YAML 的全部测速 URL（按 URL / 预期状态 / 超时去重，包括 Telegram），也可手动运行。它不在 push / PR 上执行公网探测，不影响普通配置 CI；只检测主分支，发布后才会生效。GitHub 定时任务可能延迟，并非精确计时器。

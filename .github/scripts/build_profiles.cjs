@@ -171,7 +171,7 @@ function renderProfiles() {
     const consolidatedConfig = consolidateGroups(clone(detailedConfig), environment === "国内");
     const config = tuneMihomo(clone(consolidatedConfig));
     const stem = `防DNS泄露-${environment}版`;
-    const note = `${environment}使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。\n国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。`;
+    const note = `${environment}使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。\n国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、统一延迟（unified-delay）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。`;
     // 输出完整配置供单次导入，保留共有规则与 provider；不要复制本机订阅和手选状态。
     const yaml = annotateYaml(note.split("\n").map(line => `# ${line}\n`).join("") + YAML.stringify(config, { lineWidth: 0, aliasDuplicateObjects: false }));
     const js = annotateJs(`// ${note.replace(/\n/g, "\n// ")}\nconst applySharedConfig = (() => {\n${jsSource}\nreturn main;\n})();\n\nconst ENVIRONMENT = ${JSON.stringify(settings, null, 2)};\n\n${applyEnvironment.toString()}\n\n${consolidateGroups.toString()}\n\n${tuneMihomo.toString()}\n\n// 动态节点别名仅适用于 JS：每次从输入订阅读取 hosts，不固定 IP。\n${applyNodeServerAliases.toString()}\n\nfunction main(config) {\n  return tuneMihomo(consolidateGroups(applyEnvironment(applySharedConfig(applyNodeServerAliases(config)), ENVIRONMENT), ${environment === "国内"}));\n}\n`);

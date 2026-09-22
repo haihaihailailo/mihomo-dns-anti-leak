@@ -5,7 +5,7 @@ const path = require('node:path');
 const { MARK, fieldComment, annotateYaml } = require('./config_comments.cjs');
 
 const CLIENT_KEYS = [
-  'tun', 'ipv6', 'mode', 'log-level', 'port', 'socks-port', 'mixed-port',
+  'tun', 'unified-delay', 'ipv6', 'mode', 'log-level', 'port', 'socks-port', 'mixed-port',
   'redir-port', 'tproxy-port', 'allow-lan', 'bind-address', 'interface-name',
   'routing-mark', 'external-controller', 'external-controller-tls',
   'external-controller-unix', 'external-controller-pipe', 'external-ui',
@@ -46,7 +46,7 @@ function renderRouterProfiles(profiles) {
     const note = [
       `OpenClash 路由器${environment}版公共模板；由 build_profiles.cjs 生成，请勿手改。`,
       '不含订阅/节点，须在路由器本地接入；不能单独提供代理。不要与桌面版叠加。',
-      'TUN、端口、运行模式、IPv6、认证及接管范围由 OpenClash 管理；不识别远端 App 包名。',
+      'TUN、统一延迟、端口、运行模式、IPv6、认证及接管范围由 OpenClash 管理；不识别远端 App 包名。',
       '仅保留域名/IP 分流；开启 IPv6 前须同时配置接管和 DNS，详见 README 路由器章节。',
     ].map(line => `# ${line}\n`).join('');
     return { environment, file: `防DNS泄露-路由器-${environment}版.yaml`,
@@ -76,7 +76,7 @@ function renderRouterOverrides(profiles) {
     });
     const content = [
       `# OpenClash 路由器${environment}版远程覆写；自动生成，请勿手改。`,
-      '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、IPv6 由 OpenClash 管理。',
+      '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、统一延迟、IPv6 由 OpenClash 管理。',
       '# Base64 承载公开 JSON 和仓库内固定 Ruby 适配源码，不是加密；勿添加订阅或凭据。',
       `# 各字段、策略组和逐条规则的明文说明见同目录 防DNS泄露-路由器-${environment}版.yaml。`,
       '# 下方每条命令只写入一个公共字段；不要手动编辑编码正文。',

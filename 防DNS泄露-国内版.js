@@ -1,5 +1,5 @@
 // 国内使用入口；由 .github/scripts/build_profiles.cjs 生成，请勿手改。
-// 国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。
+// 国内版 / 国外版只选一套、一个格式；不要叠加旧国内补充层或内部共同源码。TUN 网络栈（stack）、自动路由（auto-route）、自动检测出口接口（auto-detect-interface）、严格路由（strict-route）、统一延迟（unified-delay）、顶层 IPv6 / 运行模式由客户端决定；DNS 双栈 fake-ip 由本配置提供。
 const applySharedConfig = (() => {
 /**
  * 文件说明：国内版 / 国外版 JavaScript 覆写的内部共同源码，非独立导入入口。
@@ -61,8 +61,8 @@ const URLTEST_BASE = {
 
 // 主覆写对象：包含全局、sniffer、TUN、DNS 等基础配置。
 const OVERRIDE = {
-  // 配置说明：统一节点延迟测量口径；测速结果不等于实际业务吞吐。
-  "unified-delay": true,
+  // unified-delay（统一延迟）是客户端可直接切换的单开关。
+  // 公共 JS 不下发该值；输入已显式设置时保持原值，缺省时交给客户端/内核决定。
   // 配置说明：保存策略选择和 fake-ip 映射，供客户端重启后恢复。
   profile: {
     // 配置说明：保存手动选择；导入新配置后仍应核对客户端已保存的选项。

@@ -102,10 +102,15 @@ function mergeClient(base, controlled) {
   return result;
 }
 function checkDeviceBoundary(js, source) {
-  const input = { tun: clone(deviceTun), dns: { ipv6: false }, mode: "rule", ipv6: true, "mixed-port": 17890 };
+  const input = { tun: clone(deviceTun), dns: { ipv6: false }, mode: "rule", ipv6: true,
+    "mixed-port": 17890, "unified-delay": false };
   const result = evaluate(js, input);
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
   for (const key of Object.keys(deviceTun)) assert(!Object.hasOwn(evaluate(js).tun, key), `设备字段不应凭空下发：${key}`);
+  // unified-delay（统一延迟）和 TUN 单值项一样交客户端；仓库不能强制 true，也不能在缺省时自行补值。
+  assert.equal(result["unified-delay"], false, "客户端关闭统一延迟后不得被仓库重新开启");
+  assert.equal(evaluate(js, { "unified-delay": true })["unified-delay"], true, "客户端开启统一延迟后应保留");
+  assert(!Object.hasOwn(evaluate(js), "unified-delay"), "客户端未设置统一延迟时仓库不得凭空下发");
 
   // 自定义 JS 运行在 ClashMi 最终客户端补丁之前；输入里的 IPv6 可能来自机场订阅旧值。
   // 所以这里故意要求公共 DNS 仍为 ipv6=true，不能把“订阅阶段字段”误当成当前 UI 状态。
@@ -131,6 +136,8 @@ function checkDeviceBoundary(js, source) {
   // 客户端末层应能把仓库未下发的单值开关/模式改成任意合法值；这里用不同值验证覆盖链路。
   assert.equal(merged.tun.stack, "gvisor");
   assert.equal(merged.tun["strict-route"], true);
+  const delayMerged = mergeClient(result, { "unified-delay": true });
+  assert.equal(delayMerged["unified-delay"], true, "客户端末层应能切换统一延迟");
   // 回归之前的真实问题：后置数组不会自动追加仓库的 TCP 劫持项。
   const incomplete = mergeClient(result, { tun: { "dns-hijack": ["any:53"] } });
   assert(!incomplete.tun["dns-hijack"].includes("tcp://any:53"));
