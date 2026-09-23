@@ -51,6 +51,10 @@ function run() {
     assert(!config.rules.some(rule => rule.startsWith('GEOIP,VN,')), '不能依赖只含 CN 的设备库识别越南');
     assert.equal(config['rule-providers']['geoip-vn'].behavior, 'ipcidr');
     assert.equal(config['rule-providers']['geoip-vn'].format, 'mrs');
+    for (const provider of Object.values(config['rule-providers'])) {
+      if (provider.type === 'http') assert(Number.isInteger(provider.interval) && provider.interval > 0 && provider.interval <= 86400,
+        'Enabled rule-provider updates must run at least daily');
+    }
     assert.equal(config['rule-providers']['geoip-vn'].url,
       'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/vn.mrs');
     restored['geo-auto-update'] = source['geo-auto-update'];
@@ -102,6 +106,11 @@ function run() {
       assert(payload);
       assert(!/[`$\\]/.test(expression), 'Shell interpolation in Ruby expression');
       decoded[key] = JSON.parse(Buffer.from(payload[1], 'base64').toString('utf8'));
+      if (key === 'dns') {
+        const adapter = expression.match(/scope\.module_eval\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\)\)/);
+        assert(adapter, 'DNS adapter must be embedded fixed source');
+        assert.equal(Buffer.from(adapter[1], 'base64').toString('utf8'), read('.github/scripts/openclash_local_dns.rb'));
+      }
     }
     assert.deepEqual(decoded, result.config, 'Module must contain the complete router projection');
     assert(nodeAdapterSeen, 'Remote module must carry the portable node adapter');
