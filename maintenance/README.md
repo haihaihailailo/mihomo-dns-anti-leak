@@ -46,7 +46,7 @@ fi
 
 ## 本地设置参考
 
-这些是设备维护选择，不是公共覆写强制项：路由器自身需要经 OpenClash 解析/代理时核对 `router_self_proxy=1`；订阅更新间隔可设 360 分钟；受限时下载开关保护的订阅先开启供应商开关再更新，不能靠缩短轮询绕过。
+这些是设备维护选择，不是公共覆写强制项：路由器自身需要经 OpenClash 解析/代理时核对 `router_self_proxy=1`；订阅更新间隔建议 180 分钟。已启用的订阅、公共模块、规则集和实际使用的 GEO 数据更新，检查间隔最长 24 小时：模块每天检查，Country.mmdb 可每天 04:00 更新；规则集保持 86400 秒。关闭或未使用的功能不因此启用。频率不等于成功刷新；受下载开关保护的订阅先开启供应商开关，失败时保留最后成功缓存。
 
 公开模板已设置内核 `geo-auto-update: false`，并将越南改为独立 IP 规则集。设备侧停用未使用的 GeoIP.dat/GeoSite.dat 更新前，先确认没有其他规则依赖；Country.mmdb、ASN 及国内路由表的更新按实际使用保留。不要把全部 GEO 更新无差别关闭。
 
@@ -55,3 +55,21 @@ fi
 - [有界流量回退候选工具](prepare-sub-store-flow.cjs)：复用原生缓存，仅处理指定来源，候选须经审查后手动部署。
 
 私人订阅、运行 YAML、SSH 密钥、备份、服务器地址及完整维护日志不进入此目录。重新安装必须结合设备自己的私有恢复材料。
+
+## DNS 接管方式与运行设置检查
+
+Fake-IP 应答模式保持不变。本节只比较 `enable_redirect_dns=2`（防火墙直接转发到 Mihomo）和 `1`（dnsmasq 先处理本地域，再转发到 Mihomo）。这不是加密 DNS 与明文 DNS 的选择，两种方式都继续使用公共模板的 DoH 和解析策略。
+
+- 远程 CONF 内嵌 `.github/scripts/openclash_local_dns.rb`：只读本机 UCI；模式 2 且 dnsmasq 的 domain/local 相互匹配时，把该权威域的 DNS 送往本机 dnsmasq，并保持该条在公共策略之前。不硬编码 LAN 地址、域名或接口；端口无效、与核心端口相同、域不权威时拒绝赋值。未配置域或未知接管模式不猜测上游。
+- 模式 1 不注入回送。OpenClash 原生流程设置 dnsmasq 的 `server=127.0.0.1#核心DNS端口`、`noresolv=1` 和 `cachesize=0`，保留 DHCP/本地域解析，缓存交给 Mihomo。不要把 Mihomo 通用 nameserver 再指回 dnsmasq，也不额外部署 SmartDNS/MosDNS。
+- 旧设备自定义覆写可能仍包含本地域名补丁。只有确认新模块最终配置等价、保留其他自定义逻辑并建立回退后，才移除本任务识别的旧区块；不覆盖整份用户脚本。
+- [openclash-settings-audit.rb](openclash-settings-audit.rb) 在设备上以 `ruby openclash-settings-audit.rb /etc/openclash/实际运行配置.yaml` 运行。只输出字段一致性、更新上限和 TLS 保护形式的汇总，不输出节点、订阅、密钥。退出码 0 表示这些配置检查通过，1 表示发现待检查项，2 表示采集不完整；不能代替内核 API、防火墙、DNS 实测或证书握手。
+- Hysteria2 的 `skip-cert-verify=true` 若同时含 SHA-256 证书 `fingerprint`，先核实 pinning；不要统一强改为 false。配置形状正确不代表服务器证书匹配，须在隔离核心用正确/错误指纹做正负向测试，不能改动运行节点。
+
+切换前备份 UCI、dhcp、crontab、公共模块、自定义脚本、运行配置和手选策略，登记路径、哈希、容量与回退。测试 IPv4/IPv6、TCP/UDP 的路由器 DNS 与硬编码外部 DNS，本地域名、未知本地域的 NXDOMAIN、国内外 HTTPS 和实际命中规则；检查 WAN 53/核心 DNS 端口仍拒绝入站。验证一次 OpenClash 重启及停止后的 DNS 恢复，不能用单次 HTTP 200 宣称长期稳定。失败恢复原接管方式及原脚本。
+
+## WAN DNS 入站防护
+
+[openclash-wan-dns-guard.sh](openclash-wan-dns-guard.sh) 是可选的原生自定义防火墙钩子组件，不随公共 CONF 自动安装。它从 WAN zone 的 INPUT 规则读取接口，对 IPv4/IPv6 的 TCP/UDP 53 和核心 DNS 端口，拒绝 ORIGINAL 方向入站；不拦截路由器主动请求的回复。不得只凭监听地址或“仅内网访问”开关推断边界。
+
+当前实现针对 fw3/iptables，检测到 fw4 时拒绝操作；不能在未验收设备上宣称兼容 nftables。安装前做 `sh -n`，保留原钩子，在其中 source 此文件并显式调用 `oc_wan_dns_guard`，失败须记录警告。接口变化、规则重建、升级和服务重启后复核规则并从 WAN 实测。源码和 mocked 测试可以公开，设备检查点和私有网络记录留在本地。

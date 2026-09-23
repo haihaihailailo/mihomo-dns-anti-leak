@@ -60,6 +60,8 @@ function renderRouterOverrides(profiles) {
   // 独立 Module 避免与设备旧本地库重名；一次赋值保留其他节点字段和功能开关。
   const nodeLibrary = fs.readFileSync(path.join(__dirname, 'openclash_node_aliases.rb'), 'utf8').replace(/\r\n/g, '\n');
   const code = Buffer.from(nodeLibrary, 'utf8').toString('base64');
+  const dnsLibrary = fs.readFileSync(path.join(__dirname, 'openclash_local_dns.rb'), 'utf8').replace(/\r\n/g, '\n');
+  const dnsCode = Buffer.from(dnsLibrary, 'utf8').toString('base64');
   const adaptNodes = `(lambda { |scope| scope.module_eval('${code}'.unpack1('m0').force_encoding('UTF-8')); scope.const_get(:OpenClashNodeAliases).rewrite(Value.fetch('proxies', []), Value.fetch('hosts', {})) }).call(Module.new)`;
   return profiles.map(({ environment, config: source }) => {
     const config = routerConfig(source);
@@ -69,10 +71,11 @@ function renderRouterOverrides(profiles) {
       if (!/^[a-z-]+$/.test(key)) throw new Error(`Unsafe overwrite key: ${key}`);
       const encoded = Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
       const decoded = `YAML.safe_load('${encoded}'.unpack1('m0').force_encoding('UTF-8'), aliases: true)`;
+      const mergedDNS = `(Value.fetch('dns', {}).select { |k, _| ['listen', 'ipv6', 'fake-ip-range6'].include?(k) }).merge(${decoded})`;
       const expression = key === 'dns'
-        ? `(Value.fetch('dns', {}).select { |k, _| ['listen', 'ipv6', 'fake-ip-range6'].include?(k) }).merge(${decoded})`
+        ? `(lambda { |scope| scope.module_eval('${dnsCode}'.unpack1('m0').force_encoding('UTF-8')); adapter=scope.const_get(:OpenClashLocalDNS); adapter.apply(${mergedDNS}, adapter.settings) }).call(Module.new)`
         : decoded;
-      const note = fieldComment(key) + (key === 'dns' ? '保留设备 DNS 监听/IPv6 字段后合并公共 DNS。' : '整段赋值替换该公共字段。');
+      const note = fieldComment(key) + (key === 'dns' ? '保留设备 DNS 监听/IPv6 字段；仅防火墙接管时按本机 dnsmasq 权威域补充本地解析，Dnsmasq 转发模式不注入回送。' : '整段赋值替换该公共字段。');
       return `# ${MARK}${note}\nruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
     });
     const content = [
