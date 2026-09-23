@@ -1,13 +1,15 @@
 # 路由器与 Sub-Store 维护参考
 
-这里保存不含订阅、节点、认证信息和私人设备记录的维护来源。与十二个覆写入口分开：导入远程 CONF **不会**安装这些系统设置，构建工具也不会连接设备。不要将本目录作为机场订阅导入。
+这里保存不含订阅、节点、认证信息和私人设备记录的维护来源。与八个公开入口分开：导入远程 CONF **不会**安装这些系统设置，构建工具也不会连接设备。不要将本目录作为机场订阅导入。
 
-适用验证基线：GL-MT3600BE 固件 4.9.0、OpenClash 0.47.156、logrotate 3.17.0。其他版本先检查实际启动脚本；不承诺固件升级后仍保持补丁。
+已验证旧设备基线：GL-MT3600BE 固件 4.9.0、OpenClash 0.47.156、logrotate 3.17.0。当前 GL-MT6000 应视为新的设备验证基线：在复核实际固件版本、启动脚本、watchdog、logrotate 和服务布局之前，不把 MT3600BE 的维护补丁直接视为已验证可用。其他版本同样先检查实际启动脚本；不承诺固件升级后仍保持补丁。
 
-## 日志轮转
+## 日志轮转（GL-MT3600BE 旧设备候选）
 
-- [openclash-logrotate.conf](openclash-logrotate.conf)：当前日志阈值 2 MiB，保留 4 份历史，延迟压缩最近一份；正常未压缩总量约 10 MiB，另预留至少 4 MiB 临时空间。周期检查不是硬配额，实际保留时间取决于日志量。
-- 路由器目标为 `/etc/openclash/custom/openclash-logrotate.conf`，root 所有、0600 权限。使用既有 watchdog 循环调用 `/usr/sbin/logrotate -s /tmp/openclash-logrotate.status /etc/openclash/custom/openclash-logrotate.conf`，替换原日志整份清空区块；不能保留清空区块后仅追加轮转命令。
+以下阈值、路径和操作步骤属于旧设备的已验证候选，不代表 MT6000 已安装该补丁。MT6000 的原生 OpenClash watchdog 仍可能在达到 `log_size` 时清空整份 `/tmp/openclash.log`；应先核对当前脚本、日志量和可用内存，再决定是否单独适配。不要直接把旧设备的 watchdog 补丁复制到 MT6000。
+
+- [openclash-logrotate.conf](openclash-logrotate.conf)：此候选的轮转阈值为 2 MiB，保留 4 份历史，延迟压缩最近一份；正常未压缩总量约 10 MiB，另预留至少 4 MiB 临时空间。周期检查不是硬配额，实际保留时间取决于日志量。
+- 旧设备候选目标为 `/etc/openclash/custom/openclash-logrotate.conf`，root 所有、0600 权限。使用既有 watchdog 循环调用 `/usr/sbin/logrotate -s /tmp/openclash-logrotate.status /etc/openclash/custom/openclash-logrotate.conf`，替换原日志整份清空区块；不能保留清空区块后仅追加轮转命令。
 - 历史路径 `/tmp/openclash-log-history/openclash.log.1`、`.2.gz`、`.3.gz`、`.4.gz`。目录由 logrotate 以 0700 创建。插件重启通常追加日志，整机重启会丢失这些 RAM 日志。网页日志主要显示当前文件。
 - `copytruncate` 保留写入句柄；复制与截断之间存在少量日志丢失窗口，不适合作为零丢失审计。配置依据 [logrotate 3.17.0 官方手册](https://github.com/logrotate/logrotate/blob/3.17.0/logrotate.8.in)。
 

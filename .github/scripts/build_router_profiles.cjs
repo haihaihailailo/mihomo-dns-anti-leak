@@ -21,6 +21,7 @@ function routerConfig(source) {
   config['find-process-mode'] = 'off';
   // GEO 数据更新由 OpenClash 管理，避免插件与内核重复调度。
   config['geo-auto-update'] = false;
+  delete config['geo-update-interval'];
   config.rules = config.rules.filter(rule => !isProcessRule(rule));
   // CN Lite MMDB 不含越南；使用独立的小型 IP 规则集，不要求替换设备数据库。
   if (config.rules.some(rule => /^(GEOIP,VN,|RULE-SET,geoip-vn,)/.test(rule))) {

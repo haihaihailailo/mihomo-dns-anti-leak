@@ -158,8 +158,7 @@ const OVERRIDE = {
   dns: {
     // 配置说明：启用或关闭当前所属功能块。
     enable: true,
-    // 配置说明：内核 DNS 的监听地址与端口，不是上游解析器。
-    listen: "127.0.0.1:1053",
+    // DNS 监听地址/端口由客户端管理；公共层只维护解析策略，避免覆盖各平台的本地监听设置。
     // 两地共用双栈 fake-ip；顶层 IPv6 / TUN 开关仍由客户端决定。
     // 配置说明：当前作用域的 IPv6 开关；DNS 与系统接管开关不能混为一谈。
     ipv6: true,
@@ -1726,18 +1725,24 @@ function deepClone(value) {
 // 配置说明：客户端覆写入口：接收现有配置并返回合并结果；后续步骤可能由客户端再次合并。
 function main(config) {
   const next = deepClone(OVERRIDE);
-  // 这些 TUN 字段由客户端管理；替换对象时也要保留显式设置。
+  // 这些设备字段由客户端管理；替换对象时也要保留显式设置。
   // 未设置的字段不补默认值，与 YAML 覆写保持一致。
   // IPv6 DNS 保持“能力开启”而不是复制 JS 输入里的开关：
-  // ClashMi 先用订阅内容执行自定义 JS，之后才应用客户端最终补丁；此处看到的 ipv6 / dns.ipv6
-  // 可能只是订阅旧值，并不可靠代表当前 UI。若在这里跟随它，UI 后续开启 IPv6 时可能仍留下 dns.ipv6=false。
+  // Clash Mi 等客户端的自定义覆写与内置覆写顺序取决于版本和所选模式；此处看到的 ipv6 / dns.ipv6
+  // 可能只是订阅旧值，并不可靠代表当前 UI。若在这里跟随它，客户端后续开启 IPv6 时可能仍留下 dns.ipv6=false。
   // Mihomo 的实际 DNS IPv6 还受顶层 ipv6 共同门控，因此公共层固定 dns.ipv6=true，
-  // 让客户端末层的顶层 ipv6 成为最终开关。fake-ip-range6 仍由仓库固定，避免沿用订阅旧地址池。
+  // 让最终运行配置的顶层 ipv6 成为开关；若客户端还会覆写 dns.ipv6，须以最终配置回读为准。
+  // fake-ip-range6 仍由仓库固定，避免沿用订阅旧地址池。
   for (const [section, keys] of Object.entries({
     // 配置说明：虚拟网卡接管参数；开关、网卡和接管范围仍需客户端配合。
     tun: ["enable", "device", "stack", "auto-route", "auto-detect-interface", "strict-route",
       "mtu", "gso", "gso-max-size", "auto-redirect", "inet4-address", "inet6-address",
+      "udp-timeout", "iproute2-table-index", "iproute2-rule-index", "endpoint-independent-nat",
+      "include-interface", "exclude-interface", "include-mac-address", "exclude-mac-address",
       "include-package", "exclude-package", "include-android-user", "include-uid", "exclude-uid", "include-uid-range", "exclude-uid-range"],
+    // DNS 监听地址/端口属于本机接管参数；公共 DNS 策略不能固定它。
+    // 配置说明：DNS 解析、缓存、fake-ip 和域名专用解析器设置。
+    dns: ["listen"],
   })) {
     for (const key of keys) {
       if (config[section] && Object.prototype.hasOwnProperty.call(config[section], key)) {
@@ -1758,7 +1763,8 @@ const ENVIRONMENT = {
   "dns": {
     // 配置说明：启动解析器，用于解析 DNS 上游的域名。
     "default-nameserver": [
-      "https://223.5.5.5/dns-query"
+      "https://223.5.5.5/dns-query",
+      "https://223.6.6.6/dns-query"
     ],
     // 配置说明：专门解析代理节点域名，避免解析依赖尚未建立的节点连接。
     "proxy-server-nameserver": [

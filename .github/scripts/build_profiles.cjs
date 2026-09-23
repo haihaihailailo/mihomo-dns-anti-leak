@@ -29,6 +29,7 @@ function normalize(value, key = "") {
 }
 
 const CN_DNS = ["https://223.5.5.5/dns-query", "https://doh.pub/dns-query"];
+const CN_BOOTSTRAP_DNS = ["https://223.5.5.5/dns-query", "https://223.6.6.6/dns-query"];
 const GLOBAL_DNS = ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"];
 const via = (servers, policy) => servers.map(server => `${server}#${policy}`);
 
@@ -76,7 +77,7 @@ function serviceDnsPolicies(base, policies, foreign) {
 function environmentSettings(base, environment) {
   if (environment === "国内") return {
     dns: {
-      "default-nameserver": [CN_DNS[0]],
+      "default-nameserver": CN_BOOTSTRAP_DNS,
       "proxy-server-nameserver": via(CN_DNS, "DIRECT"),
       "direct-nameserver": CN_DNS,
       "nameserver-policy": serviceDnsPolicies(base, base.dns["nameserver-policy"], false),
