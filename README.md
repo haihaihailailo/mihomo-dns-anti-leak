@@ -44,6 +44,8 @@
 - 模块复用 [OpenClash v0.47.156 ruby_edit](https://github.com/vernesong/OpenClash/blob/v0.47.156/luci-app-openclash/root/usr/share/openclash/ruby.sh) 的 `[Overwrite]` 接口，整段替换公共策略组、规则集、规则和 DNS 策略，不残留机场旧规则引用；保留设备字段，并对订阅节点执行下述限定适配。DNS 仅保留本地 `listen`、`ipv6`、`fake-ip-range6`，其余按公共模板替换。Base64 承载公共 JSON 及仓库固定 Ruby 源码，避免 Shell/Ruby 二次转义损坏；这不是加密，也不含私有订阅。修改应通过生成器，不手改编码内容。
 - 两份 CONF 已内置 SS 精确 hosts 别名适配及限定花云 UDP 修复，无需换路由器后另装 Ruby 文件。代码在独立 Module 中加载，只执行仓库固定源码；订阅的 hosts/节点始终按数据处理。TFO、MPTCP、UOT、smux 等其他字段保持输入值。纯 YAML 无法执行此动态适配，使用 Sub-Store 已处理输出或选择 CONF 模块。
 - 远程模块属于可执行覆写，更新前应审查来源和变更；可将 Raw URL 中的 `main` 换为已验证的完整 commit SHA 固定版本，回退时停用该模块并恢复原配置。静态/合成验证不代表所有 OpenClash 版本兼容；更新后须核对最终生效配置。
+- CONF 使用 OpenClash 原生 `[General] RESTART = true` 声明模块下载后重新应用；下载来源、绑定范围和更新时间仍由 OpenClash 管理，不额外创建定时任务。首次从没有该声明的旧模块升级时，需要手动应用一次，才能生成包含重启的下载任务。
+- 已核对的 OpenClash 0.47.156 下载器在 HTTP 200 成功保存后返回成功并触发重启；下载失败或 HTTP 304（未修改）不重启。它依赖 ETag，不逐字节判断内容：服务器返回相同内容的 HTTP 200 也可能重启。重启会短暂中断连接，不是无损热更新；自动更新不替代配置验收或提供自动回滚保证。
 - 移除全部 `PROCESS-*` 规则及桌面 TUN 块，明确使用 `find-process-mode: "off"`（引号不可省略，兼容 OpenClash 的 YAML 1.1 处理）。路由器无法识别远端手机包名，因此 NVIDIA/AMD 等整进程直连不再适用，只保留已有精确域名规则；不承诺整个应用的未知域名都被覆盖。[Mihomo 进程匹配模式](https://wiki.metacubex.one/config/general/)
 - OpenClash 本地负责运行模式、DNS 监听、TUN/透明转发、防火墙、端口、认证、接管设备及启动设置。使用分流应选择规则模式；不向公共文件写网卡名、IP 白名单、密钥、订阅 URL 或节点密码。公共模板不指定 `dns.listen`、顶层 `ipv6`、`dns.ipv6` 或 IPv6 fake-ip 池。
 - 先按 IPv4 部署；不使用 IPv6 时，路由器 LAN 的 RA/DHCPv6 和 OpenClash IPv6 代理/DNS 开关应保持一致，不能仅靠模板防止绕过。以后开启 IPv6，须在本地同时验证接管、DNS 和客户端实际路由；本模板不自动开关路由器 IPv6。

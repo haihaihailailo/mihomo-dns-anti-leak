@@ -77,7 +77,12 @@ function run() {
   assert.deepEqual(synthetic, before);
   for (const result of renderRouterOverrides(sources)) {
     assert.equal(read(result.file), result.content, `${result.file} 生成结果过期`);
-    const commands = result.content.split('\n').filter(line => line && !line.startsWith('#') && line !== '[Overwrite]');
+    const activeLines = result.content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+    // Only the native update/restart directive is permitted before deterministic Ruby commands.
+    // Missing/disabled RESTART, extra General settings and misplaced sections must fail validation.
+    assert.deepEqual(activeLines.slice(0, 3), ['[General]', 'RESTART = true', '[Overwrite]'],
+      'Module must enable native update activation without overriding device settings');
+    const commands = activeLines.slice(3);
     const decoded = {};
     let nodeAdapterSeen = false;
     for (const line of commands) {
