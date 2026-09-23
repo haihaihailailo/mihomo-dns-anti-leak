@@ -19,9 +19,16 @@ const deviceTun = {
   "auto-detect-interface": false, "strict-route": false,
   mtu: 1400, gso: false, "gso-max-size": 0,
   "auto-redirect": false, "inet4-address": ["198.18.0.1/30"], "inet6-address": [],
+  "udp-timeout": 120, "iproute2-table-index": 2023, "iproute2-rule-index": 9100,
+  "endpoint-independent-nat": false,
 };
-// 客户端自有的应用/用户筛选；仅用合成值，不代表任何设备的实际名单。
+// 客户端自有的应用/用户/接口/MAC 筛选；仅用合成值，不代表任何设备的实际名单。
 const tunSelectors = {
+  // 接口包含/排除同时存在只用于验证字段透明保留，不是可直接运行的设备配置。
+  "include-interface": ["synthetic-lan-2", "synthetic-lan-1"],
+  "exclude-interface": ["synthetic-wan-2", "synthetic-wan-1"],
+  "include-mac-address": ["02:00:00:00:00:02", "02:00:00:00:00:01"],
+  "exclude-mac-address": ["02:00:00:00:00:04", "02:00:00:00:00:03"],
   "include-package": ["org.example.second", "org.example.first"],
   "exclude-package": ["org.example.excluded.second", "org.example.excluded.first"],
   "include-android-user": [10, 0],
@@ -90,7 +97,8 @@ function checkTunSelectors(js, source, label) {
   }
   assert.deepEqual(mergeClient(pre, { tun: {} }), clone(pre), "软件末层省略名单应保留前置名单");
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(clone(pre.tun[key]), value);
-  console.log(`${label}: 7 个 TUN 筛选字段独立/空值/缺省/深拷贝/幂等/前后层合并、7 个丢失负向控制 OK`);
+  const count = Object.keys(tunSelectors).length;
+  console.log(`${label}: ${count} 个 TUN 筛选字段独立/空值/缺省/深拷贝/幂等/前后层合并、${count} 个丢失负向控制 OK`);
 }
 // Sparkle 的末层合并：对象递归、普通数组替换。仅用于合成输入，不操作客户端。
 function mergeClient(base, controlled) {
@@ -107,20 +115,32 @@ function checkDeviceBoundary(js, source) {
   const result = evaluate(js, input);
   for (const [key, value] of Object.entries(deviceTun)) assert.deepEqual(result.tun[key], value, `设备字段丢失：tun.${key}`);
   for (const key of Object.keys(deviceTun)) assert(!Object.hasOwn(evaluate(js).tun, key), `设备字段不应凭空下发：${key}`);
+  // 客户端切换值或传入 0/false 时不能回落到公共默认值，也不能影响公共策略。
+  for (const [key, values] of Object.entries({
+    "udp-timeout": [0, 600], "iproute2-table-index": [0, 3022],
+    "iproute2-rule-index": [0, 10000], "endpoint-independent-nat": [false, true],
+  })) {
+    for (const value of values) {
+      const configured = evaluate(js, { tun: { [key]: value } });
+      assert.equal(configured.tun[key], value, `客户端 TUN 参数丢失：${key}=${value}`);
+      delete configured.tun[key];
+      assert.deepEqual(normalize(configured), normalize(source), `客户端 TUN 参数改变了公共策略：${key}`);
+    }
+  }
   // unified-delay（统一延迟）和 TUN 单值项一样交客户端；仓库不能强制 true，也不能在缺省时自行补值。
   assert.equal(result["unified-delay"], false, "客户端关闭统一延迟后不得被仓库重新开启");
   assert.equal(evaluate(js, { "unified-delay": true })["unified-delay"], true, "客户端开启统一延迟后应保留");
   assert(!Object.hasOwn(evaluate(js), "unified-delay"), "客户端未设置统一延迟时仓库不得凭空下发");
 
-  // 自定义 JS 运行在 ClashMi 最终客户端补丁之前；输入里的 IPv6 可能来自机场订阅旧值。
-  // 所以这里故意要求公共 DNS 仍为 ipv6=true，不能把“订阅阶段字段”误当成当前 UI 状态。
+  // 自定义 JS 的输入可能仍含机场订阅旧值；Clash Mi 内置覆写的最终顺序依版本和所选模式而异。
+  // 因此公共 DNS 保持 ipv6=true，不能把 JS 输入字段误当成当前 UI 状态。
   assert.equal(result.dns.listen, "127.0.0.1:7874", "客户端 DNS 监听地址/端口不得被公共层覆盖");
   assert(!Object.hasOwn(evaluate(js).dns, "listen"), "客户端未设置 DNS 监听时仓库不得凭空下发");
   const policyDns = clone(result.dns);
   delete policyDns.listen;
   assert.deepEqual(policyDns, source.dns, "订阅阶段 IPv6 旧值不得覆盖公共 DNS 能力");
 
-  // 模拟 ClashMi 的最后一层：只由客户端顶层 ipv6 决定最终有效 IPv6。
+  // 合成客户端最终仅覆写顶层 ipv6 的一种情况；真实客户端还须回读运行配置。
   // Mihomo 的有效 DNS IPv6 需要顶层 ipv6 与 dns.ipv6 同时为 true；公共层固定能力后，
   // 无论订阅旧值是什么，UI 最终 false/true 都能得到 false/true，避免反向锁死。
   const effectiveIpv6 = config => config.ipv6 === true && config.dns?.ipv6 === true;
@@ -174,6 +194,8 @@ function checkMobileDesktopBoundary(js, source, label) {
           enable: true, device: "synthetic-desktop", stack: "mixed", "auto-route": true,
           "auto-detect-interface": true, "strict-route": true, mtu: 1400,
           gso: false, "gso-max-size": 0, "auto-redirect": false,
+          "udp-timeout": 180, "endpoint-independent-nat": true,
+          "exclude-interface": ["synthetic-vpn"],
           "inet4-address": ["198.18.0.1/30"], "inet6-address": ["fdfe:dcba:9876::1/126"],
         },
       },

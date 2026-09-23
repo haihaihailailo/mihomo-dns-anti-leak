@@ -12,6 +12,8 @@
 
 对有临时下载开关的供应商，先开启开关再更新。关闭时的拒绝或旧缓存不等于所有来源失败；不要循环重试、泄露 URL token 或关闭证书验证。
 
+若 OpenClash 正在使用 Sub-Store 组合订阅，检查是否还把同一供应商的直链作为另一条 OpenClash 定时订阅。限时开关关闭时，独立直链可能报错，而组合也可能保留上次成功导出的节点；这两种结果应分别核对。独立条目不承担备用用途时，可在备份后只移除重复的 OpenClash 条目和闲置配置文件，保留 Sub-Store 的单条来源、组合及其节点。需要真正刷新该供应商时，在下载窗口内先刷新 Sub-Store 单条与组合，再由 OpenClash 拉取组合并核对节点及生效配置；不要只等下一次定时任务碰巧落在窗口内。
+
 ### 获取失败时保留最后成功额度
 
 原版 sum.js 会跳过取不到额度的来源，可能把合计总量显示成较小值。[sub-store-flow-fallback.js](sub-store-flow-fallback.js) 使用 Sub-Store 原生 `scriptResourceCache` 补充一个指定来源的有界回退；[prepare-sub-store-flow.cjs](prepare-sub-store-flow.cjs) 将它插入经审查的原始脚本，只从 stdin 读取并向 stdout 输出候选，不联网、不部署、不自动下载第三方源码。

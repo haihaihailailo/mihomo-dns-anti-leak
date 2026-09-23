@@ -23,7 +23,7 @@
 | TUN / 顶层 IPv6 / 运行模式 | 由客户端决定 | 由客户端决定 |
 | DNS 双栈 fake-ip | 公共层保持 `dns.ipv6: true` 与固定 IPv6 fake-ip 地址池；最终是否启用由客户端顶层 `ipv6` 与内核共同门控 | 同左 |
 
-- **为什么 ClashMi 关闭 IPv6 后，运行配置里仍可能看到 `dns.ipv6: true`：** 自定义 JS 是在客户端最终补丁之前对“订阅配置”执行的，JS 输入里的 `ipv6` / `dns.ipv6` 可能是机场旧值，不能可靠代表当前 UI。公共层因此固定保留 DNS IPv6 能力与 `fake-ip-range6`，不再复制订阅阶段的开关；客户端最后写入的顶层 `ipv6` 才是设备侧开关。标准 Mihomo 的实际 DNS IPv6 需要顶层 `ipv6` 与 `dns.ipv6` 同时允许，所以“配置文本中 dns.ipv6=true”本身不等于 AAAA 已实际启用。这样也避免 UI 打开 IPv6 时被订阅遗留的 `dns.ipv6=false` 反向锁死。
+- **为什么 Clash Mi 关闭 IPv6 后，运行配置里仍可能看到 `dns.ipv6: true`：** 自定义 JS 的输入中，`ipv6` / `dns.ipv6` 可能是机场旧值，不能可靠代表当前 UI；内置覆写是否再次改写它们取决于客户端版本和模式。公共层因此固定保留 DNS IPv6 能力与 `fake-ip-range6`，不复制订阅阶段的开关。标准 Mihomo 的实际 DNS IPv6 需要最终配置的顶层 `ipv6` 与 `dns.ipv6` 同时允许，所以“配置文本中 dns.ipv6=true”本身不等于 AAAA 已实际启用。重连后应回读两项，避免 UI 与运行配置不一致。
 - GitHub、YouTube、Netflix、Google、Meta / X、TikTok、Spotify 和漏网流量归入 `节点选择`。Telegram 使用独立的 `电报消息` 组，国内/国外入口均默认 `新加坡-自动`，可单独切换香港或其他地区；Mihomo 的 Telegram 专用 DNS 同步跟随该组。地区接近不保证头像、视频或通话质量，仍须实测。`游戏平台` 保持独立，默认跟随节点选择。Mihomo 的 AI 默认 `美国-AI-自动`；不需要代理且当地可用时可手动选择 `AI → DIRECT`。
 - Mihomo 两地版所有自动组使用 `lazy: true`、`tolerance: 100`，保留 300 秒间隔和 10000 毫秒超时。减少闲置探测及小幅延迟波动造成的选路变化，不保证提速或解决 SSL 报错。若订阅通过 proxy-providers 引入，其自身健康检查仍须在客户端核对。`微软/苹果服务` 默认 DIRECT，原有业务/地区测速端点不变。
 - 已知微软域名 DNS 在 Mihomo 国外版使用全球 DoH、跟随 `微软/苹果服务`；原 Google、YouTube、GitHub DNS 策略引用同步改为 `节点选择`。国内域名查询继续交给国内 DNS，这是显式分流，不代表所有 DNS 都经海外节点。
@@ -54,6 +54,14 @@
 ### 桌面与手机切换与回退
 
 手机和电脑**不再维护两套公共分流文件**：同一所在地直接共用对应地区的 JS/YAML。手机可保留自己的 MIPS/gVisor、MTU、IPv6、分应用名单等设置；电脑可保留自己的 mixed/system、接口、MTU、进程匹配等设置。公共配置只统一 DNS、规则、策略组、DNS 劫持列表与私网排除列表，避免设备切换时重复维护大段内容。CI 用两套相反的合成手机/电脑参数做回归，防止以后又把某个平台的单值默认写死进公共模板。
+
+| 客户端 | 使用入口 | 生效前必须核对 |
+| --- | --- | --- |
+| 电脑 Sparkle / Mihomo Party | 在已有机场订阅上启用同地区 JS 覆写；不要把 JS 当主订阅 | 覆写是否绑定当前订阅、规则模式，以及最终配置里的 DNS、TUN、IPv6 和手选组。软件自身控制的字段以最终配置为准。 |
+| 安卓 Clash Mi | 已验证支持 JS 的版本使用同地区 JS 取得动态节点别名适配；若 JS 无法生效，使用 YAML 并由 Sub-Store 预处理节点。只启用一种覆写 | 自定义覆写与 App 内置覆写的先后和共存行为可能随版本、所选模式变化。重连后看最终配置：`dns.enable: true`、`enhanced-mode: fake-ip`、DNS 劫持列表、顶层 IPv6/TUN 开关及分应用名单；若被内置层改写，先调整客户端覆写模式，不能只看导入文件。 |
+| MT6000 OpenClash | 机场配置订阅配合同地区远程 CONF 模块；公共 YAML 只作本地合成模板 | 模块只绑定目标配置，确认最终策略组、规则、DNS 和原有节点都在；设备的端口、监听、透明接管与 IPv6 开关仍由 OpenClash 管理。 |
+
+Clash Mi 的[官方覆写顺序说明](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)描述了订阅、自定义覆写和内置覆写三层；其项目也记录过[自定义 JS 与内置 DNS/TUN 不共存的版本表现](https://github.com/KaringX/clashmi/issues/446)。因此这里不以“脚本执行成功”替代最终运行配置验收。YAML 不执行 JS 节点别名适配；若订阅节点需要该能力，先在 Sub-Store 的单条来源中处理，再导入组合。
 
 1. 先在客户端备份当前配置与手动策略选择。
 2. 停用客户端中已有的原版覆写和国内 DNS 补充层，改为所选国内版或国外版，**只启用一套、一个格式，不再叠加补充层**。保留机场订阅。仓库已移除旧的 `防DNS泄露.yaml` / `.js` 与 `Windows-国内网络覆写.yaml` / `.js` 入口；仍引用旧 URL 的客户端须手动更换，新文件不会自动替换旧导入项。
@@ -156,7 +164,7 @@
 
 花云直订阅曾将 SS 节点全部标为 `udp: false`。JS 和 OpenClash CONF 仅对订阅 `hosts` 中存在 `.aws-agent.com` → `.apt-agent.dev` 精确域名关系的 `obfs/http` SS 节点（含已转换的目标域名）设为 `udp: true`；其他节点的 UDP 原样保留。该识别不依赖节点名字，也不启用 UOT、TFO、MPTCP、smux 或顶层 IPv6。供应商将来更换域名关系时须重新核对，不能保证自动识别；没有该关系的输入不强制启用。UDP 开关与实际双向连通性分别验证，域名转换也不保证改善延迟或修复 Telegram 媒体。
 
-从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；客户端自己的 DNS/TUN 末层覆写仍需核对。[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)。重新连接后，在最终配置中检查节点 `server` 是否等于本次订阅的别名目标，并核对上述花云节点的 `udp: true`；其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
+从 YAML 切换的 Clash Mi 用户：保留原机场订阅，导入同地区 JS 并选为该订阅的覆写，停用原 YAML，避免两套叠加；[官方覆写顺序](https://clashmi.app/guide/faq#clashmi覆写是如何工作的)和实际版本均须核对。重新连接后，在最终配置中检查 DNS/TUN、节点 `server` 是否等于本次订阅的别名目标，并核对上述花云节点的 `udp: true`；其他节点字段和设备设置应保留。回退时停用 JS 并重新启用原 YAML；GitHub 文件更新不代表手机已经导入或生效。
 
 Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a function`：旧 JS 调用了部分引擎没有的 `Object.hasOwn`。两地入口已统一使用兼容的 `Object.prototype.hasOwnProperty.call`，同时修复 AI DNS 中的同类调用，不修改全局 JS 对象。遇到旧错误时先更新客户端中的远程 **JS 覆写文件**，仅更新机场订阅不会替换缓存的覆写脚本。离线回归会禁用该 API，比较两地完整输出、节点别名、设备字段及幂等，并逐一恢复四处旧调用确认测试能检出；这不等于手机实机验收。[兼容写法说明](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn#description)。
 
@@ -263,13 +271,29 @@ rules:
 
 ### 通用配置与设备设置的边界
 
+按字段用途划分归属；数组也可能是设备接管名单。JS 只能保留本次输入中可见的客户端值，不能读取客户端 UI；软件末层仍可能再次覆写，所以最终配置回读是验收依据。
+
+| 字段或功能 | Mihomo 手机/电脑入口 | OpenClash 路由器入口 |
+| --- | --- | --- |
+| 运行模式、顶层 IPv6、统一延迟、端口、认证 | 客户端管理；公共入口不下发 | OpenClash 管理 |
+| TUN 开关、栈、接口、MTU、路由开关与明确列出的设备参数 | JS 保留显式输入，缺省不补；YAML 不下发 | 不下发 TUN 块，由 OpenClash 接管 |
+| 应用、用户、接口、MAC 接管名单 | 属于设备设置；JS 保留，空数组保留为空 | 由 OpenClash 管理接管范围 |
+| `dns.listen` | JS 保留显式输入；YAML 不固定 | CONF 保留设备值 |
+| `dns.ipv6`、`dns.fake-ip-range6` | 公共层提供双栈能力；最终生效同时受顶层 IPv6、内核和客户端末层影响 | 公共模板不下发；CONF 保留设备值 |
+| DNS 上游、解析策略、fake-ip 过滤、嗅探规则 | 仓库维护；客户端配合启用，不用旧订阅整块覆盖 | 公共模块维护；核对 OpenClash 后续改写 |
+| `tun.dns-hijack`、`tun.route-exclude-address` | 仓库提供公共列表；客户端末层若替换，必须核对完整内容 | 由 OpenClash 管理 |
+| 分流规则、规则集、策略组及测速语义 | 仓库维护；实际手选节点/组由客户端保存 | 同左，路由器投影移除进程规则 |
+
+这些分工复用现有 JS 白名单保留与 OpenClash 模块投影，不引入第二套配置合并器。字段能力依据 [Mihomo TUN 文档](https://wiki.metacubex.one/config/inbound/tun/) 与 [最低支持版本 v1.19.27 的配置定义](https://github.com/MetaCubeX/mihomo/blob/v1.19.27/config/config.go)；字段可被保留不代表每个平台都支持其作用。
+
 - 用户指定服务器例外：Mihomo 国内/国外 YAML、JS 仅将 `47.81.15.184` 的 **TCP 22** 连接设为 DIRECT，位于既有局域网/广告/网站例外之后、应用分流之前，避免 TUN 代理出口与 SSH 来源白名单不一致。采用 [AND 逻辑规则](https://wiki.metacubex.one/config/rules/#and-or-not)，IP 子规则带 `no-resolve`；不扩展到其他主机、该主机的其他端口、UDP 或整个 `ssh.exe` 进程。此条按仓库所有者要求公开，其他用户不需要该例外时可删除；服务器地址未来变动需重新核对。
 - 这不修改云安全组、服务器防火墙、SSH 密钥或系统路由，也不保证动态公网 IP 永远与白名单一致。
 
 - 内部共同源码承载各设备可复用的域名/应用分流、DNS 策略、回国隔离和测速参数；两地入口通过生成器同步共有部分，环境差异不绑定某家机场。
-- TUN 按“单值设备控制交客户端、需要维护列表的策略交仓库”划分：`tun.stack`（网络栈）、`tun.auto-route`（自动路由）、`tun.auto-detect-interface`（自动检测出口接口）、`tun.strict-route`（严格路由）不再由公共模板固定，和既有的 `tun.enable`（TUN 开关）、`tun.device`（TUN 设备名）、`tun.mtu`（最大传输单元）、`tun.gso`（通用分段卸载）、`tun.gso-max-size`（GSO 最大块大小）、`tun.auto-redirect`（自动重定向）、`tun.inet4-address`（TUN IPv4 地址）、`tun.inet6-address`（TUN IPv6 地址）一样由客户端/系统决定。两地 JS 会保留输入中这些显式值，缺省时不自行补值；两地 YAML 也不再下发前述四个开关/模式。这样 Clash Mi 可直接选择 `system/gvisor/mixed/mips` 并按平台管理路由，不需要为了切模式修改仓库。需要维护具体内容的 `tun.dns-hijack` 和 `tun.route-exclude-address` 仍由仓库提供。顶层 `mode` / `ipv6` 继续由客户端决定，`dns.ipv6` / `dns.fake-ip-range6` 使用公共能力值。
-- `unified-delay`（统一延迟）同样属于客户端单开关：公共 YAML/JS/OpenClash 模板均不再固定 `true`。Clash Mi 的最终补丁会携带该值，因此用户在客户端选择开/关后应以客户端结果为准；JS 输入显式提供时原值会保留，缺省时由客户端/内核决定。
-- Clash Mi、Sparkle 等会在自定义覆写之后继续合并软件管理字段；客户端末层明确设置的 TUN 单值项应优先。普通数组会替换而非自动追加，因此使用本仓库 DNS 劫持策略时，仍应确认最终 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探的详细规则由仓库管理时，不要为了调整一个开关整块覆盖 DNS / Sniffer 策略。
+- TUN 设备参数包括 `enable`、`device`、`stack`、`auto-route`、`auto-detect-interface`、`strict-route`、`mtu`、`gso`、`gso-max-size`、`auto-redirect`、`inet4-address`、`inet6-address`，以及 `udp-timeout`、`iproute2-table-index`、`iproute2-rule-index`、`endpoint-independent-nat`。两地 JS 保留输入中的显式值（包括 false 和 0），缺省不补默认值；YAML 不下发这些设备值。客户端可按平台选择支持的栈、路由与超时参数；仓库不负责判断输入是否适合当前平台。
+- TUN 设备名单包括 `include-package` / `exclude-package`、`include-android-user`、`include-uid` / `exclude-uid`、`include-uid-range` / `exclude-uid-range`、`include-interface` / `exclude-interface`、`include-mac-address` / `exclude-mac-address`。JS 深拷贝保留显式名单的内容、顺序和空数组，不把上次名单带入下一次覆写。接口包含与排除名单按 Mihomo 要求不能同时配置；仓库不替用户扩大接管范围或补接口/MAC 示例值。`dns-hijack` 与公共私网排除仍按上表由仓库维护。
+- `unified-delay`（统一延迟）同样属于客户端单开关：公共 YAML/JS/OpenClash 模板均不再固定 `true`。客户端的最终补丁若携带该值，用户在软件里选择开/关后应以最终配置为准；JS 输入显式提供时原值会保留，缺省时由客户端/内核决定。
+- Clash Mi、Sparkle 等客户端可能在自定义覆写之后继续合并软件管理字段，具体受版本和覆写模式影响；客户端末层明确设置的 TUN 单值项应以最终运行配置为准。普通数组会替换而非自动追加，因此使用本仓库 DNS 劫持策略时，仍应确认最终 `tun.dns-hijack` 同时含 `any:53` 和 `tcp://any:53`。DNS 与嗅探的详细规则由仓库管理时，不要为了调整一个开关整块覆盖 DNS / Sniffer 策略。
 - 不下发订阅地址、具体节点选择、代理环境变量、系统代理开关、网卡名、MTU、Windows 路由或其他 VPN 的设置。更换机场后核对所选地区组非空，切换所在地后检查已保存的手选策略。
 - 验证顺序：先检查最终合并配置，再观察连接日志中的命中规则和出口，然后测试实际登录/业务。测速 URL 可达只证明该端点可达，不等于吞吐速度、服务解锁或整个 App 正常。
 - 回退：停用当前入口，恢复导入前的客户端备份或重新导入更新前的对应地区版。导入前备份客户端配置与手选策略，不直接修改客户端生成的运行配置。
@@ -295,7 +319,7 @@ rules:
 - 四套入口由各客户端内部共同源码、环境差异及最终分组精简投影生成，不分别手改地区版。内部源码仍保留细分服务组作为规则分类来源，**不代表公开入口仍有这些组**；生成的 JS 也在运行时投影为精简组。开发依赖仅用于生成和测试，客户端不需要 Node.js 或 npm。
 - `tune_mihomo.cjs` 在精简后为两个 Mihomo 入口统一添加 AI 地区自动组、懒测速/容差和 AI DNS；同一自包含函数嵌入 JS。`validate_mihomo_tuning.cjs` 独立验证允许的差异、回国隔离、可见组不增加、幂等与负向控制。
 - 以后修改主配置时，需要同步检查 Mihomo YAML / JS 与 OpenClash YAML / CONF。
-- 换设备时只需重新导入私人订阅/Sub-Store 输出和对应公开入口：手机/电脑推荐 JS，OpenClash 使用 CONF。更新机场订阅不会自动刷新缓存的远程覆写，应分别更新。首次核对 `电报消息 → 新加坡-自动`；已有选择缓存按客户端保留。Sub-Store 的逐节点 TFO/MPTCP 结果随私人订阅输出传递，公共配置保留这些字段，不携带私人服务器名单或过期的测试白名单。
+- 换设备时重新导入私人订阅/Sub-Store 输出和对应公开入口：电脑优先使用 JS，安卓 Clash Mi 按已验证的版本选择 JS 或 YAML，OpenClash 使用 CONF。更新机场订阅不会自动刷新缓存的远程覆写，应分别更新。首次核对 `电报消息 → 新加坡-自动`；已有选择缓存按客户端保留。Sub-Store 的逐节点 TFO/MPTCP 结果随私人订阅输出传递，公共配置保留这些字段，不携带私人服务器名单或过期的测试白名单。
 - 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新八个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
 - 路由器回归由同一入口调用：检查 YAML 1.1/1.2 的字符串 `off`、进程规则移除、设备/私有字段隔离、完整差异允许范围及生成漂移；CI 另执行 Ruby aliases 解析和两份模板的 Mihomo 加载。不会联网读取私人订阅或修改路由器。
 - GitHub 托管的临时 Ubuntu VM 在隔离内核验收步骤使用 `sudo -n` 运行同一入口，使产物封存时的 `/proc` 占用检查可读取系统进程；只传入 PATH 和三个显式测试路径，不改变仓库 token 权限或本地系统权限。占用、不可读和收尾失败仍阻止通过，不跳过生命周期保护；不将此步骤复制到自托管或生产机器。[GitHub 托管运行器权限](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#administrative-privileges)
