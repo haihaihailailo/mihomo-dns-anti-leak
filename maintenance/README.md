@@ -2,14 +2,14 @@
 
 这里保存不含订阅、节点、认证信息和私人设备记录的维护来源。与八个公开入口分开：导入远程 CONF **不会**安装这些系统设置，构建工具也不会连接设备。不要将本目录作为机场订阅导入。
 
-已验证旧设备基线：GL-MT3600BE 固件 4.9.0、OpenClash 0.47.156、logrotate 3.17.0。当前 GL-MT6000 应视为新的设备验证基线：在复核实际固件版本、启动脚本、watchdog、logrotate 和服务布局之前，不把 MT3600BE 的维护补丁直接视为已验证可用。其他版本同样先检查实际启动脚本；不承诺固件升级后仍保持补丁。
+已验证基线：旧 GL-MT3600BE 固件 4.9.0，以及 GL-MT6000 固件 4.9.1 / fw3；OpenClash 0.47.156、logrotate 3.17.0。MT6000 的 DNS 重启保护、WAN 顺序及日志轮转已在 2026-09-24 完成设备验收，详见 [重启保护与验证边界](openclash-restart.md)。版本号相同不等于脚本相同，仍需审查实际源码和哈希；不承诺升级后自动保持补丁。
 
-## 日志轮转（GL-MT3600BE 旧设备候选）
+## 日志轮转
 
-以下阈值、路径和操作步骤属于旧设备的已验证候选，不代表 MT6000 已安装该补丁。MT6000 的原生 OpenClash watchdog 仍可能在达到 `log_size` 时清空整份 `/tmp/openclash.log`；应先核对当前脚本、日志量和可用内存，再决定是否单独适配。不要直接把旧设备的 watchdog 补丁复制到 MT6000。
+复用已有 watchdog 候选生成器；MT6000 已验证安装与真实轮转，其他设备先核对脚本、日志量和可用内存。公开配置不会自动安装维护脚本或 logrotate。
 
-- [openclash-logrotate.conf](openclash-logrotate.conf)：此候选的轮转阈值为 2 MiB，保留 4 份历史，延迟压缩最近一份；正常未压缩总量约 10 MiB，另预留至少 4 MiB 临时空间。周期检查不是硬配额，实际保留时间取决于日志量。
-- 旧设备候选目标为 `/etc/openclash/custom/openclash-logrotate.conf`，root 所有、0600 权限。使用既有 watchdog 循环调用 `/usr/sbin/logrotate -s /tmp/openclash-logrotate.status /etc/openclash/custom/openclash-logrotate.conf`，替换原日志整份清空区块；不能保留清空区块后仅追加轮转命令。
+- [openclash-logrotate.conf](openclash-logrotate.conf)：每日或超过 2 MiB 时轮转，保留 4 份历史，`maxage 7` 在轮转时处理过期历史，延迟压缩最近一份；正常未压缩总量约 10 MiB，另预留至少 4 MiB 临时空间。周期检查不是硬配额，空闲日志不承诺精确按年龄清理。
+- 候选目标为 `/etc/openclash/custom/openclash-logrotate.conf`，root 所有、0600 权限。使用既有 watchdog 循环调用 `/usr/sbin/logrotate -s /tmp/openclash-logrotate.status /etc/openclash/custom/openclash-logrotate.conf`，替换原日志整份清空区块；不能保留清空区块后仅追加轮转命令。
 - 历史路径 `/tmp/openclash-log-history/openclash.log.1`、`.2.gz`、`.3.gz`、`.4.gz`。目录由 logrotate 以 0700 创建。插件重启通常追加日志，整机重启会丢失这些 RAM 日志。网页日志主要显示当前文件。
 - `copytruncate` 保留写入句柄；复制与截断之间存在少量日志丢失窗口，不适合作为零丢失审计。配置依据 [logrotate 3.17.0 官方手册](https://github.com/logrotate/logrotate/blob/3.17.0/logrotate.8.in)。
 
@@ -72,4 +72,4 @@ Fake-IP 应答模式保持不变。本节只比较 `enable_redirect_dns=2`（防
 
 [openclash-wan-dns-guard.sh](openclash-wan-dns-guard.sh) 是可选的原生自定义防火墙钩子组件，不随公共 CONF 自动安装。它从 WAN zone 的 INPUT 规则读取接口，对 IPv4/IPv6 的 TCP/UDP 53 和核心 DNS 端口，拒绝 ORIGINAL 方向入站；不拦截路由器主动请求的回复。不得只凭监听地址或“仅内网访问”开关推断边界。
 
-当前实现针对 fw3/iptables，检测到 fw4 时拒绝操作；不能在未验收设备上宣称兼容 nftables。安装前做 `sh -n`，保留原钩子，在其中 source 此文件并显式调用 `oc_wan_dns_guard`，失败须记录警告。接口变化、规则重建、升级和服务重启后复核规则并从 WAN 实测。源码和 mocked 测试可以公开，设备检查点和私有网络记录留在本地。
+当前实现针对 fw3/iptables，检测到 fw4 时拒绝操作；不能在未验收设备上宣称兼容 nftables。通过临时等价 REJECT 保护，将已有规则按精确内容移到 INPUT 顶部，避免被原生 DNAT ACCEPT 遮挡；删除数量有上限，失败保留保护并返回错误。中断后须检查暂存规则；不承诺与其他防火墙写入器之间的跨命令原子性。安装前做 `sh -n`，保留原钩子，在其中 source 此文件并显式调用 `oc_wan_dns_guard`，失败须记录警告。接口变化、规则重建、升级和服务重启后复核规则并从 WAN 实测。源码和 mocked 测试可以公开，设备检查点和私有网络记录留在本地。

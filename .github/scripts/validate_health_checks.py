@@ -29,6 +29,10 @@ def check_maintenance():
         [ruby, str(Path(__file__).with_name("test_openclash_dns.rb"))],
         check=True, timeout=15,
     )
+    subprocess.run(
+        [ruby, str(Path(__file__).with_name("test_openclash_restart.rb"))],
+        check=True, timeout=15,
+    )
 
 if "--check-maintenance" in sys.argv:
     if len(sys.argv) != 2:

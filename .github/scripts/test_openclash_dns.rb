@@ -53,7 +53,7 @@ mock = <<~'SH'
   ip6tables() { fake_iptables "$@"; }
 SH
 output, error, status = Open3.capture3('sh', '-s', stdin_data: mock+guard+"\noc_wan_dns_guard\n")
-check(status.success? && output.lines.size==4, 'guard fixture failed: '+error)
+check(status.success? && output.lines.size==8, 'guard fixture failed: '+error)
 check(output.lines.all?{|l|l.include?('--ctdir ORIGINAL') && l.include?('--dports 53,7874')}, 'reply protection missing')
 _, _, status = Open3.capture3('sh', '-s', stdin_data: mock+guard+"\nuci() { echo bad; }; oc_wan_dns_guard\n")
 check(!status.success?, 'invalid port accepted')
@@ -61,5 +61,5 @@ output, _, status = Open3.capture3('sh', '-s', stdin_data: mock+guard+"\ncommand
 check(!status.success? && output.empty?, 'unsupported fw4 changed rules')
 existing = mock.sub("*' -C INPUT '*) return 1", "*' -C INPUT '*) return 0")
 output, _, status = Open3.capture3('sh', '-s', stdin_data: existing+guard+"\noc_wan_dns_guard\n")
-check(status.success? && output.empty?, 'existing guard duplicated')
+check(!status.success? && output.lines.size==1, 'unbounded duplicate cleanup accepted')
 puts 'OpenClash DNS: authoritative zone, both interception modes, atomicity, daily updates, pins and mocked WAN guard PASS'
