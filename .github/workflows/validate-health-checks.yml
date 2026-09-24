@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "maintenance/**"
-      - ".github/scripts/test_openclash_maintenance.rb"
+      - ".github/scripts/test_openclash_*.rb"
       - ".github/scripts/test_sub_store_flow.cjs"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
@@ -47,7 +47,7 @@ on:
   pull_request:
     paths:
       - "maintenance/**"
-      - ".github/scripts/test_openclash_maintenance.rb"
+      - ".github/scripts/test_openclash_*.rb"
       - ".github/scripts/test_sub_store_flow.cjs"
       - ".github/config/shared.yaml"
       - ".github/config/shared.js"
