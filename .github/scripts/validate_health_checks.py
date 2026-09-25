@@ -10,7 +10,11 @@ import sys
 import shutil
 
 def check_maintenance():
-    """Bounded, memory-only Ruby fixtures; no router calls or generated files."""
+    """Bounded, memory-only fixtures; no router calls or generated files."""
+    subprocess.run(
+        ["node", "--max-old-space-size=64", str(Path(__file__).with_name("test_openclash_updates.cjs"))],
+        check=True, timeout=30,
+    )
     subprocess.run(
         ["node", "--max-old-space-size=64", str(Path(__file__).with_name("test_sub_store_flow.cjs"))],
         check=True, timeout=15,
