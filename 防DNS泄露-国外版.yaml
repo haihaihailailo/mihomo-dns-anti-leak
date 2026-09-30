@@ -132,6 +132,7 @@ dns:
     - +.stun.*
     - stun.*.*
     - localhost.work.weixin.qq.com
+    - local.ionewu.com
   # 配置说明：启动解析器，用于解析 DNS 上游的域名。
   default-nameserver:
     - https://1.1.1.1/dns-query

@@ -195,6 +195,7 @@ Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a fu
 - 配置无法可靠判断当前公网所在地，因此不硬编码自动切换；`profile.store-selected` 会记住手动选择，跨境后只需切换一次对应策略组。
 - Mihomo 两地版的已知 AI 域名使用 AI 组解析，节点域名解析仍使用独立直连 DNS。不保证仅按进程识别的请求、未知第三方域名或绕过 VPN 的应用也使用同一 DNS 出口；同名策略也不意味着 DNS 缓存与每条连接永远使用同一 IP，不能将其视为整个系统零泄露保证。
 - 系统更新、局域网、NTP、推送等既有直连规则保持不变。
+- 节点小宝的本机接口域名 `local.ionewu.com` 在八个公开入口中精确排除 Fake-IP，沿用 DNS 上游的真实应答，避免把本机回环接口映射为虚拟地址。仅覆盖这一域名，不写固定 IP，也不改变 `ionewu.com` 其他域名的分流或安装本机组件；它不保证网页登录、辅助服务或远程功能正常。[Mihomo Fake-IP 过滤](https://wiki.metacubex.one/config/dns/#fake-ip-filter)
 - 用户指定的[聚神铺](https://www.jspoo.com/)（`jspoo.com` 根域名及子域名）在两地版均固定 DIRECT，位于广告规则之后、通用业务规则之前。Mihomo 的 DNS 随国内或国外环境使用对应解析器，不跟随回国组；导航页里的第三方外链继续按各自域名分流。
 - Tampermonkey 的 `tampermonkey.net` 根域名及子域名（包括 `accounts.tampermonkey.net`）在公开入口中直连，位置在既有网站例外之后、业务规则之前；Mihomo 的专用 DNS 随国内/国外环境使用对应解析器，避免被通用国外集合改走代理。仅调整这个域名后缀，不放行整个浏览器进程，也不改变 Google、Microsoft 等第三方登录和云同步服务的分流。保留扩展同步与 TLS 验证；端点可达不代表整个 OAuth 流程已通过。[Tampermonkey 同步说明](https://www.tampermonkey.net/faq.php?locale=en&q=Q105)
 - Steam 中国 CDN、中国大陆及海外游戏域名统一进入 `游戏平台`，Steam 包名/进程也进入该组；是否直连由组内选择决定。该组仍默认跟随节点选择，因此国内版默认可能代理游戏下载、消耗订阅流量；需要直连下载时手动选 DIRECT。B站专属游戏域名先归入 `哔哩哔哩港澳台`，不被游戏大集合截走。
@@ -342,6 +343,8 @@ rules:
 - CI 随后通过唯一测试入口调用隔离内核回归：只用回环 DNS 和合成答案验证优先级，再让 Mihomo 初始化公开规则快照，包括 MRS 完整解码；这不等于客户端或路由器的真实业务通过。
 - 本地默认入口保持离线；已有 Mihomo 时可设置 `MIHOMO_TEST_BIN` 为其绝对路径后重跑该入口，启用回环测试。先显式运行 `node .github/scripts/check_remote_rules.cjs --output-dir .generated/runs/<本次唯一名称>`，再将 `MIHOMO_RULE_CACHE` 指向其绝对路径，才能同时检查公开快照初始化。新快照正文可能复用上一快照文件，读取须使用项目加载器，不能只复制 manifest 所在目录。旧快照可显式只读引用，不会自动纳管或删除。`MIHOMO_TEST_OUTPUT` 若设置，也必须是 `.generated/runs/` 内不存在的新目录；缺省由工具生成唯一名称。测试不改系统代理、TUN 开关或客户端配置。
 - 新生成快照/测试缓存的容量、保留根、断点及安全回收规则见 [生成物生命周期](.github/ARTIFACTS.md)；不自动接管历史临时目录。
+- 生成前还检查物理可用空间：本次峰值预约加 256 MiB 余量；查询失败或空间不足会停止。防膨胀的定向合成验证走同一入口 `python .github/scripts/validate_health_checks.py --check-artifact-lifecycle`，保留 192 MiB Node 堆和 45 秒期限，不回收真实 `.generated`，不代表完整配置、内核或设备验收。
+- 生成与验收需要提供 `fs.statfsSync` 的 Node.js（该 API 从 v18.15.0 / v19.6.0 起可用），建议使用当前受支持的 LTS。缺少 API 或无法读取磁盘空间时拒绝生成；不关闭容量保护。[Node 文件系统 API](https://nodejs.org/api/fs.html#fsstatfssyncpath-options)
 - Dependabot 会每周检查 GitHub Actions 依赖更新。
 - YAML 开发依赖精确锁定为 `2.9.1`，锁文件记录来源与完整性；仅用于生成/验证，客户端无需安装。正常 merge alias、显式键覆盖、重复键拒绝和有限 alias 预算的递归拒绝均有离线回归。升级说明见 [YAML v2.9.1](https://github.com/eemeli/yaml/releases/tag/v2.9.1)。
 - Dependabot 也每周检查 npm 开发依赖，更新精确版本及锁文件后仍需通过现有 CI，不自动合并。最低内核矩阵、下载验证和依赖更新覆盖由 `validate_compatibility.cjs` 及负向控制检查。

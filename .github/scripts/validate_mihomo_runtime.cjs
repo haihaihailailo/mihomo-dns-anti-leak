@@ -106,6 +106,8 @@ async function fakeIpDnsCase(region, general, state) {
     nameserver: ["127.0.0.1:" + general], "default-nameserver": ["127.0.0.1:" + general] });
   if (state === "dns-off") dns.ipv6 = false;
   if (state === "no-pool") delete dns["fake-ip-range6"];
+  // 删除例外后用新内核重测，避免旧 fake-ip / DNS 缓存掩盖负向控制。
+  if (state === "no-local-helper") dns["fake-ip-filter"] = dns["fake-ip-filter"].filter(domain => domain !== "local.ionewu.com");
   // Mihomo config/utils.go checks host global-unicast IPv6 before creating the pool.
   // Hosted CI can be IPv4-only: use its supported test switch ONLY for this owned,
   // loopback-only child. No TUN, OS address/route change or public IPv6 connectivity claim.
@@ -121,7 +123,7 @@ async function fakeIpDnsCase(region, general, state) {
     }
     assert(addresses?.length, "双栈 DNS 监听未就绪：" + running.logs());
     assert(addresses.every(ip => /^198\.18\./.test(ip)), "IPv4 fake-ip 池应保留");
-    if (state === "enabled") {
+    if (state === "enabled" || state === "no-local-helper") {
       const ipv6 = await resolver.resolve6("dualstack.example");
       assert(ipv6.length && ipv6.every(ip => /^fdfe:dcba:9876:/.test(ip)), "AAAA 未返回公共 IPv6 fake-ip");
       assert.deepEqual(await resolver.resolve6("dualstack.example"), ipv6, "同一域名的 IPv6 映射应稳定");
@@ -130,7 +132,17 @@ async function fakeIpDnsCase(region, general, state) {
         "关闭顶层 IPv6 / DNS IPv6 / 删除地址池应停止下发 IPv6 fake-ip");
     }
     assert.deepEqual(await resolver.resolve4("router.lan"), ["198.51.100.10"], "局域网 fake-ip 过滤不得变化");
-    console.log(region + " 双栈 fake-ip / " + state + "：UDP A/AAAA、过滤与开关边界 OK（无 TUN / 公网出口测试）");
+    const helper = await resolver.resolve4("local.ionewu.com");
+    if (state === "no-local-helper") {
+      assert(helper.length && helper.every(ip => /^198\.18\./.test(ip)), "删除精确例外后本地域应恢复 fake-ip");
+    } else {
+      assert.deepEqual(helper, ["198.51.100.10"], "精确本地域应返回合成上游真实 A，不能固定地址或返回 fake-ip");
+    }
+    for (const domain of ["ionewu.com", "other.ionewu.com", "local.ionewu.com.example.test"]) {
+      const answer = await resolver.resolve4(domain);
+      assert(answer.length && answer.every(ip => /^198\.18\./.test(ip)), `本地域例外不得扩大到 ${domain}`);
+    }
+    console.log(region + " 双栈 fake-ip / " + state + "：UDP A/AAAA、精确本地域/父域/同级域/伪后缀、过滤与开关边界 OK（无 TUN / 公网出口测试）");
   } finally { resolver.cancel(); await stop(running); }
 }
 async function aiGroupsCase(region, empty) {
@@ -590,7 +602,7 @@ async function providerCase(file, manifest) {
     const ai = await upstream([203,0,113,20]);
     for (const region of ["国内", "国外"]) {
       await sshDirectCase(region);
-      for (const state of ["enabled", "global-off", "dns-off", "no-pool"]) await fakeIpDnsCase(region, general, state);
+      for (const state of ["enabled", "global-off", "dns-off", "no-pool", "no-local-helper"]) await fakeIpDnsCase(region, general, state);
       await aiGroupsCase(region, false);
       await aiGroupsCase(region, true);
       await dnsCase(region, general, ai, false);

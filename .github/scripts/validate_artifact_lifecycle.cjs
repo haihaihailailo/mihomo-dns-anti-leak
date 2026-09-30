@@ -83,6 +83,45 @@ try {
     cases.push('pre-allocation total budget, pre-write reservation');
   }
   {
+    const s = open('physical-low', { diskProbe: () => ({ bavail: 0n, bsize: 4096n }) });
+    const before = JSON.stringify(s.state);
+    assert.throws(() => s.begin('rules'), /Physical disk capacity/);
+    assert.equal(JSON.stringify(s.state), before, 'Low disk must refuse before pruning or transaction changes');
+    assert.equal(fs.readdirSync(path.join(s.root, 'runs')).length, 0);
+    assert(fs.existsSync(s.lock), 'Admission failure does not silently remove its evidence lock');
+    s.close(); // Exact synthetic fixture owner; no production recovery shortcut.
+    for (const [name, probe, error] of [
+      ['unknown', () => { throw Error('DISK_QUERY_FAILED'); }, /DISK_QUERY_FAILED/],
+      ['invalid', () => ({ bavail: -1n, bsize: 4096n }), /availability unknown/],
+    ]) {
+      const failed = open('physical-' + name, { diskProbe: probe });
+      assert.throws(() => failed.begin('runtime'), error);
+      assert.equal(fs.readdirSync(path.join(failed.root, 'runs')).length, 0);
+      failed.close();
+    }
+    const exact = open('physical-boundary', { diskProbe: () => ({
+      bavail: BigInt(policy.diskMarginBytes + policy.reservations.rules), bsize: 1n,
+    }) });
+    exact.checkDisk(policy.reservations.rules);
+    assert.throws(() => exact.checkDisk(policy.reservations.rules + 1), /Physical disk capacity/);
+    exact.close();
+    cases.push('physical free-space reservation, margin boundary, unavailable/invalid observation refusal');
+  }
+  {
+    const stateFile = path.join(ROOT, POLICY.root, 'state.json');
+    const before = fs.existsSync(stateFile) ? evidence(stateFile) : null;
+    const diskProbe = fs.statfsSync;
+    let produced = false;
+    try {
+      fs.statfsSync = () => ({ bavail: 0n, bsize: 4096n });
+      assert.throws(() => withBuildBudget(1, () => { produced = true; }), /Physical disk capacity/);
+    } finally { fs.statfsSync = diskProbe; }
+    assert.equal(produced, false);
+    if (before) verify(stateFile, before);
+    else assert(!fs.existsSync(stateFile));
+    cases.push('real source-build entry rejects low disk before callback or production store mutation');
+  }
+  {
     let s = open('usage'); let r = s.begin('rules'); const file = r.put('old.txt', 'preserve when usage unknown'); r.finish('failed');
     s = open('usage', { usageProbe: () => { throw Error('USAGE_UNKNOWN'); } });
     r = s.begin('rules'); r.put('new.txt', 'new failure');

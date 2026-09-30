@@ -166,6 +166,8 @@ dns:
     - "+.stun.*"
     - "stun.*.*"
     - "localhost.work.weixin.qq.com"
+    # 本地网页助手依赖上游真实地址；仅豁免此精确域名，不固定地址或扩大到整站。
+    - "local.ionewu.com"
   # 配置说明：启动解析器，用于解析 DNS 上游的域名。
   default-nameserver:
     - https://223.5.5.5/dns-query
