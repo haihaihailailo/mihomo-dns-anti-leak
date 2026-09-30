@@ -71,7 +71,7 @@ function usageClear(files) {
 function checkPolicy(p) {
   assert.equal(p.schemaVersion, 1);
   assert.equal(p.root, '.generated');
-  for (const k of ['budgetBytes', 'auditLimitBytes', 'logMaxBytes', 'sourceBuildMaxBytes'])
+  for (const k of ['budgetBytes', 'diskMarginBytes', 'auditLimitBytes', 'logMaxBytes', 'sourceBuildMaxBytes'])
     assert(Number.isSafeInteger(p[k]) && p[k] > 0, 'Invalid capacity policy');
   assert(p.logMaxBytes <= 104857600 && p.logMaxAgeDays > 0 && p.logMaxAgeDays <= 7);
   for (const k of ['rules', 'runtime', 'endpoints']) assert(Number.isSafeInteger(p.reservations[k]) && p.reservations[k] > 0);
@@ -83,9 +83,20 @@ class Store {
     assert(this.root.startsWith(ROOT + path.sep), 'Managed artifacts must remain in this checkout');
     this.policy = options.policy || POLICY; checkPolicy(this.policy);
     this.probe = options.usageProbe || usageClear;
+    this.diskProbe = options.diskProbe || fs.statfsSync;
     this.lock = path.join(this.root, 'lock');
     this.stateFile = path.join(this.root, 'state.json');
     this.owned = false;
+  }
+  checkDisk(reserve, directory = this.root) {
+    assert(Number.isSafeInteger(reserve) && reserve >= 0, 'Invalid physical disk reservation');
+    // BigInt avoids rounding large volumes; unavailable/invalid observations fail closed.
+    assert.equal(typeof this.diskProbe, 'function', 'Physical disk availability unknown: fs.statfsSync unavailable; use a supported Node.js runtime');
+    const stats = this.diskProbe(directory, { bigint: true });
+    assert(typeof stats.bavail === 'bigint' && stats.bavail >= 0n &&
+      typeof stats.bsize === 'bigint' && stats.bsize > 0n, 'Physical disk availability unknown');
+    const required = BigInt(reserve) + BigInt(this.policy.diskMarginBytes);
+    assert(stats.bavail * stats.bsize >= required, 'Physical disk capacity refused; preserve artifacts');
   }
   file(relative) {
     assert(typeof relative === 'string' && /^runs\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(relative), 'Invalid registered path');
@@ -206,9 +217,11 @@ class Store {
   }
   begin(product, output, dependencies = []) {
     assert(this.owned && !this.state.pending && Object.hasOwn(this.policy.reservations, product));
-    this.prune();
     const reserve = this.policy.reservations[product];
+    this.checkDisk(reserve);
+    this.prune();
     assert(this.inspect().bytes + reserve <= this.policy.budgetBytes, 'Capacity admission refused; retained/unknown content is not disposable');
+    this.checkDisk(reserve);
     const id = output ? path.basename(path.resolve(output)) : `${product}-${crypto.randomUUID()}`;
     assert(safeName(id));
     const dir = path.join(this.root, 'runs', id);
@@ -298,6 +311,7 @@ function dependency(directory) {
 function preflightBuild(bytes = 0) {
   assert(Number.isSafeInteger(bytes) && bytes >= 0 && bytes <= POLICY.sourceBuildMaxBytes, 'Source generation capacity exceeded');
   const store = new Store();
+  store.checkDisk(bytes, ROOT);
   if (!fs.existsSync(store.root)) return;
   store.open();
   try { store.prune(); assert(store.inspect().bytes + bytes <= POLICY.budgetBytes, 'Managed capacity exceeded'); }
@@ -306,8 +320,11 @@ function preflightBuild(bytes = 0) {
 function withBuildBudget(bytes, produce) {
   assert(Number.isSafeInteger(bytes) && bytes >= 0 && bytes <= POLICY.sourceBuildMaxBytes, 'Source generation capacity exceeded');
   assert.equal(typeof produce, 'function');
-  const store = new Store().open();
+  const store = new Store();
+  store.checkDisk(bytes, ROOT);
+  store.open();
   store.prune(); assert(store.inspect().bytes + bytes <= POLICY.budgetBytes, 'Managed capacity exceeded');
+  store.checkDisk(bytes);
   // Fixed tracked outputs are never enrolled as disposable artifacts. A partial source write blocks further builds.
   store.state.pending = { action: 'source-build', reservedBytes: bytes }; store.save();
   produce();

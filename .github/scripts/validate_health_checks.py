@@ -9,6 +9,20 @@ import subprocess
 import sys
 import shutil
 
+def check_artifact_lifecycle():
+    """Existing bounded synthetic lifecycle suite; do not prune the real store."""
+    subprocess.run(
+        ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_artifact_lifecycle.cjs"))],
+        check=True, timeout=45,
+        env={**os.environ, "MIHOMO_LIFECYCLE_SELFTEST": "1"},
+    )
+
+if "--check-artifact-lifecycle" in sys.argv:
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: validate_health_checks.py --check-artifact-lifecycle")
+    check_artifact_lifecycle()
+    raise SystemExit(0)
+
 def check_maintenance():
     """Bounded, memory-only fixtures; no router calls or generated files."""
     subprocess.run(
@@ -547,11 +561,7 @@ subprocess.run(
     ["node", "--max-old-space-size=192", str(Path(__file__).with_name("artifact_lifecycle.cjs")), "--check"],
     check=True, timeout=40,
 )
-subprocess.run(
-    ["node", "--max-old-space-size=192", str(Path(__file__).with_name("validate_artifact_lifecycle.cjs"))],
-    check=True, timeout=45,
-    env={**os.environ, "MIHOMO_LIFECYCLE_SELFTEST": "1"},
-)
+check_artifact_lifecycle()
 
 check_group_file(".github/config/shared.yaml")
 

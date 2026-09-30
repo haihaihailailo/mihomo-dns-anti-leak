@@ -237,10 +237,16 @@ function checkMobileDesktopBoundary(js, source, label) {
 }
 function checkSharedFakeIp(js, source, label) {
   const expected = { ipv6: true, "fake-ip-range6": "fdfe:dcba:9876::1/64" };
+  const helperDomain = "local.ionewu.com";
   const check = config => {
     assert.equal(config.dns["enhanced-mode"], "fake-ip");
     assert.equal(config.dns["fake-ip-range"], "198.18.0.1/16");
     for (const [key, value] of Object.entries(expected)) assert.equal(config.dns[key], value, `公共 DNS 字段错误：${key}`);
+    assert.equal(config.dns["fake-ip-filter-mode"], "blacklist", "精确本地域例外要求 blacklist 模式");
+    assert.deepEqual(config.dns["fake-ip-filter"].filter(domain => domain.includes("ionewu.com")), [helperDomain],
+      "本地网页助手只允许单个精确域名例外，不得遗漏、重复或扩大到整站");
+    assert(!Object.keys(config.hosts || {}).some(domain => domain.includes("ionewu.com")),
+      "公共模板不得固定本地网页助手地址，应保留上游真实 DNS 答案");
   };
   check(source);
   for (const enabled of [undefined, false, true]) {
@@ -266,7 +272,20 @@ function checkSharedFakeIp(js, source, label) {
     Object.assign(broken.dns, patch);
     assert.throws(() => check(broken), { code: "ERR_ASSERTION" });
   }
-  console.log(`${label}: 公共 DNS 双栈能力、订阅旧值覆盖、客户端最终 IPv6 门控、固定地址池、幂等与负向控制 OK`);
+  // 精确域名检查必须能区分缺失、重复和保留 exact 后再扩大到整个父域的错误。
+  for (const mutate of [
+    filter => filter.filter(domain => domain !== helperDomain),
+    filter => [...filter, helperDomain],
+    filter => [...filter, "+.ionewu.com"],
+  ]) {
+    const broken = clone(source);
+    broken.dns["fake-ip-filter"] = mutate(broken.dns["fake-ip-filter"]);
+    assert.throws(() => check(broken), { code: "ERR_ASSERTION" });
+  }
+  const fixedHost = clone(source);
+  fixedHost.hosts = { ...fixedHost.hosts, [helperDomain]: "198.51.100.10" };
+  assert.throws(() => check(fixedHost), { code: "ERR_ASSERTION" });
+  console.log(`${label}: 公共 DNS 双栈能力、精确本地域例外、订阅旧值覆盖、客户端最终 IPv6 门控、固定地址池、幂等与负向控制 OK`);
 }
 const driverRules = [
   "DOMAIN-SUFFIX,download.nvidia.com,DIRECT", "DOMAIN-SUFFIX,download.nvidia.cn,DIRECT",
