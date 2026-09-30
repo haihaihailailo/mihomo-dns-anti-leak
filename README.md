@@ -1,6 +1,8 @@
-# Mihomo DNS 防泄露配置
+# Mihomo / OpenClash DNS与分流配置
 
-面向 Mihomo / Clash Meta / Clash Party / Mihomo Party / OpenClash 的个人 DNS 防泄露、fake-ip、TUN 参数、IPv6 与规则分流配置。
+面向 Mihomo / Clash Meta / Clash Party / Mihomo Party / OpenClash 的公共 DNS、fake-ip、TUN 参数、IPv6 与规则分流配置。
+
+展示名称统一采用“平台 · DNS与分流 · 使用所在地 · 格式角色”。“中国大陆 / 海外”指使用网络所在地，海外包括越南；公共文件均不含节点订阅。物理文件名和现有 Raw URL 保持不变，文件名中的“国内版 / 国外版”分别对应“中国大陆 / 海外”。头部名称仅作说明，客户端中已有的显示名称通过其原生命名功能调整。
 
 ## 先按所在地选择（Mihomo / ClashMi）
 
@@ -8,10 +10,10 @@
 
 | 使用地点 | YAML 入口 | JS 入口（客户端支持时） |
 | --- | --- | --- |
-| 中国大陆 | [防DNS泄露-国内版.yaml](防DNS泄露-国内版.yaml) | [防DNS泄露-国内版.js](防DNS泄露-国内版.js) |
-| 越南及其他境外地区 | [防DNS泄露-国外版.yaml](防DNS泄露-国外版.yaml) | [防DNS泄露-国外版.js](防DNS泄露-国外版.js) |
+| 中国大陆 | [Mihomo · DNS与分流 · 中国大陆 · YAML覆写](防DNS泄露-国内版.yaml) | [Mihomo · DNS与分流 · 中国大陆 · JS覆写](防DNS泄露-国内版.js) |
+| 海外（越南及其他境外地区） | [Mihomo · DNS与分流 · 海外 · YAML覆写](防DNS泄露-国外版.yaml) | [Mihomo · DNS与分流 · 海外 · JS覆写](防DNS泄露-国外版.js) |
 
-| 项目 | 国内版 | 国外版 |
+| 项目 | 中国大陆使用 | 海外使用 |
 | --- | --- | --- |
 | 普通国外服务 | 合并到节点选择，默认自动选择 | 合并到节点选择，默认 DIRECT，可手动切代理 |
 | AI | 独立 AI 组，默认美国-AI-自动；已知 AI 域名 DNS 跟随 AI | 同左；只在所选地区的 AI 候选节点内自动测速 |
@@ -36,8 +38,8 @@
 
 | 路由器所在网络 | 公共 YAML 模板 | OpenClash 远程覆写模块 |
 | --- | --- | --- |
-| 中国大陆 | [防DNS泄露-路由器-国内版.yaml](防DNS泄露-路由器-国内版.yaml) | [国内版模块](防DNS泄露-路由器-国内版.conf) |
-| 越南及其他境外地区 | [防DNS泄露-路由器-国外版.yaml](防DNS泄露-路由器-国外版.yaml) | [国外版模块](防DNS泄露-路由器-国外版.conf) |
+| 中国大陆 | [OpenClash · DNS与分流 · 中国大陆 · 公共模板](防DNS泄露-路由器-国内版.yaml) | [OpenClash · DNS与分流 · 中国大陆 · 覆写模块](防DNS泄露-路由器-国内版.conf) |
+| 海外（越南及其他境外地区） | [OpenClash · DNS与分流 · 海外 · 公共模板](防DNS泄露-路由器-国外版.yaml) | [OpenClash · DNS与分流 · 海外 · 覆写模块](防DNS泄露-路由器-国外版.conf) |
 
 - 两种格式由同一 Mihomo 地区配置生成，不另维护 JS。YAML 是**不含节点的公共模板**，须在本地副本加入 `proxies` 或 `proxy-providers` 后导入；不要用公共 YAML URL 更新覆盖私人节点文件。
 - 希望“机场订阅独立更新、公共规则跟随仓库”时，使用 `.conf` **覆写模块**：机场链接仅加入 OpenClash 的“配置订阅”，模块的 GitHub Raw 链接加入“覆写模块 → 订阅链接 → http”。所有订阅都采用同一公共策略时绑定“全部配置”；有不同策略需求时才绑定指定配置。国内/国外只启用一个；不要将模块当机场 YAML 导入。先下载校验，再启用，保留旧配置供回退。
@@ -75,7 +77,7 @@ Clash Mi 的[官方覆写顺序说明](https://clashmi.app/guide/faq#clashmi覆�
 
 ## 文件
 
-公开入口共 **4 套、8 个文件**：Mihomo 桌面/手机与 OpenClash 路由器各有国内版和国外版；其中 Mihomo 每套提供 YAML / JS，路由器每套提供公共 YAML / 远程覆写模块 CONF。内部共同源码不作为额外配置入口。
+公开入口共 **4 套、8 个文件**：Mihomo 桌面/手机与 OpenClash 路由器各有中国大陆和海外入口；其中 Mihomo 每套提供 YAML / JS 覆写，路由器每套提供公共模板 YAML / 覆写模块 CONF。内部共同源码不作为额外配置入口。
 
 - `防DNS泄露-国内版.yaml` / `.js`：中国大陆使用的 Mihomo 覆写，已内置国内 DNS 设置。
 - `防DNS泄露-国外版.yaml` / `.js`：越南及其他境外地区使用的 Mihomo 覆写。

@@ -45,7 +45,7 @@ function renderRouterProfiles(profiles) {
     const document = new YAML.Document(config);
     document.get('find-process-mode', true).type = YAML.Scalar.QUOTE_DOUBLE;
     const note = [
-      `OpenClash 路由器${environment}版公共模板；由 build_profiles.cjs 生成，请勿手改。`,
+      `OpenClash · DNS与分流 · ${environment === '国内' ? '中国大陆' : '海外'} · 公共模板；由 build_profiles.cjs 生成，请勿手改。`,
       '不含订阅/节点，须在路由器本地接入；不能单独提供代理。不要与桌面版叠加。',
       'TUN、统一延迟、端口、运行模式、IPv6、认证及接管范围由 OpenClash 管理；不识别远端 App 包名。',
       '仅保留域名/IP 分流；开启 IPv6 前须同时配置接管和 DNS，详见 README 路由器章节。',
@@ -79,7 +79,7 @@ function renderRouterOverrides(profiles) {
       return `# ${MARK}${note}\nruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
     });
     const content = [
-      `# OpenClash 路由器${environment}版远程覆写；自动生成，请勿手改。`,
+      `# OpenClash · DNS与分流 · ${environment === '国内' ? '中国大陆' : '海外'} · 覆写模块；自动生成，请勿手改。`,
       '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、统一延迟、IPv6 由 OpenClash 管理。',
       '# Base64 承载公开 JSON 和仓库内固定 Ruby 适配源码，不是加密；勿添加订阅或凭据。',
       `# 各字段、策略组和逐条规则的明文说明见同目录 防DNS泄露-路由器-${environment}版.yaml。`,
