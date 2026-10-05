@@ -1327,7 +1327,9 @@ rules:
   # 用户指定网站直连；不扩展到导航页中的第三方外链。
   # 配置说明：根域名 jspoo.com 及其子域 → 直连。
   - "DOMAIN-SUFFIX,jspoo.com,DIRECT"
-  # 官网与账户认证精确直连；第三方同步/登录服务仍按各自规则分流。
+  # 官网直连，账号授权跟随节点选择；第三方同步/登录服务仍按各自规则分流。
+  # 配置说明：精确域名 accounts.tampermonkey.net → 交给「节点选择」策略。
+  - "DOMAIN,accounts.tampermonkey.net,节点选择"
   # 配置说明：根域名 tampermonkey.net 及其子域 → 直连。
   - "DOMAIN-SUFFIX,tampermonkey.net,DIRECT"
   # 配置说明：精确域名 aweme.snssdk.com → 交给「国内服务」策略。

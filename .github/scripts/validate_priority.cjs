@@ -121,16 +121,22 @@ function checkDirectSite(config) {
 }
 function checkTampermonkey(config, foreign = false, prefix = "rule-set:") {
   const rule = "DOMAIN-SUFFIX,tampermonkey.net,DIRECT";
+  const accountRule = "DOMAIN,accounts.tampermonkey.net,节点选择";
   assert.equal(config.rules.filter(item => item === rule).length, 1, "缺少或重复 Tampermonkey 直连");
+  assert.equal(config.rules.filter(item => item === accountRule).length, 1, "缺少或重复 Tampermonkey 账号例外");
   const index = config.rules.indexOf(rule);
+  const accountIndex = config.rules.indexOf(accountRule);
   const siteIndex = config.rules.indexOf("DOMAIN-SUFFIX,jspoo.com,DIRECT");
-  assert.equal(index, siteIndex + 1, "Tampermonkey 应在既有网站例外后、业务规则前");
+  assert.equal(accountIndex, siteIndex + 1, "Tampermonkey 账号例外应在既有网站例外后");
+  assert.equal(index, accountIndex + 1, "Tampermonkey 账号例外须早于后缀直连");
   if (config.dns) {
     const keys = prefix === "rule-set:" ? ["tampermonkey.net", ".tampermonkey.net"] : ["+.tampermonkey.net"];
     for (const key of keys) assert(Object.hasOwn(config.dns["nameserver-policy"], key), "缺少明确的 Tampermonkey DNS 键：" + key);
   }
-  for (const host of ["tampermonkey.net", "www.tampermonkey.net", "accounts.tampermonkey.net"]) {
-    assert.equal(firstRoute(config, host, "Code.exe"), "DIRECT", host + " 被进程或通用集合抢先匹配");
+  for (const host of ["tampermonkey.net", "www.tampermonkey.net", "accounts.tampermonkey.net",
+    "child.accounts.tampermonkey.net", "notaccounts.tampermonkey.net"]) {
+    const expectedRoute = host === "accounts.tampermonkey.net" ? "节点选择" : "DIRECT";
+    assert.equal(firstRoute(config, host, "Code.exe"), expectedRoute, host + " Tampermonkey 精确例外被遮挡或扩大");
     if (config.dns) {
       const expected = foreign
         ? ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"].map(url => prefix === "rule-set:" ? url + "#DIRECT" : url)
@@ -139,8 +145,9 @@ function checkTampermonkey(config, foreign = false, prefix = "rule-set:") {
     }
   }
   const without = structuredClone(config);
-  without.rules = without.rules.filter(item => item !== rule);
-  for (const host of ["nottampermonkey.net", "tampermonkey.net.evil.test", "accounts.google.com", "login.microsoftonline.com"]) {
+  without.rules = without.rules.filter(item => item !== rule && item !== accountRule);
+  for (const host of ["nottampermonkey.net", "tampermonkey.net.evil.test", "accounts.tampermonkey.net.evil.test",
+    "accounts.google.com", "login.microsoftonline.com"]) {
     assert(!suffix(host, "tampermonkey.net"));
     assert.equal(firstRoute(config, host, "Code.exe"), firstRoute(without, host, "Code.exe"), "不可改变第三方登录或相似域名分流");
   }
@@ -150,6 +157,15 @@ function checkTampermonkey(config, foreign = false, prefix = "rule-set:") {
 }
 function tampermonkeyRegression(config, foreign = false, prefix = "rule-set:") {
   checkTampermonkey(config, foreign, prefix);
+  const accountRule = "DOMAIN,accounts.tampermonkey.net,节点选择";
+  const missingAccount = structuredClone(config);
+  missingAccount.rules = missingAccount.rules.filter(item => item !== accountRule);
+  assert.throws(() => checkTampermonkey(missingAccount, foreign, prefix), /Tampermonkey 账号例外/);
+  const shadowedAccount = structuredClone(config);
+  shadowedAccount.rules = shadowedAccount.rules.filter(item => item !== accountRule);
+  shadowedAccount.rules.splice(shadowedAccount.rules.indexOf("DOMAIN-SUFFIX,tampermonkey.net,DIRECT") + 1, 0, accountRule);
+  assert.equal(firstRoute(shadowedAccount, "accounts.tampermonkey.net", "Code.exe"), "DIRECT");
+  assert.throws(() => checkTampermonkey(shadowedAccount, foreign, prefix), /Tampermonkey 账号例外/);
   const bad = structuredClone(config);
   bad.rules = bad.rules.filter(item => item !== "DOMAIN-SUFFIX,tampermonkey.net,DIRECT");
   assert.throws(() => checkTampermonkey(bad, foreign, prefix), /Tampermonkey/);
