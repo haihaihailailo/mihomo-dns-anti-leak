@@ -76,13 +76,13 @@ function checkRoutes(config, client, domestic) {
     [["chatgpt.com", "api.openai.com", "auth0.openai.com", "claude.ai", "gemini.google.com", "gemini.gstatic.com", "cdn.gemini.gstatic.com", "api.githubcopilot.com", "copilot.microsoft.com", ...EXTRA_AI_HOSTS], "AI"],
     [["api.zalo.me", "api.zalopay.vn", "api.techcombank.com", "ordinary.example.vn"], "越南服务"],
     [["telegram.org"], "电报消息"],
-    [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "netflix.com", "spotify.com", "tiktok.com"], "节点选择"]];
+    [["github.com", "www.google.com", "www.google.com.vn", "www.youtube.vn", "youtube.com", "netflix.com", "spotify.com", "tiktok.com", "accounts.tampermonkey.net"], "节点选择"]];
   for (const [hosts, owner] of samples) for (const host of hosts) {
     assert.equal(route(host), owner, host + " 未进入 " + owner);
     if (client === "mihomo") assert.equal(route(host, "Code.exe"), owner, "通用工具兜底遮挡 " + host);
   }
   for (const host of ["ads.bilibili.com", "ads.example.test"]) assert.equal(route(host), "广告过滤");
-  for (const host of ["jspoo.com", "accounts.tampermonkey.net", "download.nvidia.com"]) assert.equal(route(host), "DIRECT");
+  for (const host of ["jspoo.com", "tampermonkey.net", "www.tampermonkey.net", "child.accounts.tampermonkey.net", "download.nvidia.com"]) assert.equal(route(host), "DIRECT");
   for (const host of ["notbilibili.com", "bilibili.com.evil.test", "shared.akamaized.net"]) {
     assert.notEqual(route(host), BILI, "不可扩大到相似域名或共享 CDN 根域名");
   }

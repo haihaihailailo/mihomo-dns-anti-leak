@@ -2494,6 +2494,8 @@ rules:
   - RULE-SET,reject,广告过滤
   # 配置说明：根域名 jspoo.com 及其子域 → 直连。
   - DOMAIN-SUFFIX,jspoo.com,DIRECT
+  # 配置说明：精确域名 accounts.tampermonkey.net → 交给「节点选择」策略。
+  - DOMAIN,accounts.tampermonkey.net,节点选择
   # 配置说明：根域名 tampermonkey.net 及其子域 → 直连。
   - DOMAIN-SUFFIX,tampermonkey.net,DIRECT
   # 配置说明：精确域名 aweme.snssdk.com → 直连。
