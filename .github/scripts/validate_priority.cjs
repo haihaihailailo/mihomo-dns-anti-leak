@@ -110,6 +110,24 @@ function checkRoutes(config, domestic) {
   assert.equal(firstRoute(config, "ads.example.test", "Code.exe"), "广告过滤");
   assert.equal(firstRoute(config, "router.test", "Code.exe"), "DIRECT");
 }
+function checkWeWorkWeb(config, expected) {
+  const fallback = config.rules.find(rule => /^(MATCH|FINAL),/.test(rule)).split(",")[1];
+  for (const host of ["static.enterprise.example.test", "api.enterprise.example.test", "unknown-business.example.test", "api.openai.com"]) {
+    assert.equal(firstRoute(config, host, "WXWorkWeb.exe"), expected, "企业微信网页子进程不得落入域名或兜底代理：" + host);
+    assert.equal(firstRoute(config, host, "WXWorkWeb.exe"), firstRoute(config, host, "WXWork.exe"), "企业微信主进程与网页子进程策略须一致");
+  }
+  assert.equal(firstRoute(config, "ads.example.test", "WXWorkWeb.exe"), "广告过滤");
+  assert.equal(firstRoute(config, "router.test", "WXWorkWeb.exe"), "DIRECT");
+  for (const process of ["chrome.exe", "NotWXWorkWeb.exe", "WXWorkWeb.exe.other"]) {
+    assert.equal(firstRoute(config, "unknown-business.example.test", process), fallback, "不能扩大企业微信进程匹配范围");
+  }
+}
+function weWorkWebRegression(config, expected) {
+  checkWeWorkWeb(config, expected);
+  const missing = structuredClone(config);
+  missing.rules = missing.rules.filter(rule => !rule.startsWith("PROCESS-NAME,WXWorkWeb.exe,"));
+  assert.throws(() => checkWeWorkWeb(missing, expected), /企业微信网页子进程/);
+}
 function checkDirectSite(config) {
   const rule = "DOMAIN-SUFFIX,jspoo.com,DIRECT";
   assert.equal(config.rules.filter(item => item === rule).length, 1);
@@ -254,6 +272,9 @@ function run() {
     domesticDomainRegression(config, stem.includes("国外"), stem.startsWith(".github/"));
     domesticDomainRegression(evaluate(read(stem + ".js")), stem.includes("国外"), stem.startsWith(".github/"));
     checkGpuProcesses(config);
+    const weWorkTarget = stem.includes("国内") ? "DIRECT" : "国内服务";
+    weWorkWebRegression(config, weWorkTarget);
+    weWorkWebRegression(evaluate(read(stem + ".js")), weWorkTarget);
     const badGpu = structuredClone(config);
     badGpu.rules = badGpu.rules.map(rule => rule === "PROCESS-NAME,NVIDIA App.exe,DIRECT" ? "PROCESS-NAME,NVIDIA App.exe,节点选择" : rule);
     assert.throws(() => checkGpuProcesses(badGpu), /GPU 进程/);
