@@ -1231,6 +1231,8 @@ const RULES_TEXT = [
   "PROCESS-NAME,DingTalk.exe,国内服务",
   // 配置说明：进程名/应用包名 WXWork.exe → 交给「国内服务」策略。
   "PROCESS-NAME,WXWork.exe,国内服务",
+  // 配置说明：进程名/应用包名 WXWorkWeb.exe → 交给「国内服务」策略。
+  "PROCESS-NAME,WXWorkWeb.exe,国内服务",
   // 配置说明：进程名/应用包名 Feishu.exe → 交给「国内服务」策略。
   "PROCESS-NAME,Feishu.exe,国内服务",
   // 配置说明：进程名/应用包名 Lark.exe → 交给「节点选择」策略。

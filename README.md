@@ -230,6 +230,7 @@ Clash Mi 1.0.29.1503 Android 曾在 `consolidateGroups` 报 `TypeError: not a fu
 
 - Mihomo 的 DNS 策略有顺序语义：私有域名优先，其次是已有明确域名例外、AI 等专属服务，最后才是通用服务及国内/国外大集合。不能只比对键值而忽略顺序；两地版 AI 的 `#AI` 解析策略必须早于 `geolocation-!cn` 等重叠规则。[Mihomo DNS](https://wiki.metacubex.one/config/dns/)
 - VS Code、Postman 和 JetBrains 等通用开发工具的进程兜底位于所有专属业务域名规则之后：AI、B站、游戏、微软/苹果、越南等已知服务各归其组，未识别开发流量仍是节点选择。Teams 两个进程统一进入微软/苹果服务。
+- 企业微信 Windows 主进程 `WXWork.exe` 与内置网页子进程 `WXWorkWeb.exe` 使用相同策略：国内版直连，海外版进入「国内服务」。内置网页中的第三方网站也遵循该进程策略，局域网和广告规则仍优先；不扩展到其他浏览器。路由器配置继续不下发桌面进程规则。
 - 微信、支付宝整应用选路仍在 AI 域名规则之前：国内版 DIRECT，国外版国内服务。未进入 VPN 的应用不受这些规则控制；这次没有改动手机分应用名单。
 
 - 普通 GitHub 的 DNS 策略先于 Microsoft 和通用集合，避免 GitHub 网页、API、Raw、头像、静态资源和 Pages 被微软集合提前匹配；Copilot 的 AI 策略仍更优先。Mihomo 两地版的 GitHub DNS 跟随节点选择。
