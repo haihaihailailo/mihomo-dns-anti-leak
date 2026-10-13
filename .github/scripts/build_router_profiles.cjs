@@ -55,42 +55,46 @@ function renderRouterProfiles(profiles) {
   });
 }
 
+function rubyLiteral(value) {
+  if (typeof value === 'string') return JSON.stringify(value).replace(/'/g, '\\x27').replace(/#(?=[{$@])/g, '\\#');
+  if (value === null) return 'nil';
+  if (Array.isArray(value)) return '[' + value.map(rubyLiteral).join(',') + ']';
+  if (typeof value === 'object') return '{' + Object.entries(value).map(([k, v]) => rubyLiteral(k) + '=>' + rubyLiteral(v)).join(',') + '}';
+  return JSON.stringify(value);
+}
+
 function renderRouterOverrides(profiles) {
-  // 只嵌入仓库内经回归验证的固定 Ruby 源码，绝不把订阅字符串当代码执行。
-  // 独立 Module 避免与设备旧本地库重名；一次赋值保留其他节点字段和功能开关。
-  const nodeLibrary = fs.readFileSync(path.join(__dirname, 'openclash_node_aliases.rb'), 'utf8').replace(/\r\n/g, '\n');
-  const code = Buffer.from(nodeLibrary, 'utf8').toString('base64');
-  const dnsLibrary = fs.readFileSync(path.join(__dirname, 'openclash_local_dns.rb'), 'utf8').replace(/\r\n/g, '\n');
-  const dnsCode = Buffer.from(dnsLibrary, 'utf8').toString('base64');
-  const adaptNodes = `(lambda { |scope| scope.module_eval('${code}'.unpack1('m0').force_encoding('UTF-8')); scope.const_get(:OpenClashNodeAliases).rewrite(Value.fetch('proxies', []), Value.fetch('hosts', {})) }).call(Module.new)`;
+  // 只嵌入仓库固定数据表达式；通过原生 AST 允许列表，不执行订阅字符串。
+  // 一次赋值保留其他节点字段；任一坏映射使整个节点数组保持原值。
+  const adaptNodes = fs.readFileSync(path.join(__dirname, 'openclash_node_aliases_expression.rb'), 'utf8')
+    .split(/\r?\n/).filter(line => !line.trim().startsWith('#')).join(' ').trim();
+  if (adaptNodes.includes("'")) throw new Error('Native module arguments cannot contain a quote delimiter');
   return profiles.map(({ environment, config: source }) => {
     const config = routerConfig(source);
-    // OpenClash v0.47.156 [Overwrite] + ruby_edit. Avoid its [YAML] eval/echo
-    // interpolation: encode public JSON data, never executable/private input.
+    // Native 0.48.002 allowlist accepts data literals, not YAML decoders or module_eval.
+    // Single-quoted arguments also preserve shell metacharacters on older releases.
     const lines = Object.entries(config).map(([key, value]) => {
       if (!/^[a-z-]+$/.test(key)) throw new Error(`Unsafe overwrite key: ${key}`);
-      const encoded = Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
-      const decoded = `YAML.safe_load('${encoded}'.unpack1('m0').force_encoding('UTF-8'), aliases: true)`;
-      const mergedDNS = `(Value.fetch('dns', {}).select { |k, _| ['listen', 'ipv6', 'fake-ip-range6'].include?(k) }).merge(${decoded})`;
+      const decoded = rubyLiteral(value);
       const expression = key === 'dns'
-        ? `(lambda { |scope| scope.module_eval('${dnsCode}'.unpack1('m0').force_encoding('UTF-8')); adapter=scope.const_get(:OpenClashLocalDNS); adapter.apply(${mergedDNS}, adapter.settings) }).call(Module.new)`
+        ? `(Value.fetch("dns", {}).select { |k, _| ["listen", "ipv6", "fake-ip-range6"].include?(k) }).merge(${decoded})`
         : decoded;
-      const note = fieldComment(key) + (key === 'dns' ? '保留设备 DNS 监听/IPv6 字段；仅防火墙接管时按本机 dnsmasq 权威域补充本地解析，Dnsmasq 转发模式不注入回送。' : '整段赋值替换该公共字段。');
-      return `# ${MARK}${note}\nruby_edit "$CONFIG_FILE" "['${key}']" "${expression}"`;
+      const note = fieldComment(key) + (key === 'dns' ? '保留设备 DNS 监听/IPv6 字段；本地域的 UCI 读取由可选本地 DNS 钩子处理。' : '整段赋值替换该公共字段。');
+      return `# ${MARK}${note}\nruby_edit "$CONFIG_FILE" "['${key}']" '${expression}'`;
     });
     const content = [
       `# OpenClash · DNS与分流 · ${environment === '国内' ? '中国大陆' : '海外'} · 覆写模块；自动生成，请勿手改。`,
       '# 节点来自本地订阅；仅替换公共分流。端口、认证、TUN、统一延迟、IPv6 由 OpenClash 管理。',
-      '# Base64 承载公开 JSON 和仓库内固定 Ruby 适配源码，不是加密；勿添加订阅或凭据。',
+      '# 使用原生安全解释器允许的数据字面量和固定数据表达式；不解码或动态加载代码。',
       `# 各字段、策略组和逐条规则的明文说明见同目录 防DNS泄露-路由器-${environment}版.yaml。`,
-      '# 下方每条命令只写入一个公共字段；不要手动编辑编码正文。',
+      '# 下方每条命令只写入一个公共字段；请通过生成器修改。',
       '[General]',
       '# 模块定时下载成功后由 OpenClash 原生流程重启生效；下载失败或 HTTP 304 时不重启。',
       'RESTART = true',
       '',
       '[Overwrite]', ...lines,
-      `# ${MARK}使用内置适配库处理当前订阅的 SS 精确别名及限定花云 UDP；保留 TFO/MPTCP/UOT/smux，源码见 .github/scripts/openclash_node_aliases.rb。`,
-      `ruby_edit "$CONFIG_FILE" "['proxies']" "${adaptNodes}"`, '',
+      `# ${MARK}固定数据表达式处理 SS 精确别名及限定花云 UDP；保留 TFO/MPTCP/UOT/smux，源码见 .github/scripts/openclash_node_aliases_expression.rb。`,
+      `ruby_edit "$CONFIG_FILE" "['proxies']" '${adaptNodes}'`, '',
     ].join('\n');
     // OpenClash assembles Ruby in a single command argument; retain ample headroom.
     if (Buffer.byteLength(content) > 110000) throw new Error('OpenClash module exceeds command budget');
@@ -98,4 +102,4 @@ function renderRouterOverrides(profiles) {
   });
 }
 
-module.exports = { routerConfig, renderRouterProfiles, renderRouterOverrides };
+module.exports = { routerConfig, renderRouterProfiles, renderRouterOverrides, rubyLiteral };

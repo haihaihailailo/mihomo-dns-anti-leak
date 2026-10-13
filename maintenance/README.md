@@ -62,7 +62,7 @@ fi
 
 Fake-IP 应答模式保持不变。本节只比较 `enable_redirect_dns=2`（防火墙直接转发到 Mihomo）和 `1`（dnsmasq 先处理本地域，再转发到 Mihomo）。这不是加密 DNS 与明文 DNS 的选择，两种方式都继续使用公共模板的 DoH 和解析策略。
 
-- 远程 CONF 内嵌 `.github/scripts/openclash_local_dns.rb`：只读本机 UCI；模式 2 且 dnsmasq 的 domain/local 相互匹配时，把该权威域的 DNS 送往本机 dnsmasq，并保持该条在公共策略之前。不硬编码 LAN 地址、域名或接口；端口无效、与核心端口相同、域不权威时拒绝赋值。未配置域或未知接管模式不猜测上游。
+- OpenClash 0.48.002 的远程模块安全解释器禁止读取 UCI。需要模式 2 的设备，应在明确部署授权和备份后，将 `.github/scripts/openclash_local_dns.rb` 与 `openclash_local_dns_hook.rb` 放入 `/etc/openclash/custom/`，并在原有 `openclash_custom_overwrite.sh` 的 `exit 0` 前加入 `ruby /etc/openclash/custom/openclash_local_dns_hook.rb "$CONFIG_FILE" || exit 1`；保留其他自定义逻辑。两份文件来自同一审核版本，不由远程模块下载或执行额外脚本。模式 2 且 dnsmasq 的 domain/local 相互匹配时，该固定本地钩子把权威域送往本机 dnsmasq，并保持其在公共策略之前；端口无效、与核心端口相同、域不权威时拒绝赋值。未配置域或未知模式不猜测上游。配置仅在适配结果变化时原子替换；失败临时文件保留供核对。
 - 模式 1 不注入回送。OpenClash 原生流程设置 dnsmasq 的 `server=127.0.0.1#核心DNS端口`、`noresolv=1` 和 `cachesize=0`，保留 DHCP/本地域解析，缓存交给 Mihomo。不要把 Mihomo 通用 nameserver 再指回 dnsmasq，也不额外部署 SmartDNS/MosDNS。
 - 旧设备自定义覆写可能仍包含本地域名补丁。只有确认新模块最终配置等价、保留其他自定义逻辑并建立回退后，才移除本任务识别的旧区块；不覆盖整份用户脚本。
 - [openclash-settings-audit.rb](openclash-settings-audit.rb) 在设备上以 `ruby openclash-settings-audit.rb /etc/openclash/实际运行配置.yaml` 运行。只输出字段一致性、更新上限和 TLS 保护形式的汇总，不输出节点、订阅、密钥。退出码 0 表示这些配置检查通过，1 表示发现待检查项，2 表示采集不完整；不能代替内核 API、防火墙、DNS 实测或证书握手。

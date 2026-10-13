@@ -43,9 +43,9 @@
 
 - 两种格式由同一 Mihomo 地区配置生成，不另维护 JS。YAML 是**不含节点的公共模板**，须在本地副本加入 `proxies` 或 `proxy-providers` 后导入；不要用公共 YAML URL 更新覆盖私人节点文件。
 - 希望“机场订阅独立更新、公共规则跟随仓库”时，使用 `.conf` **覆写模块**：机场链接仅加入 OpenClash 的“配置订阅”，模块的 GitHub Raw 链接加入“覆写模块 → 订阅链接 → http”。所有订阅都采用同一公共策略时绑定“全部配置”；有不同策略需求时才绑定指定配置。国内/国外只启用一个；不要将模块当机场 YAML 导入。先下载校验，再启用，保留旧配置供回退。
-- 模块复用 [OpenClash v0.47.156 ruby_edit](https://github.com/vernesong/OpenClash/blob/v0.47.156/luci-app-openclash/root/usr/share/openclash/ruby.sh) 的 `[Overwrite]` 接口，整段替换公共策略组、规则集、规则和 DNS 策略，不残留机场旧规则引用；保留设备字段，并对订阅节点执行下述限定适配。DNS 仅保留本地 `listen`、`ipv6`、`fake-ip-range6`，其余按公共模板替换。Base64 承载公共 JSON 及仓库固定 Ruby 源码，避免 Shell/Ruby 二次转义损坏；这不是加密，也不含私有订阅。修改应通过生成器，不手改编码内容。
-- 两份 CONF 已内置 SS 精确 hosts 别名适配及限定花云 UDP 修复，无需换路由器后另装 Ruby 文件。代码在独立 Module 中加载，只执行仓库固定源码；订阅的 hosts/节点始终按数据处理。TFO、MPTCP、UOT、smux 等其他字段保持输入值。纯 YAML 无法执行此动态适配，使用 Sub-Store 已处理输出或选择 CONF 模块。
-- 两份 CONF 同时内置本地域 DNS 适配：Fake-IP 不变；防火墙接管模式仅把本机 dnsmasq 已声明的权威域送回本地，Dnsmasq 转发模式不注入回送。不再需要另装硬编码 `.lan` 补丁。纯 YAML 不读取 UCI；具体边界、回退与验证见 [维护说明](maintenance/README.md#dns-接管方式与运行设置检查)。
+- 模块使用 [OpenClash v0.48.002 安全覆写解释器](https://github.com/vernesong/OpenClash/blob/v0.48.002/luci-app-openclash/root/usr/share/openclash/YAML.rb) 的 `[Overwrite]` 接口，整段替换公共策略组、规则集、规则和 DNS 策略，不残留机场旧规则引用。DNS 仅保留设备的 `listen`、`ipv6`、`fake-ip-range6`。公共字段是数据字面量，单引号参数保留中文、正则和 Shell 特殊字符；不再使用新版拒绝的 Base64 解码、`module_eval` 或外部代码加载。通过生成器修改，不手改生成文件。
+- 两份 CONF 内置通过原生允许列表的 SS 精确 hosts 别名表达式及限定花云 UDP 修复，无需另装节点适配库；订阅的 hosts/节点始终按数据处理。TFO、MPTCP、UOT、smux 等其他字段保持输入值。表达式兼容设备 Ruby 3.0 的 AST，任一坏映射使整个节点数组保留原值。纯 YAML 无法执行此动态适配，使用 Sub-Store 已处理输出或选择 CONF 模块。
+- 本地域 DNS 需要区分接管方式：Dnsmasq 转发模式原生处理本地域，无需额外库。防火墙直接接管模式需要本地 UCI 信息；新版远程模块不获准读取它，因此使用显式安装的本地 DNS 钩子，在公共覆写后调用原有适配库。该钩子保持 Fake-IP，不硬编码 `.lan`，仅回送已验证的 dnsmasq 权威域。已用模式 2 的设备升级模块前须先接入钩子；具体安装、回退与验证见 [维护说明](maintenance/README.md#dns-接管方式与运行设置检查)。
 - 已启用的自动更新检查间隔最长 24 小时：订阅建议 180 分钟、公共模块每天检查、规则集 86400 秒、使用中的 GEO 数据每天由 OpenClash 更新；未使用功能不自动开启。下载受限或失败仍须保留最后成功内容，不能把旧缓存输出当作新订阅更新成功。
 - 远程模块属于可执行覆写，更新前应审查来源和变更；可将 Raw URL 中的 `main` 换为已验证的完整 commit SHA 固定版本，回退时停用该模块并恢复原配置。静态/合成验证不代表所有 OpenClash 版本兼容；更新后须核对最终生效配置。
 - CONF 使用 OpenClash 原生 `[General] RESTART = true` 声明模块下载后重新应用；下载来源、绑定范围和更新时间仍由 OpenClash 管理，不额外创建定时任务。首次从没有该声明的旧模块升级时，需要手动应用一次，才能生成包含重启的下载任务。
@@ -315,8 +315,8 @@ rules:
 - 可选的 Windows 公网订阅抽样诊断仍走唯一入口：设置 `SUBSCRIPTION_PROBE_OPT_IN=1`、`SUBSCRIPTION_PROBE_FILES`（最多三个本机 YAML 绝对路径组成的 JSON 数组）、`MIHOMO_TEST_BIN`（已有内核绝对路径），运行 `python .github/scripts/validate_health_checks.py --probe-subscriptions`。每份订阅最多抽样 16 个节点；内核由 Windows Job Object 限制进程数及总内存 512 MiB，8 分钟总期限，单次网络等待 4 秒。仅用 loopback SOCKS/控制 API，无 TUN、系统代理或现有客户端选择变更；真实节点配置通过 stdin 和 API 内存传递，不写文件或命令行。独立 DoH 解析入口以避开系统 fake-ip，默认测试指定公共 DNS 的 UDP 回包及 Cloudflare 的 IPv4/IPv6 HTTPS 响应，REJECT 负向控制和末尾拒绝规则避免直连回退。含节点名称的本地报告只写入受管理的 `.generated/runs/`，不要公开私人报告。此诊断使用本地缓存并注明时间，不刷新订阅，不代表全部节点、手机、QUIC 应用或业务服务通过。
 - 上述诊断设置 `SUBSCRIPTION_PROBE_EXTENSIONS=1` 时改为每种协议/传输抽样一个节点，在隔离副本分别尝试 TFO、sing-mux 和 SS 的 UOT v1/v2；可用 `SUBSCRIPTION_PROBE_PREVIOUS` 引用上一份受管理报告以保留依赖。功能测试不会写回客户端：TFO 打开后能接通也可能是普通 TCP 回退，不是协商成功或加速的证明；MPTCP 不在此 Windows 诊断中验证。服务端不兼容的 UOT/复用不得仅凭内核接受配置就启用。
 - 可用 `SUBSCRIPTION_PROBE_NAMES` 传入最多八个精确节点名组成的 JSON 数组以补充抽样；每份订阅总样本仍不能超过 16 个。工具不固化某个机场的节点名、地址或凭据，默认离线验收只检查语法和未显式启用时的拒绝行为。
-- OpenClash 节点适配库把当前配置 `hosts` 的精确域名别名应用到普通 SS 的 `server`，仅为已确认域名关系的花云 `obfs/http` SS 开启 UDP；保留名称、端口、认证、其他功能开关、策略组及原始订阅。两份远程 CONF 自动携带该源码，每次更新重新读取当前 hosts，不固定解析 IP，也不逐节点维护映射。
-- 已有设备可以继续保留旧本地补丁；新 CONF 不依赖它们。若要移除旧补丁，须先备份并验证最终配置等价，不能直接删掉包含其他修复的整份自定义覆写。旧设备的 Telegram 适配库属于兼容入口，通用配置现已直接包含独立组。
+- OpenClash 节点数据表达式把当前配置 `hosts` 的精确域名别名应用到普通 SS 的 `server`，仅为已确认域名关系的花云 `obfs/http` SS 开启 UDP；保留名称、端口、认证、其他功能开关、策略组及原始订阅。两份远程 CONF 自动携带该固定表达式，每次应用读取当前 hosts，不固定解析 IP，也不逐节点维护映射。旧 Ruby 库保留为行为参照和本地兼容入口。
+- 已有设备可以继续保留经过核验的本地补丁；CONF 的节点适配不依赖旧本地节点库，但模式 2 的本地域 DNS 需要上述本地钩子。移除旧补丁前须备份并验证最终配置等价，不能删除包含其他修复的整份自定义覆写。旧设备的 Telegram 适配库属于兼容入口，通用配置现已直接包含独立组。
 - `.github/scripts/openclash_telegram_split.rb` 是旧版远程模板的可选本地适配：将 Telegram 两条规则、专用 DNS 恢复到独立的 `电报消息`，默认 `新加坡-自动`。必须在既有覆写完成之后调用 `OpenClashTelegramSplit.apply`，仅用于具有所需地区组的模板；先备份并验证候选，库本身不部署、不重启、不修改节点。已含相同独立组时幂等；遇到未知组、规则或 DNS 结构则拒绝赋值。
 - 该库只支持普通 SS，以及显式指定混淆域名的 `obfs/http` SS，匹配精确 ASCII 域名；混淆 host 原样保留。不展开 `proxy-providers`、通配符或其他协议，不修改 TLS/SNI。IP 映射及最终落到 hosts IP 的别名链由内核继续处理。循环、非法目标、重复规范化键或过长链抛出异常，整批不赋值；OpenClash 记录覆写错误并保留转换前节点，不承诺因此阻止插件启动。它解决别名应用差异，不保证入口更快或消除超时。
 - 同一唯一验证入口会在 Ruby 可用时运行内存内合成回归，覆盖更新映射、幂等、字段保留、循环/非法值拒绝与部分失败无副作用。没有 Ruby 的本机明确报告 NOT RUN；设备验收须复用该夹具，并核对运行配置和真实连接。部署备份只留在设备，私有配置不进入 Git。
@@ -331,7 +331,7 @@ rules:
 - 修改 `.github/config/shared.*` 或生成器内的环境差异后，先 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的 YAML 开发依赖，再 `npm run build:profiles` 更新八个入口文件；唯一离线验证入口仍为 `python .github/scripts/validate_health_checks.py`。仅检查生成文件有无过期可运行 `npm run check:profiles`，不会写文件。
 - 路由器回归由同一入口调用：检查 YAML 1.1/1.2 的字符串 `off`、进程规则移除、设备/私有字段隔离、完整差异允许范围及生成漂移；CI 另执行 Ruby aliases 解析和两份模板的 Mihomo 加载。不会联网读取私人订阅或修改路由器。
 - GitHub 托管的临时 Ubuntu VM 在隔离内核验收步骤使用 `sudo -n` 运行同一入口，使产物封存时的 `/proc` 占用检查可读取系统进程；只传入 PATH 和三个显式测试路径，不改变仓库 token 权限或本地系统权限。占用、不可读和收尾失败仍阻止通过，不跳过生命周期保护；不将此步骤复制到自托管或生产机器。[GitHub 托管运行器权限](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#administrative-privileges)
-- 远程模块回归逐字段解码并与公共 YAML 全量比较；CI 在唯一入口设置 `OPENCLASH_RUBY_TEST=1`，额外执行真实 POSIX Shell → Ruby 合成覆写两次，检查中文/正则、旧 DNS 清除、节点/端口/认证/IPv6 保留和幂等。无 Shell/Ruby 的本地只完成静态部分，会明确报告未运行原生链路，不等同于设备实测。
+- 远程模块回归检查完整公共字段；CI 在唯一入口设置 `OPENCLASH_RUBY_TEST=1` 和 `OPENCLASH_YAML_RB`，使用固定 SHA256 的官方 0.48.002 解释器实际解析、审查并执行两次，检查 Shell 参数一致、中文/正则/插值字面量、旧 DNS 清除、节点字段保留、坏映射原子性和幂等。无 Shell/Ruby 的本地只完成静态部分，会明确报告未运行原生链路，不等同于设备实测；不能再用模拟 ruby_edit 的执行结果代替新版解释器验证。
 - CI 对两地入口新增全对象 YAML/JS 对比、生成漂移检查、引用/循环检查、默认出口、DNS、回国隔离、空组保护和客户端 TUN/IPv6 保留测试，并分别运行 Mihomo 配置加载。测试数据为合成节点，不访问订阅或切换本机网络。
 - CI 会自动校验主 YAML 解析、主 JS 语法、主 YAML/JS 全配置同步、规则引用完整性和 mihomo 加载测试。
 - CI 会明确拒绝公共模板重新下发客户端自有的 `unified-delay`（统一延迟），并检查 `profile`、`geo-auto-update`、`geo-update-interval`、`tcp-concurrent`、`sniffer`、`tun`、`dns`、`proxy-groups`、`rule-providers`、`rules` 是否在主 YAML 和主 JS 中保持一致。

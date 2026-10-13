@@ -2,11 +2,11 @@
 const assert = require('node:assert/strict');
 const YAML = require('yaml');
 const { read, renderProfiles } = require('./build_profiles.cjs');
-const { routerConfig, renderRouterProfiles, renderRouterOverrides } = require('./build_router_profiles.cjs');
+const { routerConfig, renderRouterProfiles, renderRouterOverrides, rubyLiteral } = require('./build_router_profiles.cjs');
 const { spawnSync } = require('node:child_process');
 const clone = value => JSON.parse(JSON.stringify(value));
 
-function run() {
+function run(options = {}) {
   // 复用唯一测试入口；无 Ruby 的 Windows 主机明确报告未运行，设备/CI 可跑同一夹具。
   const rubyVersion = spawnSync('ruby', ['--version'], { encoding: 'utf8', timeout: 3000 });
   if (rubyVersion.status === 0) {
@@ -90,27 +90,24 @@ function run() {
     const decoded = {};
     let nodeAdapterSeen = false;
     for (const line of commands) {
-      const match = line.match(/^ruby_edit "\$CONFIG_FILE" "\['([a-z-]+)'\]" "([^"\n]+)"$/);
+      const match = line.match(/^ruby_edit "\$CONFIG_FILE" "\['([a-z-]+)'\]" '([^'\n]+)'$/);
       assert(match, 'Only deterministic ruby_edit commands are allowed');
       const [, key, expression] = match;
       if (key === 'proxies') {
         assert(!nodeAdapterSeen, 'Only one node adapter assignment is allowed');
         nodeAdapterSeen = true;
-        const code = expression.match(/^\(lambda \{ \|scope\| scope\.module_eval\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\)\); scope\.const_get\(:OpenClashNodeAliases\)\.rewrite\(Value\.fetch\('proxies', \[\]\), Value\.fetch\('hosts', \{\}\)\) \}\)\.call\(Module\.new\)$/);
-        assert(code, 'Only the isolated fixed-source node adapter is allowed');
-        assert.equal(Buffer.from(code[1], 'base64').toString('utf8'), read('.github/scripts/openclash_node_aliases.rb'));
+        assert.equal(expression, read('.github/scripts/openclash_node_aliases_expression.rb')
+          .split(/\r?\n/).filter(row => !row.trim().startsWith('#')).join(' ').trim());
+        assert(!/module_eval|unpack|const_get|IO\.|File\.|system\(/.test(expression));
         continue;
       }
       assert(!Object.hasOwn(decoded, key), 'Duplicate assignments race in OpenClash');
-      const payload = expression.match(/YAML\.safe_load\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\), aliases: true\)/);
-      assert(payload);
-      assert(!/[`$\\]/.test(expression), 'Shell interpolation in Ruby expression');
-      decoded[key] = JSON.parse(Buffer.from(payload[1], 'base64').toString('utf8'));
-      if (key === 'dns') {
-        const adapter = expression.match(/scope\.module_eval\('([A-Za-z0-9+/=]+)'\.unpack1\('m0'\)\.force_encoding\('UTF-8'\)\)/);
-        assert(adapter, 'DNS adapter must be embedded fixed source');
-        assert.equal(Buffer.from(adapter[1], 'base64').toString('utf8'), read('.github/scripts/openclash_local_dns.rb'));
-      }
+      assert(Object.hasOwn(result.config, key));
+      const literal = rubyLiteral(result.config[key]);
+      assert.equal(expression, key === 'dns'
+        ? `(Value.fetch("dns", {}).select { |k, _| ["listen", "ipv6", "fake-ip-range6"].include?(k) }).merge(${literal})`
+        : literal);
+      decoded[key] = result.config[key];
     }
     assert.deepEqual(decoded, result.config, 'Module must contain the complete router projection');
     assert(nodeAdapterSeen, 'Remote module must carry the portable node adapter');
@@ -134,19 +131,23 @@ function run() {
     assert.equal(expected.dns.listen, '127.0.0.1:9999', 'OpenClash CONF 必须保留设备 DNS 监听');
     assert.equal(expected.dns.ipv6, true, 'OpenClash CONF 必须保留设备 DNS IPv6 开关');
     assert.equal(expected.dns['fake-ip-range6'], 'fd00::/64', 'OpenClash CONF 必须保留设备 IPv6 fake-ip 地址池');
-    if (process.env.OPENCLASH_RUBY_TEST === '1') {
-      // Run actual POSIX shell quoting and Ruby assignment semantics, in memory.
-      // Mirrors official ruby_edit's Value$2=$3 contract, not router service logic.
-      const shell = 'ruby_edit() { printf "threads << Thread.new { Value%s=%s }\\n" "$2" "$3"; }\nCONFIG_FILE=synthetic-only\n' + commands.join('\n');
+    if (options.nativeCollector || process.env.OPENCLASH_RUBY_TEST === '1') {
+      // POSIX quoting must preserve the same literal arguments, including $ and backslashes.
+      const shell = 'ruby_edit() { printf "%s\\0%s\\0%s\\0" "$1" "$2" "$3"; }\nCONFIG_FILE=synthetic-only\n' + commands.join('\n');
+      const payload = { input, expected, commands, shellScript: shell,
+        literalProbe: rubyLiteral({ text: "引号'\"\\ ${UNCHANGED} #{raise :bad} #@test `ignored`", missing: null }) };
+      if (options.nativeCollector) { options.nativeCollector(payload); continue; }
       const sh = spawnSync('sh', ['-s'], { input: shell, encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 });
       assert.equal(sh.status, 0, sh.error?.message || sh.stderr);
-      const program = `require 'yaml'; require 'json'; Value=JSON.parse(STDIN.read); 2.times do\nthreads=[]\n${sh.stdout}\nthreads.each(&:value)\nend; STDOUT.write(JSON.generate(Value))`;
-      const ruby = spawnSync('ruby', ['-E', 'UTF-8', '-e', program], {
-        input: JSON.stringify(input), encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024,
+      payload.shellFields = sh.stdout.split('\0').slice(0, -1);
+      const native = require('node:path').join(__dirname, 'test_openclash_overwrite.rb');
+      const ruby = spawnSync('ruby', ['-E', 'UTF-8', native, process.env.OPENCLASH_YAML_RB || ''], {
+        input: JSON.stringify(payload),
+        encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024,
       });
       assert.equal(ruby.status, 0, ruby.error?.message || ruby.stderr);
-      assert.deepEqual(JSON.parse(ruby.stdout), expected, 'Ruby merge, Chinese/regex roundtrip and idempotence');
-      console.log(`${result.file}: real sh/Ruby roundtrip, alias/limited UDP, other node fields/device preservation, stale DNS removal OK`);
+      process.stdout.write(ruby.stdout);
+      console.log(`${result.file}: native 0.48.002 parser, safety allowlist, merge, node preservation and idempotence OK`);
     } else {
       console.log(`${result.file}: exact payload/source parity OK; native sh/Ruby NOT RUN (OPENCLASH_RUBY_TEST=1)`);
     }
