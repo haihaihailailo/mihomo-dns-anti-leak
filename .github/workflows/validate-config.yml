@@ -24,7 +24,7 @@ on:
       - ".github/scripts/build_router_profiles.cjs"
       - ".github/scripts/validate_router_profiles.cjs"
       - ".github/scripts/*telegram*.rb"
-      - ".github/scripts/*openclash_node_aliases.rb"
+      - ".github/scripts/openclash_*.rb"
       - ".github/scripts/node_server_aliases.cjs"
       - ".github/scripts/validate_node_server_aliases.cjs"
       - ".github/scripts/probe_subscription_capabilities.*"
@@ -67,7 +67,7 @@ on:
       - ".github/scripts/build_router_profiles.cjs"
       - ".github/scripts/validate_router_profiles.cjs"
       - ".github/scripts/*telegram*.rb"
-      - ".github/scripts/*openclash_node_aliases.rb"
+      - ".github/scripts/openclash_*.rb"
       - ".github/scripts/node_server_aliases.cjs"
       - ".github/scripts/validate_node_server_aliases.cjs"
       - ".github/scripts/probe_subscription_capabilities.*"
@@ -146,7 +146,14 @@ jobs:
       - name: Check routing and health-check topology
         env:
           OPENCLASH_RUBY_TEST: "1"
-        run: python3 .github/scripts/validate_health_checks.py
+        run: |
+          set -euo pipefail
+          parser="$RUNNER_TEMP/openclash-0.48.002-YAML.rb"
+          curl --retry 2 --connect-timeout 10 --max-time 45 --max-filesize 65536 -fsSL \
+            https://raw.githubusercontent.com/vernesong/OpenClash/v0.48.002/luci-app-openclash/root/usr/share/openclash/YAML.rb \
+            -o "$parser"
+          printf '%s  %s\n' 1249abf411e1df9e8fe542fb3584f34a27e6e3a587942e5d9f759a32b1bd8261 "$parser" | sha256sum --check -
+          OPENCLASH_YAML_RB="$parser" python3 .github/scripts/validate_health_checks.py
 
       - name: Compare YAML and JS full config
         run: |
