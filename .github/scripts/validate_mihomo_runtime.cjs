@@ -151,7 +151,9 @@ async function aiGroupsCase(region, empty) {
   await new Promise(resolve => reserve.listen(0, "127.0.0.1", resolve));
   const port = reserve.address().port;
   await new Promise(resolve => reserve.close(resolve));
-  const fixtures = ["美国 AI01", "美国 AI02", "日本 JP01", "新加坡 SG01", "香港 HK01",
+  const fixtures = ["【花云】 美国 AI01", "【花云】 美国 AI02", "【花云】 日本 JP01", "【花云】 新加坡 SG01",
+    "美国 AI01", "日本 JP01", "新加坡 SG01", "【赔钱】 美国 AI01", "【赔钱】 日本 JP01", "【赔钱】 新加坡 SG01",
+    "【花云备用】 美国 AI01", "【赔钱】 【花云】 新加坡 SG01", "【花云】 美国01_回国", "香港 HK01",
     "台湾 TW01", "越南 VN01", "香港港广01_回国", "美国01_回国"];
   const candidates = empty ? [] : fixtures;
   const groups = config["proxy-groups"].map(group => ({ ...group, interval: 0 }));
@@ -185,7 +187,7 @@ async function aiGroupsCase(region, empty) {
       assert.equal(String(group.expectedStatus), "200");
       assert.equal(group.emptyFallback, "REJECT");
       assert.deepEqual([...group.all].sort(), empty ? ["REJECT"] :
-        fixtures.filter(name => name.startsWith(country) && !name.includes("回国")).sort(), "内核实际地区筛选错误");
+        fixtures.filter(name => name.startsWith("【花云】 " + country) && !name.includes("回国")).sort(), "内核实际花云/地区筛选错误");
     }
     console.log(region + " Mihomo AI 分组：" + (empty ? "空节点 REJECT" : "实际地区/回国筛选") + "、隐藏/端点/默认值 OK（无公网探测）");
   } finally { await stop(running); }
