@@ -3175,8 +3175,8 @@ function tuneMihomo(config) {
   if (!ai || ai.type !== "select") throw new Error("缺少 AI 手选入口");
   const regions = ["美国", "日本", "新加坡"];
   const aiNames = new Set(regions.map(region => region + "-AI-自动"));
-  // 来源前缀只用于识别订阅，不限制普通组或 AI 组的候选。
-  // 兼容已应用旧版“花云专供 AI”的输入，只撤销本仓库生成的来源排除项。
+  // 普通组保留全部来源；AI 自动组通过 Sub-Store 的精确【花云】前缀限定来源。
+  // 兼容旧版输入，只撤销本仓库生成的来源排除项，AI 来源限制由 filter 表达。
   const legacySourceExcludes = ["^【花云】", "^【(?!花云】)[^】]+】"];
   function originalExclude(value) {
     if (!value) return "";
@@ -3201,6 +3201,8 @@ function tuneMihomo(config) {
     }
     // 直接筛选地区叶节点，不能 proxies: [地区-自动]，否则仍由普通端点选路。
     return { ...source, name: region + "-AI-自动", hidden: true,
+      // 配置说明：按节点名称正则筛选候选；名称匹配不能证明节点真实出口地区。
+      filter: "(?i)^【花云】.*(?:" + source.filter.replace(/^\(\?i\)/, "") + ")",
       // 配置说明：组内为测速端点，规则提供器内为下载地址；端点可达不代表业务解锁。
       url: ai.url, "expected-status": ai["expected-status"], timeout: ai.timeout };
   });
